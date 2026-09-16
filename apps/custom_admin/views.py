@@ -20,7 +20,7 @@ def dashboard(request):
         'low_stock_products': low_stock_products,
         'recent_orders': recent_orders,
     }
-    return render(request, 'custom_admin/dashboard.html', context)
+    return render(request, 'custom_admin/templates/custom_admin/dashboard.html', context)
 
 # def admin_login(request):
 #     return render(request, 'custom_admin/login.html')
@@ -36,7 +36,7 @@ def product_list(request):
     context = {
         'page_obj': page_obj,
     }
-    return render(request, 'custom_admin/product_list.html', context)
+    return render(request, 'custom_admin/products/product_list.html', context)
 
 def product_create(request):
     categories = Category.objects.filter(is_active=True)
@@ -62,4 +62,4 @@ def product_create(request):
     context = {
         'categories': categories,
     }
-    return render(request, 'custom_admin/product_create.html', context)
+    return render(request, 'custom_admin/products/product_list.html', context)
