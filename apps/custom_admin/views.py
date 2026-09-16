@@ -1,12 +1,10 @@
 from orders.models import Order
-from users.models import User
-from product.models import Product, Category
-from category.models import Category
-from django.shortcuts import render
-from .decorators import admin_required
+from accounts.models import User
+from products.models import Product, Category
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum
 from django.core.paginator import Paginator
-from django.shortcuts import render, redirect, get_object_or_404
+from .decorators import admin_required
 # Create your views here.
 @admin_required
 def dashboard(request):

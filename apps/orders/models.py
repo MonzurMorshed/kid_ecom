@@ -1,5 +1,6 @@
 from django.db import models
-from django.conf import settings.AUTH_USER_MODEL
+from django.conf import settings
+from products.models import Product, ProductVariant
 
 # Create your models here.
 class Order(models.Model):
