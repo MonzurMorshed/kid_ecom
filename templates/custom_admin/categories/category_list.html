@@ -1,0 +1,91 @@
+{% extends 'custom_admin/admin_base.html' %}
+
+{% block title %}Category List{% endblock %}
+{% block page_title %}Category Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Top Action Bar -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-bold text-white">Categories</h2>
+            <p class="text-sm text-slate-400 mt-1">Manage all product categories and images</p>
+        </div>
+        <a href="{% url 'custom_admin:category_create' %}" 
+           class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-sky-600/25 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Add Category
+        </a>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
+                    <tr>
+                        <th class="px-6 py-4">Image</th>
+                        <th class="px-6 py-4">Category Name</th>
+                        <th class="px-6 py-4">Slug</th>
+                        <th class="px-6 py-4">Parent Category</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Created Date</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% for category in categories %}
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <!-- Category Image Thumbnail -->
+                        <td class="px-6 py-3">
+                            {% if category.image %}
+                            <img src="{{ category.image.url }}" alt="{{ category.name }}" 
+                                 class="w-12 h-12 object-cover rounded-xl border border-slate-700 shadow-sm">
+                            {% else %}
+                            <div class="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                            {% endif %}
+                        </td>
+
+                        <td class="px-6 py-4 font-semibold text-white">{{ category.name }}</td>
+                        <td class="px-6 py-4 text-slate-400 font-mono text-xs">{{ category.slug }}</td>
+                        <td class="px-6 py-4">
+                            {% if category.parent %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                                {{ category.parent.name }}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-500 text-xs">— Main —</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
+                                {% if category.is_active %} bg-emerald-500/10 text-emerald-300 border border-emerald-500/20
+                                {% else %} bg-rose-500/10 text-rose-300 border border-rose-500/20 {% endif %}">
+                                {% if category.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-400 text-xs">{{ category.created_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'custom_admin:category_update' category.pk %}" 
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-semibold rounded-lg border border-slate-700 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500">
+                            No categories found. Click "Add Category" to create one.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

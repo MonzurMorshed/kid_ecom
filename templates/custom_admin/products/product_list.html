@@ -1,0 +1,199 @@
+{% extends 'custom_admin/admin_base.html' %}
+
+{% block title %}Product List{% endblock %}
+{% block page_title %}Product Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ importModalOpen: false }">
+    
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-white">Products</h2>
+            <p class="text-sm text-slate-400 mt-1">Manage catalog, pricing, inventory, and bulk import/export</p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Sample CSV Link -->
+            <a href="{% url 'custom_admin:product_sample_csv' %}" 
+               class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition">
+                <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Sample CSV
+            </a>
+
+            <!-- Import Button -->
+            <button @click="importModalOpen = true" 
+                    type="button"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-600/20 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                Import CSV
+            </button>
+
+            <!-- Export Button -->
+            <a href="{% url 'custom_admin:product_export' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-indigo-600/20 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Export CSV
+            </a>
+
+            <!-- Add Product Button -->
+            <a href="{% url 'custom_admin:product_create' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-sky-600/25 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Add Product
+            </a>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
+                    <tr>
+                        <th class="px-6 py-4">ID</th>
+                        <th class="px-6 py-4">Title</th>
+                        <th class="px-6 py-4">Category</th>
+                        <th class="px-6 py-4">Brand</th>
+                        <th class="px-6 py-4">Variants</th>
+                        <th class="px-6 py-4">Price</th>
+                        <th class="px-6 py-4">Stock</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Created Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% for product in page_obj %}
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="px-6 py-4 font-mono text-xs text-slate-400">#{{ product.id }}</td>
+                        <td class="px-6 py-4 font-semibold text-white">{{ product.title }}</td>
+                        <td class="px-6 py-4">
+                            {% if product.category %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                                {{ product.category.name }}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-500 text-xs">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-slate-400 text-xs">
+                            {{ product.brand.name|default:"—" }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if product.variants.count > 0 %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                                {{ product.variants.count }} Variant{% if product.variants.count > 1 %}s{% endif %}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-500 text-xs">— Simple —</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 font-medium text-emerald-400">৳ {{ product.price }}</td>
+                        <td class="px-6 py-4">
+                            <span class="font-semibold {% if product.stock < 5 %}text-rose-400{% else %}text-slate-300{% endif %}">
+                                {{ product.stock }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
+                                {% if product.is_active %} bg-emerald-500/10 text-emerald-300 border border-emerald-500/20
+                                {% else %} bg-rose-500/10 text-rose-300 border border-rose-500/20 {% endif %}">
+                                {% if product.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-400 text-xs">{{ product.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-slate-500">
+                            No products found. Click "Add Product" or "Import CSV" to populate catalog.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+            <span class="text-xs text-slate-400">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            <div class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" 
+                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+                    Previous
+                </a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" 
+                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Import CSV Modal with Alpine.js -->
+    <div x-show="importModalOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        
+        <div @click.outside="importModalOpen = false" 
+             x-show="importModalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+            
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Import Products CSV</h3>
+                        <p class="text-xs text-slate-400">Bulk upload or update products</p>
+                    </div>
+                </div>
+                <button @click="importModalOpen = false" class="text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <form method="POST" action="{% url 'custom_admin:product_import' %}" enctype="multipart/form-data" class="space-y-5">
+                {% csrf_token %}
+                
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Select CSV File</label>
+                    <input type="file" name="csv_file" accept=".csv" required 
+                           class="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 file:cursor-pointer transition border border-slate-800 rounded-xl bg-slate-950 p-2">
+                </div>
+
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
+                    <p class="font-semibold text-slate-300">Need the correct column format?</p>
+                    <p>Download our sample template before importing: 
+                        <a href="{% url 'custom_admin:product_sample_csv' %}" class="text-sky-400 underline font-medium">Download Sample CSV</a>
+                    </p>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" @click="importModalOpen = false" 
+                            class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-600/20 transition">
+                        Upload & Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

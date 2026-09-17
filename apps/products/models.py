@@ -40,9 +40,16 @@ class Category(models.Model):
 
         return self.name
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.name, allow_unicode=True)
+        super().save(*args, **kwargs)
+
     @property
     def is_subcategory(self):
         return self.parent is not None
+
 
 
 # =========================================================
