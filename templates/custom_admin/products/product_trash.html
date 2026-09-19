@@ -1,0 +1,204 @@
+{% extends 'custom_admin/admin_base.html' %}
+
+{% block title %}Trash – Deleted Products{% endblock %}
+{% block page_title %}Product Trash{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{}">
+
+    <!-- Top Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-white">Trash</h2>
+                <p class="text-sm text-slate-400 mt-0.5">Soft-deleted products — restore or permanently remove them</p>
+            </div>
+        </div>
+        <a href="{% url 'custom_admin:product_list' %}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-xl border border-slate-700 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Back to Products
+        </a>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
+                    <tr>
+                        <th class="px-6 py-4">ID</th>
+                        <th class="px-6 py-4">Title</th>
+                        <th class="px-6 py-4">Category</th>
+                        <th class="px-6 py-4">Brand</th>
+                        <th class="px-6 py-4">Price</th>
+                        <th class="px-6 py-4">Deleted At</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% for product in page_obj %}
+                    <tr class="hover:bg-slate-800/30 transition" x-data="{ restoreOpen: false, permDeleteOpen: false }">
+                        <td class="px-6 py-4 font-mono text-xs text-slate-400">#{{ product.id }}</td>
+
+                        <td class="px-6 py-4 font-semibold text-slate-300">
+                            {{ product.title }}
+                        </td>
+
+                        <td class="px-6 py-4">
+                            {% if product.category %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                                {{ product.category.name }}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-500 text-xs">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="px-6 py-4 text-slate-400 text-xs">
+                            {{ product.brand.name|default:"—" }}
+                        </td>
+
+                        <td class="px-6 py-4 font-medium text-emerald-400">৳ {{ product.price }}</td>
+
+                        <td class="px-6 py-4 text-slate-400 text-xs">
+                            {% if product.deleted_at %}
+                                {{ product.deleted_at|date:"M d, Y H:i" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-end gap-2">
+                                <!-- Restore Button -->
+                                <button @click="restoreOpen = true"
+                                        title="Restore Product"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg border border-emerald-500/20 transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    Restore
+                                </button>
+                                <!-- Permanently Delete Button -->
+                                <button @click="permDeleteOpen = true"
+                                        title="Permanently Delete"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-lg border border-rose-500/20 transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    Delete Forever
+                                </button>
+                            </div>
+
+                            <!-- Restore Confirm Modal -->
+                            <div x-show="restoreOpen" x-cloak
+                                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                                <div @click.outside="restoreOpen = false"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-base font-bold text-white">Restore Product?</h3>
+                                            <p class="text-xs text-slate-400 mt-1">"{{ product.title }}" will be restored and made visible in the catalog again.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" @click="restoreOpen = false"
+                                                class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                                            Cancel
+                                        </button>
+                                        <form method="POST" action="{% url 'custom_admin:product_restore' product.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-600/20 transition">
+                                                Yes, Restore
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Permanent Delete Confirm Modal -->
+                            <div x-show="permDeleteOpen" x-cloak
+                                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                                <div @click.outside="permDeleteOpen = false"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     class="w-full max-w-sm bg-slate-900 border border-rose-900/40 rounded-2xl p-6 shadow-2xl space-y-4">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 flex-shrink-0">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-base font-bold text-white">Permanently Delete?</h3>
+                                            <p class="text-xs text-slate-400 mt-1">"{{ product.title }}" will be <span class="text-rose-400 font-semibold">permanently removed</span> from the database. This <strong>cannot be undone</strong>.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" @click="permDeleteOpen = false"
+                                                class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                                            Cancel
+                                        </button>
+                                        <form method="POST" action="{% url 'custom_admin:product_permanent_delete' product.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white text-xs font-semibold rounded-xl shadow-lg shadow-rose-700/20 transition">
+                                                Yes, Delete Forever
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-600">
+                                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </div>
+                                <p class="text-slate-500 text-sm font-medium">Trash is empty</p>
+                                <p class="text-slate-600 text-xs">Deleted products will appear here</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+            <span class="text-xs text-slate-400">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            <div class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}"
+                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+                    Previous
+                </a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}"
+                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

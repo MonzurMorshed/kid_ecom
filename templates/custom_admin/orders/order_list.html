@@ -1,0 +1,309 @@
+{% extends 'custom_admin/admin_base.html' %}
+
+{% block title %}Orders{% endblock %}
+{% block page_title %}Orders{% endblock %}
+
+{% block content %}
+
+{# ── Summary Cards ──────────────────────────────────────────────────────────── #}
+<div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+
+    {% with total=orders.paginator.count %}
+    <div class="col-span-2 lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-white">{{ total }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">Total Orders</p>
+        </div>
+    </div>
+    {% endwith %}
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-white">{{ pending_count|default:"—" }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">Pending</p>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-white">{{ confirmed_count|default:"—" }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">Confirmed</p>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-white">{{ processing_count|default:"—" }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">Processing</p>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-white">{{ delivered_count|default:"—" }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">Delivered</p>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-white">{{ cancelled_count|default:"—" }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">Cancelled</p>
+        </div>
+    </div>
+
+</div>
+
+{# ── Table Card ─────────────────────────────────────────────────────────────── #}
+<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+
+    {# Toolbar #}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 border-b border-slate-800">
+        <div>
+            <h2 class="text-base font-semibold text-white">All Orders</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+                Showing {{ orders.start_index }}–{{ orders.end_index }} of {{ orders.paginator.count }} orders
+            </p>
+        </div>
+
+        <form method="get" class="flex items-center gap-2 flex-wrap">
+            {# Search #}
+            <div class="relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input id="order-search" type="text" name="q" value="{{ request.GET.q }}"
+                       placeholder="Search name, email…"
+                       class="pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 placeholder-slate-500 w-48 transition">
+            </div>
+
+            {# Status filter #}
+            <select id="order-status-filter" name="status"
+                    class="py-2 px-3 bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition">
+                <option value="">All Statuses</option>
+                <option value="PENDING"    {% if request.GET.status == "PENDING"    %}selected{% endif %}>Pending</option>
+                <option value="CONFIRMED"  {% if request.GET.status == "CONFIRMED"  %}selected{% endif %}>Confirmed</option>
+                <option value="PROCESSING" {% if request.GET.status == "PROCESSING" %}selected{% endif %}>Processing</option>
+                <option value="DELIVERED"  {% if request.GET.status == "DELIVERED"  %}selected{% endif %}>Delivered</option>
+                <option value="CANCELLED"  {% if request.GET.status == "CANCELLED"  %}selected{% endif %}>Cancelled</option>
+            </select>
+
+            <button type="submit" id="order-filter-btn"
+                    class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium rounded-lg transition">
+                Filter
+            </button>
+            {% if request.GET.q or request.GET.status %}
+            <a href="{% url 'custom_admin:order_list' %}" id="order-clear-btn"
+               class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-sm rounded-lg transition">
+                Clear
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    {# Table #}
+    {% if orders %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-slate-800 text-xs text-slate-500 uppercase tracking-wide">
+                    <th class="text-left px-5 py-3.5 font-medium">Order</th>
+                    <th class="text-left px-5 py-3.5 font-medium">Customer</th>
+                    <th class="text-left px-5 py-3.5 font-medium hidden md:table-cell">Items</th>
+                    <th class="text-left px-5 py-3.5 font-medium hidden lg:table-cell">Address</th>
+                    <th class="text-right px-5 py-3.5 font-medium">Total</th>
+                    <th class="text-center px-5 py-3.5 font-medium">Status</th>
+                    <th class="text-left px-5 py-3.5 font-medium hidden lg:table-cell">Date</th>
+                    <th class="text-right px-5 py-3.5 font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/70">
+                {% for order in orders %}
+                <tr class="hover:bg-slate-800/40 transition group">
+
+                    {# Order ID #}
+                    <td class="px-5 py-4">
+                        <a href="{% url 'custom_admin:order_detail' order.pk %}"
+                           class="font-semibold text-sky-400 hover:text-sky-300 transition">
+                            #{{ order.id|stringformat:"05d" }}
+                        </a>
+                    </td>
+
+                    {# Customer #}
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-xs font-bold text-slate-300 shrink-0">
+                                {{ order.full_name|slice:":1"|upper }}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="font-medium text-slate-100 truncate">{{ order.full_name }}</p>
+                                <p class="text-xs text-slate-500 truncate">{{ order.email }}</p>
+                            </div>
+                        </div>
+                    </td>
+
+                    {# Items count #}
+                    <td class="px-5 py-4 hidden md:table-cell">
+                        <span class="inline-flex items-center gap-1 text-slate-400">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                            {{ order.items.count }} item{{ order.items.count|pluralize }}
+                        </span>
+                    </td>
+
+                    {# Address #}
+                    <td class="px-5 py-4 hidden lg:table-cell">
+                        <p class="text-slate-400 text-xs max-w-[160px] truncate" title="{{ order.shipping_address }}">
+                            {{ order.shipping_address }}
+                        </p>
+                    </td>
+
+                    {# Total #}
+                    <td class="px-5 py-4 text-right">
+                        <span class="font-semibold text-emerald-400">BDT {{ order.total_amount }}</span>
+                    </td>
+
+                    {# Status Badge #}
+                    <td class="px-5 py-4 text-center">
+                        {% if order.status == 'PENDING' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                Pending
+                            </span>
+                        {% elif order.status == 'CONFIRMED' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                Confirmed
+                            </span>
+                        {% elif order.status == 'PROCESSING' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"></span>
+                                Processing
+                            </span>
+                        {% elif order.status == 'DELIVERED' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                Delivered
+                            </span>
+                        {% elif order.status == 'CANCELLED' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                Cancelled
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    {# Date #}
+                    <td class="px-5 py-4 hidden lg:table-cell">
+                        <p class="text-slate-400 text-xs">{{ order.created_at|date:"d M Y" }}</p>
+                        <p class="text-slate-600 text-[10px]">{{ order.created_at|date:"H:i" }}</p>
+                    </td>
+
+                    {# Actions #}
+                    <td class="px-5 py-4 text-right">
+                        <div class="flex items-center justify-end gap-1.5 transition">
+                            <a href="{% url 'custom_admin:order_detail' order.pk %}"
+                               title="View Order"
+                               class="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
+                            <a href="{% url 'custom_admin:order_update' order.pk %}"
+                               title="Edit Order"
+                               class="p-1.5 rounded-lg bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
+                            {% if order.status != 'CANCELLED' and order.status != 'DELIVERED' %}
+                            <a href="{% url 'custom_admin:order_cancel' order.pk %}"
+                               title="Cancel Order"
+                               onclick="return confirm('Cancel order #{{ order.id }}?')"
+                               class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'custom_admin:order_delete' order.pk %}"
+                               title="Move to Trash"
+                               onclick="return confirm('Move order #{{ order.id }} to trash?')"
+                               class="p-1.5 rounded-lg bg-slate-700/60 text-slate-500 hover:bg-rose-500/10 hover:text-rose-400 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# ── Pagination ──────────────────────────────────────────────────────────── #}
+    {% if orders.has_other_pages %}
+    <div class="flex items-center justify-between px-5 py-4 border-t border-slate-800">
+        <p class="text-xs text-slate-500">
+            Page {{ orders.number }} of {{ orders.paginator.num_pages }}
+        </p>
+        <div class="flex items-center gap-1">
+            {% if orders.has_previous %}
+            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ orders.previous_page_number }}"
+               class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                &laquo; Prev
+            </a>
+            {% endif %}
+
+            {% for num in orders.paginator.page_range %}
+                {% if orders.number == num %}
+                <span class="px-3 py-1.5 text-xs font-semibold text-white bg-sky-600 border border-sky-500 rounded-lg">{{ num }}</span>
+                {% elif num > orders.number|add:"-3" and num < orders.number|add:"3" %}
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ num }}"
+                   class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if orders.has_next %}
+            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ orders.next_page_number }}"
+               class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                Next &raquo;
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    {# Empty State #}
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+        </div>
+        <h3 class="text-slate-300 font-semibold text-sm">No orders found</h3>
+        <p class="text-slate-600 text-xs mt-1">Try adjusting your filters or search query.</p>
+        {% if request.GET.q or request.GET.status %}
+        <a href="{% url 'custom_admin:order_list' %}" class="mt-4 text-xs text-sky-400 hover:text-sky-300 transition">
+            Clear filters
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

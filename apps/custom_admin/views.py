@@ -12,7 +12,7 @@ from .forms import AdminRegisterForm
 
 @admin_required
 def dashboard(request):
-    total_sales = Order.objects.filter(status='Completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_sales = Order.objects.filter(status='DELIVERED').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     total_orders = Order.objects.count()
     active_customers = User.objects.filter(is_customer=True, is_blocked=False).count()
     low_stock_products = Product.objects.filter(stock__lt=5)

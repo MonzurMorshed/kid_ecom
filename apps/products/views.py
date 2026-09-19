@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -7,7 +8,7 @@ from django.http import HttpResponse
 from django.utils.text import slugify
 
 from apps.custom_admin.decorators import admin_required
-from .models import Category, Product, Brand, ProductOption, ProductOptionValue, ProductVariant
+from .models import Category, Product, Brand, ProductOption, ProductOptionValue, ProductVariant, ProductImage
 
 # =========================================================
 # CATEGORY VIEWS
@@ -85,45 +86,413 @@ def category_update(request, pk):
 
 @admin_required
 def product_list(request):
-    products = Product.objects.select_related('category', 'brand').prefetch_related('variants').all().order_by('-created_at')
-    paginator = Paginator(products, 15)
+    qs = (
+        Product.objects
+        .select_related('category', 'brand')
+        .prefetch_related('variants')
+        .filter(is_deleted=False)
+        .order_by('-created_at')
+    )
+
+    # ── Search & Filter ──
+    q          = request.GET.get('q', '').strip()
+    cat_id     = request.GET.get('category', '').strip()
+    brand_id   = request.GET.get('brand', '').strip()
+    status     = request.GET.get('status', '').strip()   # 'active' | 'inactive'
+
+    if q:
+        qs = qs.filter(title__icontains=q)
+    if cat_id:
+        qs = qs.filter(category_id=cat_id)
+    if brand_id:
+        qs = qs.filter(brand_id=brand_id)
+    if status == 'active':
+        qs = qs.filter(is_active=True)
+    elif status == 'inactive':
+        qs = qs.filter(is_active=False)
+
+    paginator  = Paginator(qs, 15)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj   = paginator.get_page(page_number)
+
     context = {
-        'page_obj': page_obj,
+        'page_obj'   : page_obj,
+        'categories' : Category.objects.filter(is_active=True).order_by('name'),
+        'brands'     : Brand.objects.filter(is_active=True).order_by('name'),
+        'q'          : q,
+        'cat_id'     : cat_id,
+        'brand_id'   : brand_id,
+        'status'     : status,
+        'total_count': qs.count(),
     }
     return render(request, 'custom_admin/products/product_list.html', context)
 
 @admin_required
 def product_create(request):
     categories = Category.objects.filter(is_active=True)
+    brands = Brand.objects.filter(is_active=True)
+
     if request.method == 'POST':
-        title = request.POST.get('title')
-        slug = request.POST.get('slug')
+        title = request.POST.get('title', '').strip()
+        slug = request.POST.get('slug', '').strip()
         if not slug and title:
             slug = slugify(title, allow_unicode=True)
 
-        category_id = request.POST.get('category')
-        price = request.POST.get('price')
-        stock = request.POST.get('stock')
-        description = request.POST.get('description')
+        category_id = request.POST.get('category') or None
+        brand_id = request.POST.get('brand') or None
+        price = request.POST.get('price', '0')
+        stock = request.POST.get('stock', '0')
+        description = request.POST.get('description', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+
+        if not title:
+            messages.error(request, 'Product title is required.')
+            return render(request, 'custom_admin/products/product_create.html', {
+                'categories': categories, 'brands': brands,
+            })
+
+        # Ensure slug uniqueness
+        original_slug = slug
+        counter = 1
+        while Product.objects.filter(slug=slug).exists():
+            slug = f"{original_slug}-{counter}"
+            counter += 1
 
         product = Product.objects.create(
             title=title,
             slug=slug,
             category_id=category_id,
+            brand_id=brand_id,
             price=price,
             stock=stock,
             description=description,
+            is_active=is_active,
         )
 
-        messages.success(request, "Product created successfully.")
-        return redirect('custom_admin:product_list')
+        # ── Options & Variants ──
+        try:
+            options_json = request.POST.get('options_json', '[]')
+            variants_json = request.POST.get('variants_json', '[]')
+            options_data = json.loads(options_json)   # [{name, values:[...]}, ...]
+            variants_data = json.loads(variants_json) # [{sku, stock, price, option_indices:{optIdx: valIdx}},...]
+
+            # Create options and collect value objects keyed by (optIdx, valIdx)
+            value_map = {}  # (opt_index, val_index) -> ProductOptionValue
+            for opt_idx, opt in enumerate(options_data):
+                opt_name = opt.get('name', '').strip()
+                if not opt_name:
+                    continue
+                option_obj, _ = ProductOption.objects.get_or_create(
+                    product=product, name=opt_name
+                )
+                for val_idx, val in enumerate(opt.get('values', [])):
+                    val = val.strip()
+                    if val:
+                        val_obj, _ = ProductOptionValue.objects.get_or_create(
+                            option=option_obj, value=val
+                        )
+                        value_map[(opt_idx, val_idx)] = val_obj
+
+            # Create variants
+            for variant in variants_data:
+                sku = variant.get('sku', '').strip()
+                if not sku:
+                    continue
+                v_stock = int(variant.get('stock', 0))
+                v_price = variant.get('price') or None
+                v_obj = ProductVariant.objects.create(
+                    product=product,
+                    sku=sku,
+                    stock=v_stock,
+                    price_override=v_price if v_price else None,
+                )
+                # Assign option values
+                for opt_idx_str, val_idx in variant.get('option_values', {}).items():
+                    key = (int(opt_idx_str), int(val_idx))
+                    if key in value_map:
+                        v_obj.options.add(value_map[key])
+        except (json.JSONDecodeError, ValueError, KeyError):
+            pass  # Don't fail the whole product creation
+
+        featured_image = request.FILES.get('featured_image')
+        if featured_image:
+            ProductImage.objects.create(
+                product=product,
+                image=featured_image,
+                is_feature=True,
+            )
+
+        # Save additional gallery images
+        gallery_images = request.FILES.getlist('gallery_images')
+        for img in gallery_images:
+            ProductImage.objects.create(
+                product=product,
+                image=img,
+                is_feature=False,
+            )
+
+        messages.success(request, f'"{product.title}" created successfully.')
+        return redirect('custom_admin:product_detail', pk=product.pk)
 
     context = {
         'categories': categories,
+        'brands': brands,
     }
-    return render(request, 'custom_admin/products/product_list.html', context)
+    return render(request, 'custom_admin/products/product_create.html', context)
+
+
+@admin_required
+def product_details(request, pk):
+    product = get_object_or_404(Product, pk=pk, is_deleted=False)
+    context = {
+        'product': product,
+    }
+    return render(request, 'custom_admin/products/product_details.html', context)
+
+
+@admin_required
+def product_update(request, pk):
+    product = get_object_or_404(Product, pk=pk, is_deleted=False)
+    categories = Category.objects.filter(is_active=True)
+    brands = Brand.objects.filter(is_active=True)
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        slug = request.POST.get('slug', '').strip()
+        if not slug and title:
+            slug = slugify(title, allow_unicode=True)
+
+        category_id = request.POST.get('category')
+        brand_id = request.POST.get('brand') or None
+        price = request.POST.get('price')
+        stock = request.POST.get('stock')
+        description = request.POST.get('description', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+
+        # Ensure slug uniqueness (exclude current product)
+        if slug != product.slug and Product.objects.filter(slug=slug).exclude(pk=pk).exists():
+            original_slug = slug
+            counter = 1
+            while Product.objects.filter(slug=slug).exclude(pk=pk).exists():
+                slug = f"{original_slug}-{counter}"
+                counter += 1
+
+        product.title = title or product.title
+        product.slug = slug
+        product.category_id = category_id
+        product.brand_id = brand_id
+        product.price = price
+        product.stock = stock
+        product.description = description
+        product.is_active = is_active
+        product.save()
+
+        # Handle featured image upload
+        featured_image = request.FILES.get('featured_image')
+        if featured_image:
+            # Remove old featured image if exists
+            ProductImage.objects.filter(product=product, is_feature=True).delete()
+            ProductImage.objects.create(
+                product=product,
+                image=featured_image,
+                is_feature=True,
+            )
+
+        # Handle additional gallery images
+        gallery_images = request.FILES.getlist('gallery_images')
+        for img in gallery_images:
+            ProductImage.objects.create(
+                product=product,
+                image=img,
+                is_feature=False,
+            )
+
+        messages.success(request, f'"{product.title}" updated successfully.')
+        return redirect('custom_admin:product_detail', pk=product.pk)
+
+    context = {
+        'product': product,
+        'categories': categories,
+        'brands': brands,
+    }
+    return render(request, 'custom_admin/products/product_form.html', context)
+
+
+@admin_required
+def product_image_delete(request, image_pk):
+    """Delete a single ProductImage."""
+    img = get_object_or_404(ProductImage, pk=image_pk)
+    product_pk = img.product_id
+    if request.method == 'POST':
+        img.delete()
+        messages.success(request, 'Image removed successfully.')
+    return redirect('custom_admin:product_detail', pk=product_pk)
+
+
+# =========================================================
+# VARIANT VIEWS
+# =========================================================
+
+@admin_required
+def variant_add(request, pk):
+    """Add a single variant to an existing product."""
+    product = get_object_or_404(Product, pk=pk, is_deleted=False)
+    if request.method == 'POST':
+        sku = request.POST.get('sku', '').strip()
+        stock = request.POST.get('stock', '0')
+        price_override = request.POST.get('price_override', '').strip() or None
+        is_active = request.POST.get('is_active') == 'on'
+        value_ids = request.POST.getlist('option_values')  # list of ProductOptionValue PKs
+
+        if not sku:
+            messages.error(request, 'SKU is required for a variant.')
+            return redirect('custom_admin:product_update', pk=pk)
+
+        if ProductVariant.objects.filter(sku=sku).exists():
+            messages.error(request, f'SKU "{sku}" already exists.')
+            return redirect('custom_admin:product_update', pk=pk)
+
+        variant = ProductVariant.objects.create(
+            product=product,
+            sku=sku,
+            stock=int(stock),
+            price_override=price_override,
+            is_active=is_active,
+        )
+        if value_ids:
+            values = ProductOptionValue.objects.filter(
+                pk__in=value_ids, option__product=product
+            )
+            variant.options.set(values)
+
+        messages.success(request, f'Variant "{sku}" added.')
+    return redirect('custom_admin:product_update', pk=pk)
+
+
+@admin_required
+def variant_delete(request, variant_pk):
+    """Delete a single variant."""
+    variant = get_object_or_404(ProductVariant, pk=variant_pk)
+    product_pk = variant.product_id
+    if request.method == 'POST':
+        sku = variant.sku
+        variant.delete()
+        messages.success(request, f'Variant "{sku}" deleted.')
+    return redirect('custom_admin:product_update', pk=product_pk)
+
+
+
+@admin_required
+def product_soft_delete(request, pk):
+    """Soft-delete a product (sets is_deleted=True, does not remove from DB)."""
+    product = get_object_or_404(Product, pk=pk, is_deleted=False)
+    if request.method == 'POST':
+        product.soft_delete()
+        messages.success(request, f'"{product.title}" has been moved to trash.')
+    return redirect('custom_admin:product_list')
+
+
+@admin_required
+def product_trash(request):
+    """Recycle bin – list of soft-deleted products."""
+    deleted_products = (
+        Product.objects
+        .select_related('category', 'brand')
+        .filter(is_deleted=True)
+        .order_by('-deleted_at')
+    )
+    paginator   = Paginator(deleted_products, 15)
+    page_number = request.GET.get('page')
+    page_obj    = paginator.get_page(page_number)
+    context = {
+        'page_obj': page_obj,
+    }
+    return render(request, 'custom_admin/products/product_trash.html', context)
+
+
+@admin_required
+def product_restore(request, pk):
+    """Restore a soft-deleted product back to the active catalog."""
+    product = get_object_or_404(Product, pk=pk, is_deleted=True)
+    if request.method == 'POST':
+        product.restore()
+        messages.success(request, f'"{product.title}" has been restored.')
+    return redirect('custom_admin:product_trash')
+
+
+@admin_required
+def product_permanent_delete(request, pk):
+    """Permanently remove a soft-deleted product from the database."""
+    product = get_object_or_404(Product, pk=pk, is_deleted=True)
+    if request.method == 'POST':
+        title = product.title
+        product.delete()
+        messages.success(request, f'"{title}" has been permanently deleted.')
+    return redirect('custom_admin:product_trash')
+
+
+# =========================================================
+# PRODUCT OPTION VIEWS
+# =========================================================
+
+@admin_required
+def option_add(request, pk):
+    """Add a new option group (e.g. Size, Color) to a product."""
+    product = get_object_or_404(Product, pk=pk, is_deleted=False)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if name:
+            _, created = ProductOption.objects.get_or_create(product=product, name=name)
+            if created:
+                messages.success(request, f'Option "{name}" added.')
+            else:
+                messages.warning(request, f'Option "{name}" already exists.')
+        else:
+            messages.error(request, 'Option name cannot be empty.')
+    return redirect('custom_admin:product_detail', pk=pk)
+
+
+@admin_required
+def option_delete(request, option_pk):
+    """Delete an option group and all its values (cascades via FK)."""
+    option = get_object_or_404(ProductOption, pk=option_pk)
+    product_pk = option.product_id
+    if request.method == 'POST':
+        name = option.name
+        option.delete()
+        messages.success(request, f'Option "{name}" and all its values have been removed.')
+    return redirect('custom_admin:product_detail', pk=product_pk)
+
+
+@admin_required
+def option_value_add(request, option_pk):
+    """Add a new value (e.g. Small, Red) to an existing option group."""
+    option = get_object_or_404(ProductOption, pk=option_pk)
+    product_pk = option.product_id
+    if request.method == 'POST':
+        value = request.POST.get('value', '').strip()
+        if value:
+            _, created = ProductOptionValue.objects.get_or_create(option=option, value=value)
+            if created:
+                messages.success(request, f'Value "{value}" added to {option.name}.')
+            else:
+                messages.warning(request, f'"{value}" already exists in {option.name}.')
+        else:
+            messages.error(request, 'Value cannot be empty.')
+    return redirect('custom_admin:product_detail', pk=product_pk)
+
+
+@admin_required
+def option_value_delete(request, value_pk):
+    """Delete a single option value."""
+    value = get_object_or_404(ProductOptionValue, pk=value_pk)
+    product_pk = value.option.product_id
+    if request.method == 'POST':
+        label = f'{value.option.name}: {value.value}'
+        value.delete()
+        messages.success(request, f'Value "{label}" removed.')
+    return redirect('custom_admin:product_detail', pk=product_pk)
+
 
 @admin_required
 def product_export(request):

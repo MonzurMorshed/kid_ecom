@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 # =========================================================
@@ -128,16 +129,32 @@ class Product(models.Model):
 
     is_active = models.BooleanField(default=True)
 
+    # Soft delete
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Products"
-        ordering = ["created_at"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.title
+
+    def soft_delete(self):
+        """Mark product as deleted without removing from DB."""
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['is_deleted', 'deleted_at'])
+
+    def restore(self):
+        """Restore a soft-deleted product."""
+        self.is_deleted = False
+        self.deleted_at = None
+        self.save(update_fields=['is_deleted', 'deleted_at'])
 
 
 # =========================================================
