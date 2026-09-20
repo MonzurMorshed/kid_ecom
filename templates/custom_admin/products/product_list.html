@@ -84,7 +84,7 @@
                 class="px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition">
                 <option value="">All Categories</option>
                 {% for cat in categories %}
-                <option value="{{ cat.id }}" {% if cat_id==cat.id|stringformat:'s' %}selected{% endif %}>{{ cat.name }}
+                <option value="{{ cat.id }}" {% if cat_id  ==  cat.id|stringformat:'s' %}selected{% endif %}>{{ cat.name }}
                 </option>
                 {% endfor %}
             </select>
@@ -93,7 +93,7 @@
                 class="px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition">
                 <option value="">All Brands</option>
                 {% for brand in brands %}
-                <option value="{{ brand.id }}" {% if brand_id==brand.id|stringformat:'s' %}selected{% endif %}>{{
+                <option value="{{ brand.id }}" {% if brand_id  ==  brand.id|stringformat:'s' %}selected{% endif %}>{{
                     brand.name }}</option>
                 {% endfor %}
             </select>
@@ -102,8 +102,8 @@
                 <select name="status"
                     class="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition">
                     <option value="">All Status</option>
-                    <option value="active" {% if status=='active' %}selected{% endif %}>Active</option>
-                    <option value="inactive" {% if status=='inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
                 </select>
                 <button type="submit"
                     class="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold rounded-xl transition">

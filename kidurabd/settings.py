@@ -80,6 +80,8 @@ DATABASES = {
         'PASSWORD': 'root',
         'HOST': 'localhost',
         'PORT': '5432',
+        'CONN_MAX_AGE': 60,          # reuse DB connection for 60s (avoids reconnect per request)
+        'CONN_HEALTH_CHECKS': True,  # auto-reconnect if connection drops
     }
 }
 
@@ -112,3 +114,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ── Local dev performance ───────────────────────────────────────────────────────
+# In-memory cache (avoids DB hit for sessions on every request)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'  # cache-first, then DB

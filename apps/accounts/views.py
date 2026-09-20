@@ -1,7 +1,9 @@
+from django.db.models import Count
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import redirect, render
 from .forms import UserRegisterForm
+from .models import User
 
 # Create your views here.
 def register_view(request):
@@ -49,3 +51,18 @@ def logout_view(request):
     logout(request)
     messages.info(request, "আপনি সফলভাবে লগআউট করেছেন।")
     return redirect('accounts:login')
+
+def user_list(request):
+    customers = User.objects.annotate(order_count=Count('order')).filter(is_staff=False, is_superuser=False).order_by('-id')
+    context = {
+        'customers': customers,
+    }
+    return render(request, 'accounts/user_list.html', context)
+
+
+def user_detail(request, id):
+    user = User.objects.get(id=id)
+    context = {
+        'user': user,
+    }
+    return render(request, 'accounts/user_detail.html', context)

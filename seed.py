@@ -19,7 +19,7 @@ from decimal import Decimal
 # ── project setup ──────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kidurabd_env.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kidurabd.settings')
 django.setup()
 
 # ── imports ────────────────────────────────────────────────────────────────────
