@@ -1,0 +1,146 @@
+{% extends 'custom_admin/admin_base.html' %}
+{% block title %}Payment Methods{% endblock %}
+{% block page_title %}Payment Methods{% endblock %}
+
+{% block content %}
+<div>
+
+    <!-- Header Actions -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <p class="text-sm text-slate-400">Configure payment gateways available at checkout.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'custom_admin:site_settings' %}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-sm font-medium rounded-xl transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Site Settings
+            </a>
+            <a href="{% url 'custom_admin:payment_method_create' %}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm rounded-xl transition shadow-lg shadow-sky-500/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Add Payment Method
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <p class="text-xs text-slate-400 mb-1">Total Gateways</p>
+            <p class="text-2xl font-bold text-white">{{ methods|length }}</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <p class="text-xs text-slate-400 mb-1">Active</p>
+            <p class="text-2xl font-bold text-emerald-400">{{ active_count }}</p>
+        </div>
+    </div>
+
+
+    {% if methods %}
+    <!-- Payment Methods Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-800">
+            <h2 class="text-sm font-semibold text-slate-300">Configured Payment Gateways</h2>
+        </div>
+        <div class="divide-y divide-slate-800">
+            {% for method in methods %}
+            <div class="flex items-center justify-between px-6 py-4 hover:bg-slate-800/40 transition group"
+                 x-data="{ active: {{ method.is_active|yesno:'true,false' }} }">
+
+                <!-- Left: Icon + Info -->
+                <div class="flex items-center gap-4">
+                    <!-- Gateway Icon / Badge -->
+                    <div class="w-12 h-12 rounded-xl border border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {% if method.icon %}
+                            <img src="{{ method.icon.url }}" alt="{{ method.display_name }}" class="w-10 h-10 object-contain">
+                        {% else %}
+                            <span class="text-lg font-bold text-slate-400">{{ method.display_name|slice:":1" }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-white">{{ method.display_name }}</span>
+                            <span class="px-2 py-0.5 text-[10px] font-medium rounded-full
+                                {% if method.sandbox_mode %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% else %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% endif %}">
+                                {% if method.sandbox_mode %}Sandbox{% else %}Live{% endif %}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            {{ method.get_gateway_display }}
+                            {% if method.description %} · {{ method.description }}{% endif %}
+                        </p>
+                        {% if method.api_key %}
+                        <p class="text-[10px] text-slate-500 mt-0.5 font-mono">
+                            Key: {{ method.api_key|slice:":12" }}••••
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Right: Toggle + Actions -->
+                <div class="flex items-center gap-3">
+                    <!-- Active Toggle (AJAX) -->
+                    <button @click="
+                        fetch('{% url 'custom_admin:payment_method_toggle' method.pk %}', {
+                            method: 'POST',
+                            headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                        })
+                        .then(r => r.json())
+                        .then(d => { active = d.is_active; })
+                    "
+                    :class="active ? 'bg-emerald-500' : 'bg-slate-700'"
+                    class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
+                    :title="active ? 'Click to disable' : 'Click to enable'">
+                        <span :class="active ? 'translate-x-6' : 'translate-x-1'"
+                              class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform shadow-sm"></span>
+                    </button>
+
+                    <span x-text="active ? 'Active' : 'Inactive'"
+                          :class="active ? 'text-emerald-400' : 'text-slate-500'"
+                          class="text-xs font-medium w-14"></span>
+
+                    <!-- Edit -->
+                    <a href="{% url 'custom_admin:payment_method_edit' method.pk %}"
+                       class="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition"
+                       title="Edit">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    </a>
+
+                    <!-- Delete -->
+                    <form method="post" action="{% url 'custom_admin:payment_method_delete' method.pk %}"
+                          onsubmit="return confirm('Remove {{ method.display_name }} payment method?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
+                                title="Delete">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="flex flex-col items-center justify-center py-20 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div class="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-white mb-1">No Payment Methods Configured</h3>
+        <p class="text-sm text-slate-400 mb-6 text-center max-w-sm">
+            Add your first payment gateway to start accepting payments at checkout.
+        </p>
+        <a href="{% url 'custom_admin:payment_method_create' %}"
+           class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm rounded-xl transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Add First Payment Method
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

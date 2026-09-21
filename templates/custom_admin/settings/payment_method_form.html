@@ -1,0 +1,145 @@
+{% extends 'custom_admin/admin_base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-xs text-slate-400 mb-6">
+        <a href="{% url 'custom_admin:payment_method_list' %}" class="hover:text-sky-400 transition">Payment Methods</a>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        <span class="text-slate-300">{{ title }}</span>
+    </nav>
+
+    <form method="post" enctype="multipart/form-data" novalidate class="space-y-5">
+        {% csrf_token %}
+
+        <!-- ── Gateway Selection (hidden on edit) ─────────────────────────── -->
+        {% if not is_edit %}
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Gateway</h2>
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">
+                    Payment Gateway <span class="text-rose-400">*</span>
+                </label>
+                {{ form.gateway }}
+                {% if form.gateway.errors %}
+                    <p class="text-rose-400 text-xs mt-1">{{ form.gateway.errors.0 }}</p>
+                {% endif %}
+                <p class="text-xs text-slate-500 mt-1">Only ungonfigured gateways are shown. Each gateway can only be added once.</p>
+            </div>
+        </div>
+        {% else %}
+        <!-- Read-only badge showing current gateway on edit -->
+        <div class="flex items-center gap-3 px-4 py-3 bg-slate-800/60 border border-slate-700 rounded-xl">
+            <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div>
+                <span class="text-xs text-slate-400">Gateway</span>
+                <p class="text-sm font-semibold text-white">{{ method.get_gateway_display }}</p>
+            </div>
+            {{ form.gateway }}  {# disabled hidden field — value still submitted #}
+        </div>
+        {% endif %}
+
+        <!-- ── Display Info ────────────────────────────────────────────────── -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Display Information</h2>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">Display Name <span class="text-rose-400">*</span></label>
+                {{ form.display_name }}
+                {% if form.display_name.errors %}<p class="text-rose-400 text-xs mt-1">{{ form.display_name.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">Description</label>
+                {{ form.description }}
+                <p class="text-xs text-slate-500 mt-1">Shown to customers at checkout (optional)</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Display Order</label>
+                    {{ form.sort_order }}
+                    <p class="text-xs text-slate-500 mt-1">Lower = shown first</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Icon / Logo</label>
+                    {% if is_edit and method.icon %}
+                        <div class="mb-2 flex items-center gap-3 p-2 bg-slate-800 border border-slate-700 rounded-lg">
+                            <img src="{{ method.icon.url }}" alt="Icon" class="w-10 h-10 object-contain">
+                            <span class="text-xs text-slate-400">Current icon</span>
+                        </div>
+                    {% endif %}
+                    {{ form.icon }}
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Status ─────────────────────────────────────────────────────── -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Status</h2>
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-white">Active</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Enable to show this method at checkout</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    {{ form.is_active }}
+                </label>
+            </div>
+        </div>
+
+        <!-- ── API Credentials ────────────────────────────────────────────── -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">API Credentials</h2>
+                <span class="px-2 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full">
+                    Stored in plain text — use env vars in production
+                </span>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">API Key / Merchant ID</label>
+                {{ form.api_key }}
+                <p class="text-xs text-slate-500 mt-1">Leave empty for gateways that don't require it (e.g. Cash on Delivery)</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">API Secret / Password</label>
+                {{ form.api_secret }}
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div>
+                    <p class="text-sm font-medium text-white">Sandbox / Test Mode</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Use sandbox environment instead of live</p>
+                </div>
+                {{ form.sandbox_mode }}
+            </div>
+        </div>
+
+        <!-- ── Extra Config ───────────────────────────────────────────────── -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Extra Configuration (JSON)</h2>
+            {{ form.extra_config }}
+            {% if form.extra_config.errors %}<p class="text-rose-400 text-xs mt-1">{{ form.extra_config.errors.0 }}</p>{% endif %}
+            <p class="text-xs text-slate-500 mt-1">Optional JSON for gateway-specific settings (e.g. webhook URLs, store IDs)</p>
+        </div>
+
+        <!-- ── Actions ────────────────────────────────────────────────────── -->
+        <div class="flex items-center gap-3 pb-4">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm rounded-xl transition shadow-lg shadow-sky-500/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                {% if is_edit %}Update Method{% else %}Add Method{% endif %}
+            </button>
+            <a href="{% url 'custom_admin:payment_method_list' %}"
+               class="px-5 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-sm font-medium rounded-xl transition">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
