@@ -7,7 +7,8 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings as django_settings
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Sum
+from django.db.models import Sum, Count, Q
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -90,6 +91,101 @@ def admin_logout(request):
     return redirect('custom_admin:login')
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Settings — Admin User List
+# ──────────────────────────────────────────────────────────────────────────────
+@admin_required
+def settings_admin_list(request):
+    admins = (
+        User.objects
+        .filter(is_staff=True)
+        .annotate(order_count=Count('orders'))
+        .order_by('-is_superuser', 'username')
+    )
+    context = {
+        'admins':        admins,
+        'total_admins':  admins.count(),
+        'superuser_count': admins.filter(is_superuser=True).count(),
+    }
+    return render(request, 'custom_admin/settings/admin_list.html', context)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Settings — Change Password
+# ──────────────────────────────────────────────────────────────────────────────
+@admin_required
+def settings_change_password(request):
+    if request.method == 'POST':
+        form = ChangePasswordForm(request.POST)
+        if form.is_valid():
+            current  = form.cleaned_data['current_password']
+            new_pwd  = form.cleaned_data['new_password']
+
+            # Verify current password
+            if not request.user.check_password(current):
+                form.add_error('current_password', 'Current password is incorrect.')
+            else:
+                request.user.set_password(new_pwd)
+                request.user.save()
+                # Keep the user logged in after password change
+                update_session_auth_hash(request, request.user)
+                messages.success(request, 'Password changed successfully.')
+                return redirect('custom_admin:settings_change_password')
+    else:
+        form = ChangePasswordForm()
+
+    return render(request, 'custom_admin/settings/change_password.html', {'form': form})
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Settings — Promote / Demote Admin
+# ──────────────────────────────────────────────────────────────────────────────
+@admin_required
+def settings_admin_role_toggle(request, pk):
+    """Toggle is_superuser (Staff -> Superuser or Superuser -> Staff)."""
+    if not request.user.is_superuser:
+        messages.error(request, 'Only superusers can change admin roles.')
+        return redirect('custom_admin:settings_admin_list')
+
+    admin = get_object_or_404(User, pk=pk, is_staff=True)
+
+    # Prevent self-demotion
+    if admin == request.user:
+        messages.error(request, 'You cannot change your own role.')
+        return redirect('custom_admin:settings_admin_list')
+
+    if request.method == 'POST':
+        admin.is_superuser = not admin.is_superuser
+        admin.save(update_fields=['is_superuser'])
+        role = 'Superuser' if admin.is_superuser else 'Staff'
+        messages.success(request, f'"{admin.username}" is now {role}.')
+
+    return redirect('custom_admin:settings_admin_list')
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Settings — Remove Admin (revoke staff access)
+# ──────────────────────────────────────────────────────────────────────────────
+@admin_required
+def settings_admin_remove(request, pk):
+    """Remove admin privileges (set is_staff=False, is_superuser=False)."""
+    if not request.user.is_superuser:
+        messages.error(request, 'Only superusers can remove admins.')
+        return redirect('custom_admin:settings_admin_list')
+
+    admin = get_object_or_404(User, pk=pk, is_staff=True)
+
+    if admin == request.user:
+        messages.error(request, 'You cannot remove your own admin access.')
+        return redirect('custom_admin:settings_admin_list')
+
+    if request.method == 'POST':
+        admin.is_staff       = False
+        admin.is_superuser   = False
+        admin.save(update_fields=['is_staff', 'is_superuser'])
+        messages.success(request, f'Admin access removed for "{admin.username}".')
+
+    return redirect('custom_admin:settings_admin_list')
 # ═══════════════════════════════════════════════════════════════════════════════
 # SITE SETTINGS
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -614,4 +710,84 @@ def admin_reset_password(request, uidb64, token):
     return render(request, 'custom_admin/reset_password_form.html', {
         'uidb64': uidb64, 'token': token, 'username': user.username
     })
+
+@admin_required
+def customer_list(request):
+    qs = (
+        User.objects
+        .filter(is_staff=False, is_superuser=False)
+        .annotate(order_count=Count('orders'))
+        .order_by('-id')
+    )
+
+    # ── Search ──
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(
+            Q(username__icontains=q) |
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(email__icontains=q) |
+            Q(phone_number__icontains=q)
+        )
+
+    # ── Status filter ──
+    status = request.GET.get('status', '').strip()
+    if status == 'active':
+        qs = qs.filter(is_blocked=False)
+    elif status == 'blocked':
+        qs = qs.filter(is_blocked=True)
+
+    # ── Summary counts (always on full customer base) ──
+    total_customers = User.objects.filter(is_staff=False, is_superuser=False).count()
+    active_count    = User.objects.filter(is_staff=False, is_superuser=False, is_blocked=False).count()
+    blocked_count   = User.objects.filter(is_staff=False, is_superuser=False, is_blocked=True).count()
+
+    # ── Pagination ──
+    paginator   = Paginator(qs, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj    = paginator.get_page(page_number)
+
+    context = {
+        'customers':       page_obj,
+        'total_customers': total_customers,
+        'active_count':    active_count,
+        'blocked_count':   blocked_count,
+        'q':               q,
+        'status':          status,
+    }
+    return render(request, 'custom_admin/customers/customer_list.html', context)
+
+
+@admin_required
+def customer_detail(request, pk):
+    customer = get_object_or_404(
+        User.objects.annotate(order_count=Count('orders')),
+        pk=pk, is_staff=False, is_superuser=False
+    )
+    orders = customer.orders.order_by('-created_at')
+    total_spent = orders.filter(status='DELIVERED').aggregate(
+        total=Sum('total_amount')
+    )['total'] or 0
+
+    context = {
+        'customer':    customer,
+        'orders':      orders,
+        'total_spent': total_spent,
+    }
+    return render(request, 'custom_admin/customers/customer_detail.html', context)
+
+
+@admin_required
+@require_POST
+def customer_block_toggle(request, pk):
+    customer = get_object_or_404(User, pk=pk, is_staff=False, is_superuser=False)
+    customer.is_blocked = not customer.is_blocked
+    customer.save(update_fields=['is_blocked'])
+    action = 'blocked' if customer.is_blocked else 'unblocked'
+    messages.success(request, f'Customer "{customer.username}" has been {action}.')
+    next_url = request.META.get('HTTP_REFERER')
+    if next_url:
+        return redirect(next_url)
+    return redirect('custom_admin:customer_detail', pk=pk)
 

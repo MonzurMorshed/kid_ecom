@@ -55,4 +55,12 @@ urlpatterns = [
     # ── Activity Log ───────────────────────────────────────────────────────────
     path('activity-log/', views.activity_log, name='activity_log'),
     path('activity-log/clear/', views.activity_log_clear, name='activity_log_clear'),
+
+    # ── Customers ───────────────────────────────────────────────────────────
+    path('customers/', views.customer_list, name='customer_list'),
+    path('customers/<int:pk>/', views.customer_detail, name='customer_detail'),
+    path('customers/<int:pk>/toggle/', views.customer_block_toggle, name='customer_block_toggle'),
+    # path('customers/<int:pk>/edit/', views.customer_edit, name='customer_edit'),
+    # path('customers/<int:pk>/delete/', views.customer_delete, name='customer_delete'),
+
 ]

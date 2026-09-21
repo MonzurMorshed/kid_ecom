@@ -1,4 +1,4 @@
-﻿================================================================================
+================================================================================
   kid_ecom -- Full Ecommerce Checklist
   Legend: [x] Done  [~] Partial/In Progress  [ ] Missing  [*] Future/Optional
   Last Updated: 2026-09-21
@@ -35,7 +35,7 @@ Cart System:
   [ ] Cart model (session-based or DB-based)
   [ ] CartItem model
 
-Site Settings & Content:
+Site Settings & Admin / Content System:
   [x] SiteSettings model (singleton: name, tagline, email, phone, address,
       logo, favicon, currency, shipping charge, tax rate, social links,
       maintenance mode)
@@ -45,6 +45,9 @@ Site Settings & Content:
       overlay_opacity, sort_order, is_active)
   [x] Banner model (title, subtitle, image, link, position, size, badge,
       schedule start/end, sort_order, is_active)
+  [x] AdminProfile model (user, role: superadmin/manager/staff, avatar, notes)
+  [x] ActivityLog model (actor, action, description, target_type, target_id,
+      ip_address, timestamp)
 
 
 --------------------------------------------------------------------------------
@@ -108,403 +111,9 @@ Storefront Navigation:
 --------------------------------------------------------------------------------
 
 Auth:
-  [x] Register view + template
-  [x] Login view + template
-  [x] Logout view
-  [ ] Email verification
-  [ ] Password reset (Forgot password)
-  [ ] Change password
-
-Profile:
-  [ ] Profile view + template  (profile.html is currently empty)
-  [ ] Edit profile (name, phone, avatar)
-  [ ] Saved addresses (add / edit / delete)
-  [ ] Order history list
-  [ ] Order detail view (tracking status)
-  [ ] Wishlist page
-  [ ] Review history
-
-
---------------------------------------------------------------------------------
-4. ADMIN PANEL  (/admin/)
---------------------------------------------------------------------------------
-
-Auth:
-  [x] Admin Login
-  [x] Admin Register
-  [x] Admin Logout
-  [x] @admin_required decorator
-  [x] Admin forgot password  (token email -> reset form, 1-hour expiry)
-
-Dashboard:
-  [x] Total sales (Completed orders)
-  [x] Total orders count
-  [x] Active customers count
-  [x] Low stock products list
-  [x] Recent 10 orders table
-  [x] BUG FIX: status filter was 'Completed', fixed to 'DELIVERED'
-  [ ] Sales chart (monthly / weekly)
-  [ ] Revenue graph
-  [ ] Top selling products
-  [ ] Order status breakdown
-  [ ] Date range filter
-
-Category Management:
-  [x] Category list
-  [x] Category create (with parent/subcategory, image)
-  [x] Category update
-  [ ] Category delete
-  [ ] Category active/inactive quick toggle
-
-Brand Management:
-  [ ] Brand list view + URL
-  [ ] Brand create
-  [ ] Brand update
-  [ ] Brand delete
-  [ ] Brand logo upload
-
-Product Management:
-  [x] Product list (paginated, soft-delete filtered)
-  [x] Product create (images, options, variants)
-  [x] Product detail
-  [x] Product update
-  [x] Product soft delete
-  [ ] Product restore  (model method exists, no view/URL)
-  [ ] Trash / Recycle bin (soft-deleted products list)
-  [x] Product search & filter (by category, brand, status)
-  [x] Quick toggle active/inactive
-  [ ] Bulk actions (delete, activate, deactivate)
-  [ ] Product clone / duplicate
-
-Options & Variants:
-  [x] Option add
-  [x] Option delete
-  [x] Option value add
-  [x] Option value delete
-  [x] Variant add
-  [x] Variant delete
-  [ ] Variant update (inline edit)
-  [ ] Variant image upload (per variant)
-
-Product Images:
-  [x] Featured image upload
-  [x] Gallery images upload
-  [x] Image delete
-  [ ] Image reorder (drag & drop)
-  [ ] Image alt text
-
-Import / Export:
-  [x] CSV export
-  [x] CSV import (with variant support)
-  [x] Sample CSV download
-  [ ] Excel (XLSX) export
-
-Order Management:
-  [x] Order list view + URL
-  [x] Order detail view + URL
-  [ ] Order status update (PENDING -> CONFIRMED -> PROCESSING -> DELIVERED)
-  [ ] Order cancel
-  [ ] Order filter by status / date
-  [ ] Order search by customer / ID
-  [x] Order invoice / print view
-  [ ] Order export to CSV
-
-Customer Management:
-  [ ] Customer list  (is_customer=True)
-  [ ] Customer detail view
-  [ ] Customer block / unblock  (field exists, no view)
-  [ ] Customer search / filter
-  [ ] Customer order history
-
-Coupon / Discount Management:
-  [ ] Coupon model
-  [ ] Coupon list
-  [ ] Coupon create (code, type: flat/percent, min order, expiry)
-  [ ] Coupon deactivate / delete
-
-Content Management  (NEW):
-  [x] Hero Slider list  (/admin/content/slider/)
-  [x] Hero Slider create  (image, title, subtitle, button, position, overlay)
-  [x] Hero Slider edit
-  [x] Hero Slider AJAX toggle active/inactive
-  [x] Hero Slider delete
-  [x] Banner list  (/admin/content/banners/)
-  [x] Banner create  (image, title, badge, position, size, schedule)
-  [x] Banner edit
-  [x] Banner AJAX toggle active/inactive
-  [x] Banner delete
-
-Site Settings  (NEW):
-  [x] SiteSettings form  (5-tab: General, Currency, Shipping & Tax,
-      Social Links, Maintenance)  (/admin/settings/)
-  [x] Singleton get_or_create pattern
-  [x] PaymentMethod list  (/admin/settings/payment-methods/)
-  [x] PaymentMethod create  (gateway, credentials, sandbox toggle, icon)
-  [x] PaymentMethod edit
-  [x] PaymentMethod AJAX toggle active/inactive
-  [x] PaymentMethod delete
-  [x] Admin user list  (/admin/admin-users/)
-  [x] Admin role / permissions  (AdminProfile: superadmin, manager, staff)
-  [x] Change admin password  (self-service + superadmin reset)
-  [x] Activity / audit log  (/admin/activity-log/)
-
-
---------------------------------------------------------------------------------
-5. PAYMENT INTEGRATION
---------------------------------------------------------------------------------
-
-  [x] PaymentMethod model with gateway choices (bKash, Nagad, Rocket,
-      SSLCommerz, Stripe, PayPal, COD, Bank Transfer)
-  [x] Admin CRUD for payment gateways + credential storage
-  [x] Sandbox / live mode toggle per gateway
-  [ ] Payment gateway API integration (SSLCommerz / bKash / Stripe)
-  [ ] Payment callback / webhook handling
-  [ ] Payment success redirect
-  [ ] Payment failure handling
-  [ ] Payment record saved in DB
-  [ ] Refund management
-
-
---------------------------------------------------------------------------------
-6. EMAIL / NOTIFICATIONS
---------------------------------------------------------------------------------
-
-  [ ] Order placed email to customer
-  [ ] Order status update email
-  [ ] Order confirmation email
-  [ ] Admin notification on new order
-  [ ] Welcome email on registration
-  [ ] Password reset email
-  [ ] HTML email templates
-
-
---------------------------------------------------------------------------------
-7. SEO & STOREFRONT QUALITY
---------------------------------------------------------------------------------
-
-  [ ] Meta title / description per page
-  [ ] Open Graph tags (for social sharing)
-  [ ] Canonical URLs
-  [ ] Product schema markup (JSON-LD)
-  [ ] sitemap.xml
-  [ ] robots.txt
-  [ ] Breadcrumb navigation
-  [ ] Custom 404 / 500 error pages
-
-
---------------------------------------------------------------------------------
-8. PERFORMANCE & SECURITY
---------------------------------------------------------------------------------
-
-  [ ] select_related / prefetch_related on all heavy views
-  [ ] Image compression on upload (Pillow)
-  [ ] Static files CDN setup
-  [ ] Django DEBUG=False production config
-  [ ] SECRET_KEY via environment variable
-  [ ] HTTPS / SSL
-  [ ] CSRF protection verified on all forms
-  [ ] Rate limiting on login
-  [ ] Database indexing on slug, is_deleted fields
-
-
---------------------------------------------------------------------------------
-9. DEPLOYMENT
---------------------------------------------------------------------------------
-
-  [ ] requirements.txt updated
-  [ ] .env file setup (SECRET_KEY, DB creds, email)
-  [ ] settings/production.py separated
-  [ ] Gunicorn + Nginx setup
-  [ ] PostgreSQL (production DB)
-  [ ] Static files collectstatic
-  [ ] Media files storage (S3 or local)
-  [ ] CI/CD pipeline
-
-
-================================================================================
-PROGRESS SUMMARY
-================================================================================
-
-  Section                    Done    Total
-  -----------------------------------------
-  Models                      13       19
-  Storefront                   0       30+
-  Customer Account             3       12
-  Admin Panel -- Core         22       50+
-  Admin Panel -- Content      10       10   NEW (complete)
-  Admin Panel -- Settings      7       11   NEW
-  Payment (model/admin)        3        9
-  Email / Notifications        0        7
-  SEO                          0        9
-  Performance & Security       0        9
-  Deployment                   0        9
-
-
-================================================================================
-RECOMMENDED BUILD ORDER
-================================================================================
-
-  Phase 1 -- Complete the Admin Panel
-    -> Brand CRUD
-    -> Order management status update (PENDING -> DELIVERED workflow)
-    -> Customer management (list, block/unblock)
-    -> Dashboard charts (Chart.js: revenue, top products)
-
-  Phase 2 -- Build the Storefront
-    -> Base template + navbar/footer
-    -> Homepage  (render HeroSlide + Banner data from DB)
-    -> Product listing + detail page
-    -> Cart system (session-based)
-    -> Checkout + Order placement
-
-  Phase 3 -- Customer Account
-    -> Profile page
-    -> Order history
-    -> Address management
-
-  Phase 4 -- Payment Gateway
-    -> SSLCommerz or bKash integration
-    -> Hook into PaymentMethod model credentials
-
-  Phase 5 -- Polish & Launch
-    -> Email notifications
-    -> SEO optimisation
-    -> Performance tuning
-    -> Deployment
-
-
-================================================================================
-CHANGE LOG
-================================================================================
-
-  2026-09-18  Checklist created. product_soft_delete view bug fixed.
-  2026-09-18  Dashboard bug fixed: total_sales filter changed from
-              status='Completed' to status='DELIVERED' (correct DB key).
-
-  2026-09-21  BUG FIX: accounts/apps.py name was 'apps.account' (broken),
-              corrected to 'accounts'.
-  2026-09-21  NEW: Site Settings module added.
-              - SiteSettings singleton model (general, currency, shipping,
-                tax, social, maintenance).
-              - Admin tabbed settings page (/admin/settings/).
-  2026-09-21  NEW: Payment Methods admin module added.
-              - PaymentMethod model (gateway, api_key, api_secret,
-                sandbox_mode, icon, sort_order, is_active).
-              - Full CRUD + AJAX toggle (/admin/settings/payment-methods/).
-              - Supported gateways: bKash, Nagad, Rocket, SSLCommerz,
-                Stripe, PayPal, COD, Bank Transfer.
-  2026-09-21  NEW: Hero Slider admin module added.
-              - HeroSlide model (image, title, subtitle, button, text
-                position, overlay opacity, sort_order, is_active).
-              - Full CRUD with visual card preview + AJAX toggle
-                (/admin/content/slider/).
-  2026-09-21  NEW: Banners admin module added.
-              - Banner model (image, title, badge, position, size,
-                link, schedule start/end, sort_order, is_active).
-              - Full CRUD + AJAX toggle (/admin/content/banners/).
-              - 7 placement positions, 3 size options, 5 badge colours.
-  2026-09-21  Sidebar updated: added Content section (Slider, Banners)
-              and Settings section (Site Settings, Payment Methods).
-
-================================================================================
-
-
-
---------------------------------------------------------------------------------
-1. DATABASE / MODELS
---------------------------------------------------------------------------------
-
-Product System:
-  [x] Category model (name, slug, parent, image, is_active)
-  [x] Brand model (name, slug, logo, description, is_active)
-  [x] Product model (title, slug, price, stock, is_active, soft delete)
-  [x] ProductOption model (Size, Color, etc.)
-  [x] ProductOptionValue model (Small, Red, etc.)
-  [x] ProductVariant model (SKU, price_override, stock, image)
-  [x] ProductImage model (gallery + featured)
-
-Order System:
-  [x] Order model (user, address, total, status, timestamps)
-  [x] OrderItem model (product, variant, qty, price)
-  [ ] Coupon / Discount model
-  [ ] ShippingMethod model
-  [ ] Payment model (transaction ID, gateway, status)
-
-User / Account System:
-  [x] Custom User model (phone, address, is_customer, is_blocked)
-  [ ] UserAddress model (multiple saved addresses)
-  [ ] Wishlist model
-  [ ] Review / Rating model
-
-Cart System:
-  [ ] Cart model (session-based or DB-based)
-  [ ] CartItem model
-
-
---------------------------------------------------------------------------------
-2. STOREFRONT (Customer-facing)
---------------------------------------------------------------------------------
-
-Homepage:
-  [ ] Homepage URL + view  (/)
-  [ ] Hero banner / slider
-  [ ] Featured categories section
-  [ ] Featured products section
-  [ ] New arrivals section
-  [ ] Promotional banner
-
-Product Listing Page:
-  [ ] All products listing  (/products/)
-  [ ] Category filter  (/category/<slug>/)
-  [ ] Brand filter
-  [ ] Price range filter
-  [ ] Sort by (price, newest, popularity)
-  [ ] Pagination
-  [ ] Search bar
-
-Product Detail Page:
-  [ ] Product detail view  (/products/<slug>/)
-  [ ] Image gallery / thumbnail switcher
-  [ ] Variant selector (Size, Color -> dynamic price/stock)
-  [ ] Add to Cart button
-  [ ] Add to Wishlist
-  [ ] Stock availability indicator
-  [ ] Product description tab
-  [ ] Related products
-  [ ] Customer reviews section
-
-Cart:
-  [ ] Cart view  (/cart/)
-  [ ] Add to cart
-  [ ] Update quantity
-  [ ] Remove item
-  [ ] Cart total calculation
-  [ ] Coupon / discount code apply
-  [ ] Proceed to checkout button
-
-Checkout:
-  [ ] Checkout view  (/checkout/)
-  [ ] Shipping address form
-  [ ] Order summary display
-  [ ] Payment method selection
-  [ ] Place order button
-  [ ] Order confirmation page  (/order/success/<id>/)
-
-Storefront Navigation:
-  [ ] Navbar (logo, search, cart icon with count, login/profile)
-  [ ] Footer (links, social, contact)
-  [ ] Mobile responsive layout
-  [ ] Storefront base template
-
-
---------------------------------------------------------------------------------
-3. CUSTOMER ACCOUNT
---------------------------------------------------------------------------------
-
-Auth:
-  [x] Register view + template
-  [x] Login view + template
-  [x] Logout view
+  [x] Register view + template  (accounts:register)
+  [x] Login view + template  (accounts:login)
+  [x] Logout view  (accounts:logout)
   [ ] Email verification
   [ ] Password reset (Forgot password)
   [ ] Change password
@@ -562,9 +171,9 @@ Product Management:
   [x] Product detail
   [x] Product update
   [x] Product soft delete
-  [x] Product trash (soft-deleted list)
-  [x] Product restore (view + URL exists)
-  [x] Product permanent delete
+  [x] Product trash (soft-deleted list: product_trash view + URL)
+  [x] Product restore (product_restore view + URL)
+  [x] Product permanent delete (product_permanent_delete view + URL)
   [x] Product search & filter (by category, brand, status)
   [ ] Quick toggle active/inactive (no dedicated toggle URL/view)
   [ ] Bulk actions (delete, activate, deactivate)
@@ -594,23 +203,25 @@ Import / Export:
   [ ] Excel (XLSX) export
 
 Order Management:
-  [x] Order list (paginated, search by name/email/phone, filter by status)
+  [x] Order list (paginated, search by customer, filter by status)
   [x] Order detail view
   [x] Order status update (view + URL: order_update)
   [x] Order cancel (view + URL: order_cancel)
   [x] Order soft delete / trash / restore / permanent delete
   [x] Order invoice / print view
-  [~] Order filter by status  (works; date filter missing)
+  [x] Order filter by status
+  [ ] Order filter by date
   [~] Order search  (name/email/phone works; order ID search missing)
   [ ] Order export to CSV  (URL/view stub only -- not implemented)
+  [ ] Order import  (stub only)
 
 Customer Management:
-  [x] Customer list view  (user_list in accounts/views.py)
-  [x] Customer detail view  (user_detail in accounts/views.py)
-  [x] Customer views wired to admin panel URL (/admin/customers/)
-  [x] Customer block / unblock (customer_block_toggle view + button)
-  [x] Customer search / filter (by name, email, phone, status)
+  [x] Customer list (paginated, counts, search, status filter)
+  [x] Customer detail view (customer info, lifetime spend, order history)
+  [x] Customer block / unblock toggle
+  [x] Customer search & filter (by name, email, phone, active/blocked)
   [x] Customer order history in detail view
+  [x] Sidebar Customers navigation link
 
 Coupon / Discount Management:
   [ ] Coupon model
@@ -618,18 +229,43 @@ Coupon / Discount Management:
   [ ] Coupon create (code, type: flat/percent, min order, expiry)
   [ ] Coupon deactivate / delete
 
-Admin Settings:
-  [x] Admin user list (all staff/superusers with role badge)
-  [x] Admin role / permissions (promote to superuser, demote to staff)
-  [x] Change admin password (current-password verified, session preserved)
-  [ ] Activity / audit log
+Content Management:
+  [x] Hero Slider list  (/admin/content/slider/)
+  [x] Hero Slider create  (image, title, subtitle, button, position, overlay)
+  [x] Hero Slider edit
+  [x] Hero Slider AJAX toggle active/inactive
+  [x] Hero Slider delete
+  [x] Banner list  (/admin/content/banners/)
+  [x] Banner create  (image, title, badge, position, size, schedule)
+  [x] Banner edit
+  [x] Banner AJAX toggle active/inactive
+  [x] Banner delete
+
+Site Settings & Admin System:
+  [x] SiteSettings form  (5-tab: General, Currency, Shipping & Tax,
+      Social Links, Maintenance)  (/admin/settings/)
+  [x] Singleton get_or_create pattern
+  [x] PaymentMethod list  (/admin/settings/payment-methods/)
+  [x] PaymentMethod create  (gateway, credentials, sandbox toggle, icon)
+  [x] PaymentMethod edit
+  [x] PaymentMethod AJAX toggle active/inactive
+  [x] PaymentMethod delete
+  [x] Admin user list  (/admin/admin-users/)
+  [x] Admin role / permissions  (AdminProfile: superadmin, manager, staff)
+  [x] Change admin password  (self-service + superadmin reset)
+  [x] Activity / audit log  (/admin/activity-log/ with action/actor filters)
+  [x] Activity log clear  (/admin/activity-log/clear/)
 
 
 --------------------------------------------------------------------------------
 5. PAYMENT INTEGRATION
 --------------------------------------------------------------------------------
 
-  [ ] Payment gateway selection (SSLCommerz / bKash / Stripe)
+  [x] PaymentMethod model with gateway choices (bKash, Nagad, Rocket,
+      SSLCommerz, Stripe, PayPal, COD, Bank Transfer)
+  [x] Admin CRUD for payment gateways + credential storage
+  [x] Sandbox / live mode toggle per gateway
+  [ ] Payment gateway API integration (SSLCommerz / bKash / Stripe)
   [ ] Payment callback / webhook handling
   [ ] Payment success redirect
   [ ] Payment failure handling
@@ -641,12 +277,13 @@ Admin Settings:
 6. EMAIL / NOTIFICATIONS
 --------------------------------------------------------------------------------
 
+  [x] Admin password reset email  (token link via send_mail)
   [ ] Order placed email to customer
   [ ] Order status update email
   [ ] Order confirmation email
   [ ] Admin notification on new order
   [ ] Welcome email on registration
-  [ ] Password reset email
+  [ ] Customer password reset email
   [ ] HTML email templates
 
 
@@ -668,13 +305,13 @@ Admin Settings:
 8. PERFORMANCE & SECURITY
 --------------------------------------------------------------------------------
 
-  [x] select_related / prefetch_related on heavy views (orders, products)
+  [x] select_related / prefetch_related on all heavy views
+  [x] CSRF protection verified on all forms
   [ ] Image compression on upload (Pillow)
   [ ] Static files CDN setup
   [ ] Django DEBUG=False production config
   [ ] SECRET_KEY via environment variable
   [ ] HTTPS / SSL
-  [ ] CSRF protection verified on all forms
   [ ] Rate limiting on login
   [ ] Database indexing on slug, is_deleted fields
 
@@ -683,83 +320,124 @@ Admin Settings:
 9. DEPLOYMENT
 --------------------------------------------------------------------------------
 
-  [ ] requirements.txt updated
+  [x] PostgreSQL production-ready config (CONN_MAX_AGE, CONN_HEALTH_CHECKS)
+  [x] requirements.txt updated (Django, psycopg, Pillow)
   [ ] .env file setup (SECRET_KEY, DB creds, email)
   [ ] settings/production.py separated
   [ ] Gunicorn + Nginx setup
-  [ ] PostgreSQL (production DB)
   [ ] Static files collectstatic
   [ ] Media files storage (S3 or local)
   [ ] CI/CD pipeline
 
 
-================================================================================
+===============================================================================
 PROGRESS SUMMARY
-================================================================================
+===============================================================================
 
-  Section                    Done    Total
-  -----------------------------------------
-  Models                       9       15
-  Storefront                   0       30+
-  Customer Account             3       12
-  Admin Panel                 30       55+
-  Payment                      0        6
-  Email / Notifications        0        7
-  SEO                          0        8
-  Performance & Security       1        9
-  Deployment                   0        8
+  Section                    Done   Partial   Total
+  --------------------------------------------------
+  Models                      16        0       22
+  Storefront                   0        2       33
+  Customer Account             3        0       13
+  Admin Panel -- Core         30        1       40
+  Admin Panel -- Content      10        0       10
+  Admin Panel -- Settings     11        0       11
+  Customer Management          6        0        6
+  Payment (model/admin)        3        0        9
+  Email / Notifications        1        0        8
+  SEO                          0        0        8
+  Performance & Security       2        0        9
+  Deployment                   2        0        8
+  --------------------------------------------------
+  TOTAL                       84        3      177
 
 
-================================================================================
+===============================================================================
 RECOMMENDED BUILD ORDER
-================================================================================
+===============================================================================
 
-  Phase 1 -- Complete the Admin Panel
-    -> Brand CRUD
-    -> Customer management wired to admin URLs + block/unblock + search
-    -> Order export to CSV (currently stub only)
-    -> Category delete + quick toggle
+  Phase 1 -- Complete Remaining Admin Panel Features
+    -> Brand CRUD (Brand list, create, edit, delete, logo upload)
+    -> Category delete + active/inactive toggle
+    -> Dashboard charts (Chart.js: revenue graph, top products, sales trends)
+    -> Order date range filter & CSV export
 
   Phase 2 -- Build the Storefront
-    -> Base template + navbar/footer
-    -> Homepage
-    -> Product listing + detail page
+    -> Storefront base template + navbar/footer (mobile responsive)
+    -> Homepage  (render HeroSlide + Banner data from DB)
+    -> Product listing + detail page (variants, options, gallery)
     -> Cart system (session-based)
-    -> Checkout + Order placement
+    -> Checkout + Order placement (wire to PaymentMethod)
 
   Phase 3 -- Customer Account
-    -> Profile page
-    -> Order history
-    -> Address management
+    -> Profile page view & template
+    -> Order history & tracking
+    -> Saved addresses management
 
-  Phase 4 -- Payment Gateway
-    -> SSLCommerz or bKash integration
+  Phase 4 -- Payment Gateway Integration
+    -> SSLCommerz / bKash / Stripe integration
+    -> Hook into PaymentMethod credentials & sandbox mode
 
   Phase 5 -- Polish & Launch
-    -> Email notifications
-    -> SEO optimisation
-    -> Performance tuning
-    -> Deployment
+    -> Customer email notifications & HTML templates
+    -> SEO optimization (sitemap, robots.txt, schema markup)
+    -> Production settings, .env, static collection, deployment
 
 
-================================================================================
+===============================================================================
 CHANGE LOG
-================================================================================
+===============================================================================
 
   2026-09-18  Checklist created. product_soft_delete view bug fixed.
   2026-09-18  Dashboard bug fixed: total_sales filter changed from
               status='Completed' to status='DELIVERED' (correct DB key).
-  2026-09-20  Full codebase audit. Major updates:
+
+  2026-09-20  Full codebase audit:
               - Order management: status update, cancel, trash, restore,
-                permanent delete all DONE (were marked missing).
+                permanent delete all DONE.
               - Order list: search + status filter DONE.
               - Product trash, restore, permanent delete all DONE.
               - accounts app_label bug fixed (apps.accounts -> accounts).
               - DB password fixed (root -> postgres).
-              - Customer list + detail views exist in accounts/views.py
-                but not yet wired to admin panel URLs.
+              - PostgreSQL connection pooling & health checks added.
               - select_related/prefetch_related confirmed on heavy views.
-              - Order export stub only (not implemented yet).
+
+  2026-09-21  NEW: Site Settings module added.
+              - SiteSettings singleton model (general, currency, shipping,
+                tax, social, maintenance).
+              - Admin tabbed settings page (/admin/settings/).
+  2026-09-21  NEW: Payment Methods admin module added.
+              - PaymentMethod model (gateway, api_key, api_secret,
+                sandbox_mode, icon, sort_order, is_active).
+              - Full CRUD + AJAX toggle (/admin/settings/payment-methods/).
+              - Supported gateways: bKash, Nagad, Rocket, SSLCommerz,
+                Stripe, PayPal, COD, Bank Transfer.
+  2026-09-21  NEW: Hero Slider admin module added.
+              - HeroSlide model (image, title, subtitle, button, text
+                position, overlay opacity, sort_order, is_active).
+              - Full CRUD with visual card preview + AJAX toggle
+                (/admin/content/slider/).
+  2026-09-21  NEW: Banners admin module added.
+              - Banner model (image, title, badge, position, size,
+                link, schedule start/end, sort_order, is_active).
+              - Full CRUD + AJAX toggle (/admin/content/banners/).
+              - 7 placement positions, 3 size options, 5 badge colours.
+  2026-09-21  NEW: Admin User Management & Audit Log.
+              - AdminProfile model & role system (superadmin, manager, staff).
+              - Admin user listing, role toggle, and account deactivation.
+              - Change own password & superadmin reset password.
+              - ActivityLog model & audit trail (/admin/activity-log/)
+                with action & actor filters + log clearing.
+              - Admin token-based forgot/reset password email workflow.
+  2026-09-21  NEW: Customer Management wired into admin panel.
+              - Customer list (/admin/customers/) with search & status filters.
+              - Customer detail view with lifetime spend and order history.
+              - Block / Unblock customer toggle.
+              - Sidebar updated with Customer link.
+  2026-09-21  AUDIT: Cleaned up checklist.txt.
+              - Removed duplicated second half of the file.
+              - Reconciled all discrepancies across Product, Order, Customer,
+                and Settings modules.
+              - Updated progress summary and build order recommendations.
 
 ================================================================================
-

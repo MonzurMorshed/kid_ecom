@@ -5,6 +5,7 @@ from .models import SiteSettings, PaymentMethod, HeroSlide, Banner, AdminProfile
 
 User = get_user_model()
 
+INPUT_CSS = 'w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition'
 
 # ── Shared widget helpers ────────────────────────────────────────────────────
 def _input(placeholder='', type_='text'):
