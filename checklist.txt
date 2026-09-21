@@ -1,7 +1,7 @@
-================================================================================
+﻿================================================================================
   kid_ecom -- Full Ecommerce Checklist
   Legend: [x] Done  [~] Partial/In Progress  [ ] Missing  [*] Future/Optional
-  Last Updated: 2026-09-18
+  Last Updated: 2026-09-20
 ================================================================================
 
 
@@ -19,7 +19,7 @@ Product System:
   [x] ProductImage model (gallery + featured)
 
 Order System:
-  [x] Order model (user, address, total, status, timestamps)
+  [x] Order model (user, address, total, status, soft delete, timestamps)
   [x] OrderItem model (product, variant, qty, price)
   [ ] Coupon / Discount model
   [ ] ShippingMethod model
@@ -126,12 +126,11 @@ Auth:
   [ ] Admin forgot password
 
 Dashboard:
-  [x] Total sales (Completed orders)
+  [x] Total sales (Completed orders - status=DELIVERED)
   [x] Total orders count
-  [x] Active customers count
-  [x] Low stock products list
+  [x] Active customers count (is_customer=True, is_blocked=False)
+  [x] Low stock products list (stock < 5)
   [x] Recent 10 orders table
-  [x] BUG FIX: status filter was 'Completed', fixed to 'DELIVERED'
   [ ] Sales chart (monthly / weekly)
   [ ] Revenue graph
   [ ] Top selling products
@@ -140,7 +139,7 @@ Dashboard:
 
 Category Management:
   [x] Category list
-  [x] Category create (with parent/subcategory, image)
+  [x] Category create (with parent/subcategory, image, is_active)
   [x] Category update
   [ ] Category delete
   [ ] Category active/inactive quick toggle
@@ -153,15 +152,16 @@ Brand Management:
   [ ] Brand logo upload
 
 Product Management:
-  [x] Product list (paginated, soft-delete filtered)
+  [x] Product list (paginated, soft-delete filtered, search & status filter)
   [x] Product create (images, options, variants)
   [x] Product detail
   [x] Product update
   [x] Product soft delete
-  [ ] Product restore  (model method exists, no view/URL)
-  [ ] Trash / Recycle bin (soft-deleted products list)
+  [x] Product trash (soft-deleted list)
+  [x] Product restore (view + URL exists)
+  [x] Product permanent delete
   [x] Product search & filter (by category, brand, status)
-  [x] Quick toggle active/inactive
+  [ ] Quick toggle active/inactive (no dedicated toggle URL/view)
   [ ] Bulk actions (delete, activate, deactivate)
   [ ] Product clone / duplicate
 
@@ -189,21 +189,23 @@ Import / Export:
   [ ] Excel (XLSX) export
 
 Order Management:
-  [x] Order list view + URL
-  [x] Order detail view + URL
-  [ ] Order status update (PENDING -> CONFIRMED -> PROCESSING -> DELIVERED)
-  [ ] Order cancel
-  [ ] Order filter by status / date
-  [ ] Order search by customer / ID
+  [x] Order list (paginated, search by name/email/phone, filter by status)
+  [x] Order detail view
+  [x] Order status update (view + URL: order_update)
+  [x] Order cancel (view + URL: order_cancel)
+  [x] Order soft delete / trash / restore / permanent delete
   [x] Order invoice / print view
-  [ ] Order export to CSV
+  [~] Order filter by status  (works; date filter missing)
+  [~] Order search  (name/email/phone works; order ID search missing)
+  [ ] Order export to CSV  (URL/view stub only -- not implemented)
 
 Customer Management:
-  [ ] Customer list  (is_customer=True)
-  [ ] Customer detail view
-  [ ] Customer block / unblock  (field exists, no view)
-  [ ] Customer search / filter
-  [ ] Customer order history
+  [x] Customer list view  (user_list in accounts/views.py)
+  [x] Customer detail view  (user_detail in accounts/views.py)
+  [x] Customer views wired to admin panel URL (/admin/customers/)
+  [x] Customer block / unblock (customer_block_toggle view + button)
+  [x] Customer search / filter (by name, email, phone, status)
+  [x] Customer order history in detail view
 
 Coupon / Discount Management:
   [ ] Coupon model
@@ -212,9 +214,9 @@ Coupon / Discount Management:
   [ ] Coupon deactivate / delete
 
 Admin Settings:
-  [ ] Admin user list
-  [ ] Admin role / permissions
-  [ ] Change admin password
+  [x] Admin user list (all staff/superusers with role badge)
+  [x] Admin role / permissions (promote to superuser, demote to staff)
+  [x] Change admin password (current-password verified, session preserved)
   [ ] Activity / audit log
 
 
@@ -261,7 +263,7 @@ Admin Settings:
 8. PERFORMANCE & SECURITY
 --------------------------------------------------------------------------------
 
-  [ ] select_related / prefetch_related on all heavy views
+  [x] select_related / prefetch_related on heavy views (orders, products)
   [ ] Image compression on upload (Pillow)
   [ ] Static files CDN setup
   [ ] Django DEBUG=False production config
@@ -295,12 +297,12 @@ PROGRESS SUMMARY
   Models                       9       15
   Storefront                   0       30+
   Customer Account             3       12
-  Admin Panel                 22       50+
+  Admin Panel                 30       55+
   Payment                      0        6
   Email / Notifications        0        7
-  SEO                          0        9
-  Performance & Security       0        9
-  Deployment                   0        9
+  SEO                          0        8
+  Performance & Security       1        9
+  Deployment                   0        8
 
 
 ================================================================================
@@ -309,9 +311,9 @@ RECOMMENDED BUILD ORDER
 
   Phase 1 -- Complete the Admin Panel
     -> Brand CRUD
-    -> Order management (list, detail, status update)
-    -> Dashboard bug fix (status filter)
-    -> Customer management (list, block/unblock)
+    -> Customer management wired to admin URLs + block/unblock + search
+    -> Order export to CSV (currently stub only)
+    -> Category delete + quick toggle
 
   Phase 2 -- Build the Storefront
     -> Base template + navbar/footer
@@ -342,5 +344,16 @@ CHANGE LOG
   2026-09-18  Checklist created. product_soft_delete view bug fixed.
   2026-09-18  Dashboard bug fixed: total_sales filter changed from
               status='Completed' to status='DELIVERED' (correct DB key).
+  2026-09-20  Full codebase audit. Major updates:
+              - Order management: status update, cancel, trash, restore,
+                permanent delete all DONE (were marked missing).
+              - Order list: search + status filter DONE.
+              - Product trash, restore, permanent delete all DONE.
+              - accounts app_label bug fixed (apps.accounts -> accounts).
+              - DB password fixed (root -> postgres).
+              - Customer list + detail views exist in accounts/views.py
+                but not yet wired to admin panel URLs.
+              - select_related/prefetch_related confirmed on heavy views.
+              - Order export stub only (not implemented yet).
 
 ================================================================================

@@ -77,7 +77,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'kidurabd_db',
         'USER': 'postgres',
-        'PASSWORD': 'root',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
         'CONN_MAX_AGE': 60,          # reuse DB connection for 60s (avoids reconnect per request)
