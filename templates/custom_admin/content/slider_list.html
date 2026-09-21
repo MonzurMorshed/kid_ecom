@@ -1,0 +1,156 @@
+{% extends 'custom_admin/admin_base.html' %}
+{% block title %}Hero Slider{% endblock %}
+{% block page_title %}Hero Slider{% endblock %}
+
+{% block content %}
+<div>
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+            <p class="text-sm text-slate-400">Manage slides displayed in the homepage hero banner.</p>
+        </div>
+        <a href="{% url 'custom_admin:slider_create' %}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm rounded-xl transition shadow-lg shadow-sky-500/20">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Add Slide
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <p class="text-xs text-slate-400 mb-1">Total Slides</p>
+            <p class="text-2xl font-bold text-white">{{ slides|length }}</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <p class="text-xs text-slate-400 mb-1">Active</p>
+            <p class="text-2xl font-bold text-emerald-400">
+                {% with c=0 %}{% for s in slides %}{% if s.is_active %}{{ forloop.counter }}{% endif %}{% endfor %}{% endwith %}
+                {{ slides|dictsort:"is_active"|length }}
+            </p>
+        </div>
+    </div>
+
+    {% if slides %}
+    <!-- Slides Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {% for slide in slides %}
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group"
+             x-data="{ active: {{ slide.is_active|yesno:'true,false' }} }">
+
+            <!-- Slide Preview -->
+            <div class="relative h-48 bg-slate-800 overflow-hidden">
+                <img src="{{ slide.image.url }}" alt="{{ slide.title }}"
+                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+
+                <!-- Overlay preview -->
+                <div class="absolute inset-0 bg-black/{{ slide.overlay_opacity }}"></div>
+
+                <!-- Slide text preview -->
+                <div class="absolute inset-0 flex flex-col
+                    {% if slide.text_position == 'center' %}items-center justify-center text-center
+                    {% elif slide.text_position == 'right' %}items-end justify-center text-right pr-6
+                    {% else %}items-start justify-center text-left pl-6{% endif %}
+                    p-6">
+                    <h3 class="text-white font-bold text-lg drop-shadow-lg leading-tight">{{ slide.title }}</h3>
+                    {% if slide.subtitle %}
+                    <p class="text-slate-200 text-sm mt-1 drop-shadow">{{ slide.subtitle }}</p>
+                    {% endif %}
+                    {% if slide.button_text %}
+                    <span class="mt-3 px-3 py-1 text-xs font-semibold rounded-lg
+                        {% if slide.button_style == 'primary' %}bg-sky-500 text-white
+                        {% elif slide.button_style == 'secondary' %}border border-white text-white
+                        {% else %}bg-slate-900 text-white{% endif %}">
+                        {{ slide.button_text }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Order Badge -->
+                <div class="absolute top-2 left-2 w-7 h-7 rounded-full bg-slate-900/80 backdrop-blur flex items-center justify-center text-xs font-bold text-slate-300">
+                    {{ slide.sort_order }}
+                </div>
+
+                <!-- Active indicator -->
+                <div class="absolute top-2 right-2">
+                    <span :class="active ? 'bg-emerald-500' : 'bg-slate-600'"
+                          class="inline-block w-2.5 h-2.5 rounded-full ring-2 ring-slate-900"></span>
+                </div>
+            </div>
+
+            <!-- Actions Row -->
+            <div class="flex items-center justify-between px-4 py-3 border-t border-slate-800">
+                <div class="flex items-center gap-3">
+                    <!-- Toggle -->
+                    <button @click="
+                        fetch('{% url 'custom_admin:slider_toggle' slide.pk %}', {
+                            method: 'POST',
+                            headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                        }).then(r => r.json()).then(d => { active = d.is_active; })
+                    "
+                    :class="active ? 'bg-emerald-500' : 'bg-slate-700'"
+                    class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors">
+                        <span :class="active ? 'translate-x-4' : 'translate-x-1'"
+                              class="inline-block w-3.5 h-3.5 bg-white rounded-full transition-transform shadow-sm"></span>
+                    </button>
+                    <span x-text="active ? 'Active' : 'Inactive'"
+                          :class="active ? 'text-emerald-400' : 'text-slate-500'"
+                          class="text-xs font-medium"></span>
+                </div>
+
+                <div class="flex items-center gap-1">
+                    <!-- Position info -->
+                    <span class="text-xs text-slate-500 mr-2">{{ slide.get_text_position_display }} · opacity {{ slide.overlay_opacity }}%</span>
+
+                    <!-- Edit -->
+                    <a href="{% url 'custom_admin:slider_edit' slide.pk %}"
+                       class="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition" title="Edit">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    </a>
+
+                    <!-- Delete -->
+                    <form method="post" action="{% url 'custom_admin:slider_delete' slide.pk %}"
+                          onsubmit="return confirm('Delete slide &quot;{{ slide.title }}&quot;?')">
+                        {% csrf_token %}
+                        <button type="submit" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Delete">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tip -->
+    <div class="mt-6 flex items-start gap-3 p-4 bg-sky-500/5 border border-sky-500/15 rounded-xl">
+        <svg class="w-5 h-5 text-sky-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div>
+            <p class="text-sm font-medium text-sky-300">Tips</p>
+            <ul class="text-xs text-slate-400 mt-1 space-y-0.5">
+                <li>· Use <strong class="text-slate-300">Sort Order</strong> to control slide sequence (0 = first)</li>
+                <li>· Recommended image size: <strong class="text-slate-300">1920 × 700 px</strong> for best results</li>
+                <li>· Toggle slides on/off without deleting them</li>
+            </ul>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="flex flex-col items-center justify-center py-20 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div class="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-white mb-1">No Slides Yet</h3>
+        <p class="text-sm text-slate-400 mb-6 text-center max-w-sm">Add your first slide to bring the homepage hero banner to life.</p>
+        <a href="{% url 'custom_admin:slider_create' %}"
+           class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm rounded-xl transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Add First Slide
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
