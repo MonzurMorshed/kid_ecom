@@ -11,6 +11,7 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='custom_admin:dashboard', permanent=False)),
     path('django-admin/', admin.site.urls),
     path('admin/', include('custom_admin.urls', namespace='custom_admin')),
+    path('api/v1/', include('kidurabd.api', namespace='api')),
     path('accounts/', include('accounts.urls', namespace='accounts')),
 ]
 

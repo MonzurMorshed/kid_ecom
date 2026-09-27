@@ -1,0 +1,104 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6"
+    x-data="revenueChartComponent()"
+    x-init="initChart()">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-gray-800">Revenue Analytics</h2>
+            <p class="text-xs text-gray-500">Track earnings over time with dynamic date filters</p>
+        </div>
+    </div>
+
+    <!-- Chart Canvas Container -->
+    <div class="relative h-72 w-full">
+        <canvas id="revenueChart"></canvas>
+    </div>
+
+
+</div>
+
+<script>
+    function revenueChartComponent() {
+        return {
+            chart: null,
+            activeRange: 7,
+            startDate: '',
+            endDate: '',
+
+            initChart() {
+                this.setRange(7);
+            },
+
+            setRange(days) {
+                this.activeRange = days;
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - days - 1);
+
+                this.startDate = start.toISOString().split('T')[0];
+                this.endDate = end.toISOString().split('T')[0];
+
+                this.fetchChartData();
+            },
+
+            fetchChartData() {
+                fetch(`/api/v1/revenue-chart/?start_date=${this.startDate}&end_date=${this.endDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    this.renderChart(data.labels, data.data);
+                })
+                .catch(err => console.error("Error fetching revenue chart data:", err));
+            },
+
+            renderChart(labels, dataValues) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+
+            if (this.chart) {
+                this.chart.destroy();
+            }
+
+            this.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue (৳)',
+                        data: dataValues,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.08)',
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#4f46e5'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f3f4f6' },
+                            ticks: {
+                                callback: function(value) {
+                                    return '৳' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        }
+    }
+</script>

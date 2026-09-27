@@ -1,3 +1,6 @@
+from datetime import datetime
+from datetime import timedelta
+from time import timezone
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -20,6 +23,8 @@ from .decorators import admin_required
 from .forms import AdminRegisterForm, SiteSettingsForm, PaymentMethodForm, HeroSlideForm, BannerForm, AdminEditForm, AdminProfileForm, ChangePasswordForm
 from .models import SiteSettings, PaymentMethod, HeroSlide, Banner, AdminProfile, ActivityLog
 
+from django.db.models.functions import TruncDate
+
 @admin_required
 def dashboard(request):
     total_sales = Order.objects.filter(status='DELIVERED').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
@@ -35,6 +40,48 @@ def dashboard(request):
         'recent_orders': recent_orders,
     }
     return render(request, 'custom_admin/dashboard.html', context)
+
+def revenue_chart_data(request):
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    # Last 7 days
+    if not start_date_str and not end_date_str:
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=6)
+    
+    # Custom range
+    else:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+    # Filter completed orders in date range
+    orders = Order.objects.filter(
+        status='DELIVERED',
+        created_at__date__range=(start_date, end_date)
+    ).values('created_at__date') \
+    .annotate(total_sales=Sum('total_amount')) \
+    .annotate(date=TruncDate('created_at')) \
+    .order_by('created_at__date')
+    
+    order_dict = {
+        item['date'].strftime('%Y-%m-%d'): item['total_sales'] for item in orders
+    }
+
+    # Fill in missing dates with zero revenue
+    labels = []
+    data = []
+    current_date = start_date
+    while current_date <= end_date:
+        date_key = current_date.strftime('%Y-%m-%d')
+        labels.append(current_date.strftime('%b %d')) # Format: Sep 22
+        data.append(order_dict.get(date_key, 0.0))
+        current_date += timedelta(days=1)
+
+    return JsonResponse({
+        'labels': labels,
+        'data': data
+    })
 
 def admin_login(request):
     if request.user.is_authenticated and request.user.is_superuser:
