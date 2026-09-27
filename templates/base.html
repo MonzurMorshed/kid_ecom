@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#fffaf2">
+    <meta name="description"
+        content="Kidurabd — thoughtful toys for curious minds, creative hands, and every wonderfully messy moment.">
+    <title>Kidurabd — Big joy for little humans.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: '#19253b',
+                        coral: '#ff6b4d',
+                        butter: '#f6c64d',
+                        cream: '#fffaf2',
+                        mint: '#e6f0e8',
+                        softmint: '#7ac9b3'
+                    },
+                    fontFamily: {
+                        sans: ['DM Sans', 'sans-serif'],
+                        display: ['Fraunces', 'serif']
+                    },
+                    boxShadow: {
+                        toy: '0 10px 25px rgba(25,37,59,.11)',
+                        button: '0 7px 0 #df543d, 0 11px 18px rgba(223,84,61,.16)'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
+        rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        .display {
+            font-family: 'Fraunces', serif;
+        }
+
+        .hero-grid {
+            background-image: linear-gradient(rgba(25, 37, 59, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(25, 37, 59, .055) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .hero-wave {
+            clip-path: ellipse(60% 70% at 50% 100%);
+        }
+
+        .product-card:hover .product-visual {
+            transform: translateY(-5px);
+        }
+
+        .product-card:hover .product-emoji {
+            transform: scale(1.08) rotate(-4deg);
+        }
+
+        .product-visual,
+        .product-emoji {
+            transition: transform .25s cubic-bezier(.23, 1, .32, 1);
+        }
+
+        .category-card {
+            transition: transform .25s cubic-bezier(.23, 1, .32, 1), box-shadow .25s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-6px) rotate(-1deg);
+            box-shadow: 0 15px 28px rgba(25, 37, 59, .1);
+        }
+
+        .search-field {
+            width: 38px;
+            transition: width .2s ease, background .2s ease;
+        }
+
+        .search-field:focus-within {
+            width: 205px;
+            background: #f5eee4;
+        }
+
+        .search-field input {
+            width: 0;
+            transition: width .2s ease;
+        }
+
+        .search-field:focus-within input {
+            width: 155px;
+        }
+
+        .modal {
+            animation: pop .23s cubic-bezier(.23, 1, .32, 1);
+        }
+
+        @keyframes pop {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+                animation-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-cream text-ink antialiased">
+    <div class="bg-ink text-cream text-[10px] sm:text-[11px] uppercase tracking-[.12em]">
+        <div class="mx-auto flex min-h-[34px] max-w-7xl items-center justify-center gap-3 px-4 text-center">
+            <span class="text-butter">✦</span><span>Free shipping on orders over <strong
+                    class="text-butter">৳1,000</strong></span><span class="hidden sm:inline text-softmint">•</span><span
+                class="hidden sm:inline">Cash on delivery available</span><span class="text-butter">✦</span>
+        </div>
+    </div>
+
+    <header class="relative z-30 h-[72px] border-b border-ink/10 bg-cream">
+        <div class="mx-auto flex h-full max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+            <button id="menuButton"
+                class="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-[#f5eee4] lg:hidden"
+                aria-label="Open menu">☰</button>
+            <a href="#top" class="flex shrink-0 items-center gap-2">
+                <!-- <span
+                    class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b]">✦</span> -->
+                <img src="C:\Users\monzu\Downloads\kidurabd\kidurabd.png" alt="Logo" class="h-12 w-auto">
+                <span class="text-[23px] font-bold tracking-[-.075em]">Kidurabd<span class="text-coral">.</span></span>
+            </a>
+            <nav id="mainNav"
+                class="absolute left-0 right-0 top-[72px] hidden flex-col gap-5 border-b border-ink/10 bg-cream px-6 py-5 shadow-xl lg:static lg:ml-auto lg:flex lg:flex-row lg:items-center lg:gap-7 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none">
+                <a class="text-sm font-semibold text-ink/65 hover:text-coral" href="#featured">Shop</a>
+                <a class="text-sm font-semibold text-ink/65 hover:text-coral" href="#categories">Categories</a>
+                <a class="text-sm font-semibold text-ink/65 hover:text-coral" href="#play-ideas">Play ideas</a>
+                <a class="text-sm font-semibold text-ink/65 hover:text-coral" href="#story">Our story</a>
+            </nav>
+            <div class="ml-auto flex items-center gap-1 sm:gap-2">
+                <label
+                    class="search-field hidden h-10 items-center gap-2 overflow-hidden rounded-xl px-3 text-ink/60 sm:flex"
+                    aria-label="Search toys">
+                    <span>⌕</span><input id="searchInput"
+                        class="min-w-0 border-0 bg-transparent text-xs text-ink outline-none placeholder:text-ink/40"
+                        placeholder="Find a new favorite..." type="search">
+                </label>
+                <button id="wishlistButton"
+                    class="relative grid h-10 w-10 place-items-center rounded-xl text-coral hover:bg-[#f5eee4]"
+                    aria-label="Wishlist">♡<span id="wishlistCount"
+                        class="absolute right-0 top-0 hidden h-4 min-w-4 rounded-full border-2 border-cream bg-coral px-1 text-[9px] font-bold leading-3 text-white">0</span></button>
+                <button id="cartButton"
+                    class="flex h-10 items-center gap-1.5 rounded-xl bg-ink px-2.5 text-cream hover:bg-[#283b5d]"
+                    aria-label="Shopping bag"><span>▣</span><span
+                        class="hidden text-xs font-bold sm:inline">Bag</span><span id="cartCount"
+                        class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">0</span></button>
+            </div>
+        </div>
+    </header>
+
+    <main id="top">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="border-t border-ink/10 bg-cream px-4 py-14 sm:px-6 lg:px-8">
+        <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.7fr]">
+            <div><a href="#top" class="flex items-center gap-2">
+                    <!-- <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b]">✦</span> -->
+
+                    <img src="C:\Users\monzu\Downloads\kidurabd\kidurabd.png" alt="Logo" class="h-12 w-auto">
+                    <span class="text-[23px] font-bold tracking-[-.075em]">Kidurabd<span
+                            class="text-coral">.</span></span></a>
+                <p class="mt-4 text-xs leading-5 text-ink/55">Toys with a little more heart.<br>Made for big little
+                    lives.</p>
+                <div class="mt-5 flex gap-2"><button
+                        class="grid h-8 w-8 place-items-center rounded-full bg-[#f3ede3] hover:bg-coral hover:text-cream">◎</button><button
+                        class="grid h-8 w-8 place-items-center rounded-full bg-[#f3ede3] hover:bg-coral hover:text-cream">♪</button><button
+                        class="grid h-8 w-8 place-items-center rounded-full bg-[#f3ede3] hover:bg-coral hover:text-cream">f</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-8 sm:grid-cols-3">
+                <div>
+                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Shop</h4><a
+                        class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#featured">All toys</a><a
+                        class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#featured">Educational</a><a
+                        class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#featured">Plushies</a>
+                </div>
+                <div>
+                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Need help?</h4><a
+                        class="mb-2 block text-xs text-ink/55 hover:text-coral" href="mailto:hello@Kidurabd.bd">Contact
+                        us</a><a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#top">Delivery &
+                        returns</a><a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#top">Payment &
+                        safety</a>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Stay curious</h4>
+                    <p class="mb-4 text-xs leading-5 text-ink/55">Play ideas, new toys,<br>zero boring emails.</p>
+                    <form id="emailForm" class="flex border-b border-ink/30 pb-2"><input
+                            class="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-ink/40"
+                            placeholder="Your email address" type="email" required><button class="text-coral">→</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div
+            class="mx-auto mt-12 flex max-w-7xl flex-col justify-between gap-3 border-t border-ink/10 pt-5 text-[10px] text-ink/45 sm:flex-row">
+            <span>© 2025 Kidurabd Bangladesh</span><span>Secure checkout · <strong class="text-ink/70">VISA</strong> ·
+                <strong class="text-ink/70">mastercard</strong> · <strong class="text-[#e90070]">bKash</strong></span>
+        </div>
+    </footer>
+
+    <div id="modalBackdrop" class="fixed inset-0 z-50 hidden place-items-center bg-ink/55 p-5 backdrop-blur-sm">
+        <div id="quickModal"
+            class="modal relative grid w-full max-w-2xl overflow-hidden rounded-3xl bg-cream shadow-2xl sm:grid-cols-2">
+            <button id="closeModal"
+                class="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-full bg-cream/80 text-ink">×</button>
+            <div id="modalVisual" class="grid min-h-[220px] place-items-center bg-[#f9e8a8] text-8xl sm:min-h-[350px]">
+                🧸</div>
+            <div class="p-7 sm:p-9"><span id="modalType"
+                    class="text-[10px] font-bold uppercase tracking-[.18em] text-coral">Plushies</span>
+                <h2 id="modalName" class="mt-3 text-4xl font-bold leading-none">Milo the Musical Bear</h2>
+                <div class="mt-4 text-xs text-[#f4ae16]">★★★★★ <span class="text-ink/50">4.9 · 88 reviews</span></div>
+                <p id="modalDescription" class="mt-5 text-sm leading-6 text-ink/60">A super-soft singing buddy with
+                    three gentle lullabies for cozy little adventures.</p>
+                <div id="modalPrice" class="mt-5 text-xl font-bold">৳1,250</div><button id="modalAdd"
+                    class="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-coral text-xs font-bold text-cream shadow-button">Add
+                    to bag ▣</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = { filter: 'All toys', cart: 0, favorites: 0 };
+        const products = [...document.querySelectorAll('.product-card')];
+        const cartCount = document.getElementById('cartCount');
+        const wishlistCount = document.getElementById('wishlistCount');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const notify = (message) => { const note = document.createElement('div'); note.textContent = message; note.className = 'fixed bottom-5 right-5 z-[60] rounded-xl bg-ink px-4 py-3 text-xs font-bold text-cream shadow-xl'; document.body.appendChild(note); setTimeout(() => note.remove(), 2200); };
+        function setFilter(filter) { state.filter = filter; document.querySelectorAll('.filter').forEach(button => { const active = button.dataset.filter === filter; button.className = `filter rounded-full px-4 py-2 text-[11px] font-bold ${active ? 'bg-ink text-cream' : 'bg-[#f3ede3] text-ink/60'}`; }); products.forEach(card => { card.classList.toggle('hidden', filter !== 'All toys' && card.dataset.type !== filter); }); document.getElementById('featured').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => setFilter(button.dataset.filter)));
+        document.querySelectorAll('.add-to-cart').forEach(button => button.addEventListener('click', () => { state.cart++; cartCount.textContent = state.cart; notify('Toy added to your bag'); }));
+        document.querySelectorAll('.heart').forEach(button => button.addEventListener('click', () => { const active = button.dataset.active === 'true'; button.dataset.active = String(!active); button.textContent = active ? '♡' : '♥'; button.classList.toggle('text-coral', !active); state.favorites += active ? -1 : 1; wishlistCount.textContent = state.favorites; wishlistCount.classList.toggle('hidden', state.favorites === 0); notify(active ? 'Removed from wishlist' : 'Saved to wishlist'); }));
+        function openModal(card) { document.getElementById('modalVisual').textContent = card.querySelector('.product-emoji').textContent; document.getElementById('modalVisual').className = `grid min-h-[220px] place-items-center text-8xl sm:min-h-[350px] ${card.querySelector('.product-visual').className.match(/bg-\[[^\]]+\]/)?.[0] || 'bg-[#f9e8a8]'}`; document.getElementById('modalType').textContent = card.dataset.type; document.getElementById('modalName').textContent = card.dataset.name; document.getElementById('modalDescription').textContent = card.dataset.description; document.getElementById('modalPrice').textContent = card.querySelector('.font-bold').textContent; modalBackdrop.classList.remove('hidden'); modalBackdrop.classList.add('grid'); }
+        document.querySelectorAll('.quick-view').forEach(button => button.addEventListener('click', () => openModal(button.closest('.product-card'))));
+        document.getElementById('closeModal').addEventListener('click', () => modalBackdrop.classList.add('hidden')); modalBackdrop.addEventListener('click', (event) => { if (event.target === modalBackdrop) modalBackdrop.classList.add('hidden'); });
+        document.getElementById('modalAdd').addEventListener('click', () => { state.cart++; cartCount.textContent = state.cart; modalBackdrop.classList.add('hidden'); notify('Toy added to your bag'); });
+        document.getElementById('wishlistButton').addEventListener('click', () => notify(state.favorites ? `${state.favorites} saved toy${state.favorites === 1 ? '' : 's'}` : 'Your wishlist is waiting'));
+        document.getElementById('cartButton').addEventListener('click', () => notify(state.cart ? `${state.cart} item${state.cart === 1 ? '' : 's'} in your bag` : 'Your bag is empty'));
+        document.getElementById('searchInput').addEventListener('input', (event) => { const query = event.target.value.toLowerCase(); products.forEach(card => card.classList.toggle('hidden', !`${card.dataset.name} ${card.dataset.type}`.toLowerCase().includes(query) || (state.filter !== 'All toys' && card.dataset.type !== state.filter))); });
+        document.getElementById('menuButton').addEventListener('click', () => document.getElementById('mainNav').classList.toggle('hidden'));
+        document.querySelectorAll('#mainNav a').forEach(link => link.addEventListener('click', () => document.getElementById('mainNav').classList.add('hidden')));
+        document.getElementById('emailForm').addEventListener('submit', (event) => { event.preventDefault(); notify('You’re on the list — welcome to the playful side'); event.target.reset(); });
+    </script>
+</body>
+
+</html>
+    

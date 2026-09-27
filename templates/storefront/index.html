@@ -1,1 +1,19 @@
 
+{% extends "base.html" %}
+{% block content %}
+<p class="text-sm">This is a simple text</p>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    {% for cat in category %}
+    <div class="category-card flex flex-col items-center justify-center bg-white p-5 rounded-2xl hover:shadow-toy">
+        <a href="#" class="block">
+            <div class="product-visual w-32 h-32 sm:w-36 sm:h-36 bg-softmint rounded-2xl flex items-center justify-center mb-3 transition-transform">
+                <span class="text-6xl">{{ cat.emoji }}</span>
+            </div>
+        </a>
+        <a href="#" class="block">
+            <h3 class="text-center text-lg font-semibold text-ink">{{ cat.name }}</h3>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
