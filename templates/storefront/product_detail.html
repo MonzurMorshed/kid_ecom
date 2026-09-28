@@ -1,1 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
 
+{% block title %}{{ product.title }} — Kidurabd{% endblock %}
+{% block meta_description %}{{ product.description|truncatechars:160 }}{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="bg-cream border-b border-ink/10 py-3">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb">
+            <ol class="flex items-center gap-1.5 text-xs text-ink/50">
+                <li><a href="{% url 'storefront:index' %}" class="hover:text-coral">Home</a></li>
+                <li aria-hidden="true">/</li>
+                <li><a href="{% url 'storefront:category_detail' product.category.slug %}" class="hover:text-coral">{{ product.category.name }}</a></li>
+                <li aria-hidden="true">/</li>
+                <li class="font-semibold text-ink truncate max-w-[200px]" aria-current="page">{{ product.title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PRODUCT DETAIL
+══════════════════════════════════════════════════ -->
+<section class="py-10 sm:py-16" aria-label="Product details"
+         x-data="{ qty: 1, activeImage: 0 }">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-16">
+
+            <!-- Left: Images -->
+            <div>
+                <!-- Main image -->
+                <div class="rounded-3xl overflow-hidden flex items-center justify-center min-h-[320px] sm:min-h-[420px]"
+                     style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }};">
+                    {% with feat_image=product.images.all|first %}
+                    {% if feat_image %}
+                        <img src="{{ feat_image.image.url }}"
+                             alt="{{ product.title }}"
+                             class="h-64 w-64 sm:h-80 sm:w-80 object-contain">
+                    {% else %}
+                        <span class="text-[10rem] leading-none">{{ product.category.emoji|default:"🧸" }}</span>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- Thumbnail strip (if multiple images) -->
+                {% if product.images.all|length > 1 %}
+                <div class="mt-4 flex gap-3 overflow-x-auto">
+                    {% for img in product.images.all %}
+                    <button class="h-16 w-16 shrink-0 rounded-xl overflow-hidden border-2 border-transparent hover:border-coral transition-colors"
+                            @click="activeImage = {{ forloop.counter0 }}"
+                            :class="activeImage === {{ forloop.counter0 }} ? 'border-coral' : 'border-transparent'"
+                            aria-label="View image {{ forloop.counter }}">
+                        <img src="{{ img.image.url }}" alt="{{ product.title }} image {{ forloop.counter }}" class="h-full w-full object-cover">
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right: Product info -->
+            <div class="flex flex-col">
+                <!-- Category badge -->
+                <a href="{% url 'storefront:category_detail' product.category.slug %}"
+                   class="self-start text-[11px] font-bold uppercase tracking-widest text-coral hover:underline">
+                    {{ product.category.name }}
+                </a>
+
+                <!-- Title -->
+                <h1 class="mt-3 text-3xl sm:text-4xl lg:text-5xl font-bold text-ink leading-tight">{{ product.title }}</h1>
+
+                <!-- Rating -->
+                {% if product.rating %}
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="text-yellow-500 text-sm">
+                        {% with r=product.rating|floatformat:0|add:"0" %}
+                        {% for i in "12345" %}{% if forloop.counter <= r %}★{% else %}☆{% endif %}{% endfor %}
+                        {% endwith %}
+                    </span>
+                    <span class="text-xs text-muted">{{ product.rating }} / 5</span>
+                </div>
+                {% endif %}
+
+                <!-- Price -->
+                <div class="mt-5 flex items-center gap-4">
+                    <span class="text-3xl font-bold text-ink">৳{{ product.price }}</span>
+                    {% if product.compare_price %}
+                    <span class="text-lg text-muted line-through">৳{{ product.compare_price }}</span>
+                    <span class="rounded-full bg-coral px-3 py-1 text-xs font-bold text-white">Sale</span>
+                    {% endif %}
+                </div>
+
+                <!-- Flags -->
+                <div class="mt-3 flex flex-wrap gap-2">
+                    {% if product.is_bestseller %}<span class="rounded-full bg-butter px-3 py-1 text-xs font-bold text-ink">Best seller</span>{% endif %}
+                    {% if product.is_new %}<span class="rounded-full bg-softmint px-3 py-1 text-xs font-bold text-ink">New arrival</span>{% endif %}
+                    {% if product.is_featured %}<span class="rounded-full bg-lavender px-3 py-1 text-xs font-bold text-ink">Featured</span>{% endif %}
+                </div>
+
+                <!-- Description -->
+                {% if product.description %}
+                <p class="mt-6 text-sm text-ink/65 leading-relaxed">{{ product.description }}</p>
+                {% endif %}
+
+                <!-- Variants -->
+                {% if product.variants.all %}
+                <div class="mt-6">
+                    <span class="text-xs font-bold uppercase tracking-widest text-ink/50">Options</span>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        {% for variant in product.variants.all %}
+                        {% if variant.is_active %}
+                        <button class="rounded-xl border-2 border-ink/15 px-4 py-2 text-xs font-bold hover:border-coral transition-colors">
+                            {{ variant.sku }}
+                        </button>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Quantity + Add to cart -->
+                <div class="mt-8 flex items-center gap-4">
+                    <!-- Quantity control -->
+                    <div class="flex items-center gap-0 rounded-2xl border border-ink/15 overflow-hidden">
+                        <button @click="qty = Math.max(1, qty - 1)"
+                                class="h-12 w-12 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-lg"
+                                aria-label="Decrease quantity">−</button>
+                        <span class="w-10 text-center text-sm font-bold" x-text="qty" aria-live="polite"></span>
+                        <button @click="qty = qty + 1"
+                                class="h-12 w-12 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-lg"
+                                aria-label="Increase quantity">+</button>
+                    </div>
+
+                    <!-- Add to bag -->
+                    <button class="add-to-cart flex-1 flex items-center justify-center gap-2 rounded-2xl bg-coral px-6 py-4 text-sm font-bold text-white shadow-button hover:bg-coral/90 active:translate-y-0.5 transition-all"
+                            aria-label="Add {{ product.title }} to bag">
+                        Add to bag ▣
+                    </button>
+
+                    <!-- Wishlist -->
+                    <button class="toggle-favorite grid h-12 w-12 place-items-center rounded-2xl border border-ink/15 text-xl hover:border-coral hover:text-coral transition-colors"
+                            data-active="false"
+                            aria-label="Save to wishlist">♡</button>
+                </div>
+
+                <!-- Delivery note -->
+                <div class="mt-6 rounded-2xl bg-mint/50 px-5 py-4 text-xs text-ink/60 leading-relaxed">
+                    🚚 <strong class="text-ink">Free delivery</strong> on orders over ৳1,000 ·
+                    📦 Usually ships within 1-2 business days ·
+                    ↩ 7-day hassle-free returns
+                </div>
+
+                {% if product.brand %}
+                <p class="mt-4 text-xs text-ink/40">Brand: <span class="font-semibold text-ink/60">{{ product.brand.name }}</span></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     RELATED PRODUCTS
+══════════════════════════════════════════════════ -->
+{% if related_products %}
+<section class="py-14 sm:py-16 bg-[#fffdf4]" aria-label="Related products">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex items-end justify-between mb-8">
+            <h2 class="text-3xl font-bold text-ink">
+                More <em class="not-italic text-coral">{{ product.category.name|lower }}</em> toys.
+            </h2>
+            <a href="{% url 'storefront:category_detail' product.category.slug %}"
+               class="text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                View all →
+            </a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for p in related_products %}
+            {% include "storefront/partials/product_card.html" with product=p %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

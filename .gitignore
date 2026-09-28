@@ -1,7 +1,9 @@
 venv/
+kidurabd_env/
 *.pyc
 __pycache__/
 db.sqlite3
 .env
 media/
 landing-page.html
+prompt.txt

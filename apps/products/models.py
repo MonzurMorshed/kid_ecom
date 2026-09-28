@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 
@@ -25,6 +26,22 @@ class Category(models.Model):
         null=True,
     )
 
+    # Storefront display fields
+    description = models.CharField(max_length=255, blank=True, default="")
+    theme_color = models.CharField(
+        max_length=30,
+        blank=True,
+        default="#e6f0e8",
+        help_text="Pastel hex colour used for this category's card background.",
+    )
+    emoji = models.CharField(
+        max_length=10,
+        blank=True,
+        default="🧸",
+        help_text="Single emoji representing this category.",
+    )
+    display_order = models.PositiveSmallIntegerField(default=0)
+
     is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -33,12 +50,11 @@ class Category(models.Model):
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
-        ordering = ["created_at"]
+        ordering = ["display_order", "created_at"]
 
     def __str__(self):
         if self.parent:
             return f"{self.parent} > {self.name}"
-
         return self.name
 
     def save(self, *args, **kwargs):
@@ -46,6 +62,9 @@ class Category(models.Model):
             from django.utils.text import slugify
             self.slug = slugify(self.name, allow_unicode=True)
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("storefront:category_detail", kwargs={"category_slug": self.slug})
 
     @property
     def is_subcategory(self):
@@ -122,10 +141,30 @@ class Product(models.Model):
         decimal_places=2,
     )
 
+    # Compare-at / original price (for sale displays)
+    compare_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text="Original price before discount. Leave blank if not on sale.",
+    )
+
     # For simple product.
     # Variant product stock should ideally be managed
     # from ProductVariant.stock.
     stock = models.PositiveIntegerField(default=0)
+
+    # Storefront flags
+    is_featured = models.BooleanField(default=False)
+    is_bestseller = models.BooleanField(default=False)
+    is_new = models.BooleanField(default=False)
+    rating = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        default=0.0,
+        help_text="Average rating out of 5.",
+    )
 
     is_active = models.BooleanField(default=True)
 
@@ -143,6 +182,9 @@ class Product(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse("storefront:product_detail", kwargs={"slug": self.slug})
 
     def soft_delete(self):
         """Mark product as deleted without removing from DB."""

@@ -1,0 +1,84 @@
+{% comment %}
+Reusable product card partial.
+Usage: {% include "storefront/partials/product_card.html" with product=product %}
+{% endcomment %}
+{% load static %}
+
+<article class="product-card group relative rounded-2xl border border-ink/5 bg-white overflow-hidden hover:shadow-toy transition-shadow">
+
+    <!-- Image / visual panel -->
+    <a href="{{ product.get_absolute_url }}" class="block" tabindex="-1" aria-hidden="true">
+        <div class="product-visual relative flex min-h-[180px] sm:min-h-[220px] items-center justify-center overflow-hidden"
+             style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }};">
+
+            {% with feat_image=product.images.all|first %}
+            {% if feat_image %}
+                <img src="{{ feat_image.image.url }}"
+                     alt="{{ product.title }}"
+                     class="h-36 w-36 sm:h-44 sm:w-44 object-contain">
+            {% else %}
+                <span class="product-emoji text-7xl sm:text-8xl leading-none">
+                    {{ product.category.emoji|default:"🧸" }}
+                </span>
+            {% endif %}
+            {% endwith %}
+
+            <!-- Badges -->
+            <div class="absolute left-3 top-3 flex flex-col gap-1">
+                {% if product.is_new %}
+                <span class="rounded-full bg-softmint px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-ink">New</span>
+                {% endif %}
+                {% if product.is_bestseller %}
+                <span class="rounded-full bg-butter px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-ink">Best seller</span>
+                {% endif %}
+                {% if product.compare_price %}
+                <span class="rounded-full bg-coral px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">Sale</span>
+                {% endif %}
+            </div>
+
+            <!-- Favorite button -->
+            <button class="toggle-favorite absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm text-ink/40 hover:text-coral transition-colors"
+                    data-active="false"
+                    aria-label="Save {{ product.title }} to wishlist">♡</button>
+        </div>
+    </a>
+
+    <!-- Card body -->
+    <div class="p-4">
+        <!-- Category badge -->
+        <span class="text-[9px] font-bold uppercase tracking-widest text-coral">{{ product.category.name }}</span>
+
+        <!-- Title -->
+        <h3 class="mt-1">
+            <a href="{{ product.get_absolute_url }}"
+               class="font-bold text-ink text-sm leading-snug hover:text-coral transition-colors line-clamp-2">
+                {{ product.title }}
+            </a>
+        </h3>
+
+        <!-- Rating (if available) -->
+        {% if product.rating %}
+        <div class="mt-1 text-[11px] text-yellow-500">
+            {% with rating_int=product.rating|floatformat:0 %}
+            {% for i in "12345" %}
+            {% if forloop.counter <= rating_int|add:"0" %}★{% else %}☆{% endif %}
+            {% endfor %}
+            {% endwith %}
+            <span class="text-ink/40 ml-1">{{ product.rating }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Price row -->
+        <div class="mt-2 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-ink">৳{{ product.price }}</span>
+                {% if product.compare_price %}
+                <span class="text-xs text-muted line-through">৳{{ product.compare_price }}</span>
+                {% endif %}
+            </div>
+            <!-- Quick add-to-cart -->
+            <button class="add-to-cart flex h-8 w-8 items-center justify-center rounded-xl bg-coral text-white hover:bg-coral/90 transition-colors text-sm"
+                    aria-label="Add {{ product.title }} to bag">+</button>
+        </div>
+    </div>
+</article>

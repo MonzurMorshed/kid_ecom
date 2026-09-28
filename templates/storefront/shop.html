@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Shop All Toys — Kidurabd{% endblock %}
+{% block meta_description %}Browse all children's toys at Kidurabd — educational, outdoor, plushies, creative, and more.{% endblock %}
+
+{% block content %}
+
+<!-- Hero strip -->
+<section class="bg-mint py-14 sm:py-20" aria-label="Shop header">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+        <span class="text-[11px] font-bold uppercase tracking-widest text-coral">All toys</span>
+        <h1 class="mt-3 text-5xl sm:text-6xl font-bold text-ink">
+            Find their next <em class="not-italic text-coral">obsession.</em>
+        </h1>
+        <p class="mt-4 text-base text-ink/60 max-w-lg mx-auto">
+            Thoughtfully chosen toys across every category — from educational adventures to the softest plush companions.
+        </p>
+    </div>
+</section>
+
+<!-- Category chooser -->
+<section class="py-14 sm:py-16" aria-label="Shop by category">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-ink mb-8">Shop by category</h2>
+        {% if categories %}
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for cat in categories %}
+            <a href="{% url 'storefront:category_detail' cat.slug %}"
+               class="category-card group block rounded-3xl p-6 sm:p-8 text-center border border-ink/5 hover:border-transparent"
+               style="background-color: {{ cat.theme_color|default:'#e6f0e8' }};">
+                <div class="mb-3 text-5xl leading-none">{{ cat.emoji|default:"🧸" }}</div>
+                <h3 class="text-base font-bold text-ink group-hover:text-coral transition-colors">{{ cat.name }}</h3>
+                {% if cat.description %}<p class="mt-1 text-xs text-ink/55">{{ cat.description }}</p>{% endif %}
+                <span class="mt-3 inline-block text-[11px] font-bold text-ink/40 group-hover:text-coral transition-colors">Shop now →</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-10">No categories yet.</p>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

@@ -1,19 +1,239 @@
-
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Kidurabd — Big joy for little humans.{% endblock %}
+
 {% block content %}
-<p class="text-sm">This is a simple text</p>
-<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-    {% for cat in category %}
-    <div class="category-card flex flex-col items-center justify-center bg-white p-5 rounded-2xl hover:shadow-toy">
-        <a href="#" class="block">
-            <div class="product-visual w-32 h-32 sm:w-36 sm:h-36 bg-softmint rounded-2xl flex items-center justify-center mb-3 transition-transform">
-                <span class="text-6xl">{{ cat.emoji }}</span>
+
+<!-- ══════════════════════════════════════════════════
+     1. HERO SECTION
+══════════════════════════════════════════════════ -->
+<section class="bg-mint overflow-hidden" aria-label="Hero">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+
+            <!-- Left: copy -->
+            <div class="text-center lg:text-left">
+                <span class="inline-block rounded-full bg-white/70 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-coral mb-6">
+                    New arrivals every week ✦
+                </span>
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-ink">
+                    Big joy for<br><em class="not-italic text-coral">little</em> humans.
+                </h1>
+                <p class="mt-6 text-base sm:text-lg text-ink/60 leading-relaxed max-w-md mx-auto lg:mx-0">
+                    Thoughtfully chosen toys that spark curiosity, creativity, and a whole lot of mess — because that's where the magic happens.
+                </p>
+                <div class="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start">
+                    <a href="{% url 'storefront:shop' %}"
+                       class="inline-flex items-center gap-2 rounded-2xl bg-coral px-7 py-4 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
+                        Shop all toys →
+                    </a>
+                    <a href="#categories"
+                       class="inline-flex items-center gap-2 rounded-2xl border-2 border-ink/15 px-7 py-4 text-sm font-bold text-ink hover:border-coral hover:text-coral transition-all">
+                        Browse categories
+                    </a>
+                </div>
+                <!-- Trust badges -->
+                <div class="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start text-[11px] text-ink/50 font-medium">
+                    <span class="flex items-center gap-1.5"><span class="text-softmint">✓</span> Free delivery over ৳1,000</span>
+                    <span class="flex items-center gap-1.5"><span class="text-softmint">✓</span> Cash on delivery</span>
+                    <span class="flex items-center gap-1.5"><span class="text-softmint">✓</span> 7-day returns</span>
+                </div>
             </div>
-        </a>
-        <a href="#" class="block">
-            <h3 class="text-center text-lg font-semibold text-ink">{{ cat.name }}</h3>
-        </a>
+
+            <!-- Right: illustration area -->
+            <div class="relative flex justify-center lg:justify-end">
+                <!-- Yellow circle backdrop -->
+                <div class="relative h-72 w-72 sm:h-80 sm:w-80 lg:h-96 lg:w-96">
+                    <div class="absolute inset-0 rounded-full bg-butter opacity-60"></div>
+                    <!-- Central illustration -->
+                    <div class="absolute inset-4 rounded-full bg-butter flex items-center justify-center text-9xl">
+                        🧸
+                    </div>
+                    <!-- Floating sticker badges -->
+                    <div class="absolute -top-4 -right-2 rotate-12 rounded-2xl bg-white/90 backdrop-blur-sm px-3 py-2 shadow-toy text-xs font-bold text-ink">
+                        ★ 4.9 / 5
+                    </div>
+                    <div class="absolute -bottom-4 -left-4 -rotate-6 rounded-2xl bg-coral px-4 py-2 shadow-toy text-xs font-bold text-white">
+                        New in!
+                    </div>
+                    <div class="absolute top-1/2 -right-8 rotate-3 rounded-2xl bg-lavender px-3 py-1.5 shadow-toy text-xs font-bold text-ink">
+                        🎉 Gift-ready
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endfor %}
-</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     2. CATEGORY CHOOSER
+══════════════════════════════════════════════════ -->
+<section id="categories" class="py-16 sm:py-20" aria-label="Shop by category">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Explore</span>
+            <h2 class="mt-2 text-4xl sm:text-5xl font-bold leading-tight text-ink">
+                Pick a mood, <em class="not-italic text-coral">start</em> a story.
+            </h2>
+            <p class="mt-3 text-sm text-muted max-w-md mx-auto">Every category is a new adventure waiting to happen.</p>
+        </div>
+
+        {% if categories %}
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for cat in categories %}
+            <a href="{% url 'storefront:category_detail' cat.slug %}"
+               class="category-card group block rounded-3xl p-6 sm:p-8 text-center border border-ink/5 hover:border-transparent"
+               style="background-color: {{ cat.theme_color|default:'#e6f0e8' }};">
+                <div class="mb-4 text-5xl sm:text-6xl leading-none">{{ cat.emoji|default:"🧸" }}</div>
+                <h3 class="text-base sm:text-lg font-bold text-ink group-hover:text-coral transition-colors">{{ cat.name }}</h3>
+                {% if cat.description %}
+                <p class="mt-1 text-xs text-ink/55">{{ cat.description }}</p>
+                {% endif %}
+                <span class="mt-3 inline-block text-[11px] font-bold text-ink/40 group-hover:text-coral transition-colors">
+                    Shop now →
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-muted">No categories yet — check back soon!</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     3. FEATURED PRODUCTS SECTION
+══════════════════════════════════════════════════ -->
+{% if featured_products %}
+<section id="featured" class="py-16 sm:py-20 bg-[#fffdf4]" aria-label="Featured products">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+            <div>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Handpicked</span>
+                <h2 class="mt-2 text-4xl sm:text-5xl font-bold text-ink">
+                    Our <em class="not-italic text-coral">most-loved</em> picks.
+                </h2>
+            </div>
+            <a href="{% url 'storefront:shop' %}"
+               class="shrink-0 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                View all toys →
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for product in featured_products %}
+            {% include "storefront/partials/product_card.html" with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════
+     4. VALUE PROPOSITION BAND
+══════════════════════════════════════════════════ -->
+<section class="py-16 sm:py-20" aria-label="Why Kidurabd">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="rounded-3xl bg-peach/40 px-6 py-12 sm:px-12 sm:py-16">
+            <div class="text-center mb-10">
+                <h2 class="text-4xl sm:text-5xl font-bold text-ink">
+                    Good toys. <em class="not-italic text-coral">Good</em> feelings.
+                </h2>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for item in values %}
+                <div class="text-center">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl"
+                         style="background-color: {{ item.color }}">{{ item.icon }}</div>
+                    <h3 class="font-bold text-ink text-sm">{{ item.title }}</h3>
+                    <p class="mt-1 text-xs text-ink/55">{{ item.desc }}</p>
+                </div>
+                {% empty %}
+                {% for item in "1234" %}
+                {% with icons="🎁🚚✨🤍" titles="Easy gifting,Free delivery,Thoughtfully selected,Made with care" descs="Gift-wrapped on request,On orders over ৳1000,Every toy is tested,Safe for all ages" colors="#f7c9bd #bfe3d5 #f9d35b #ded8f4" %}
+                {% endwith %}
+                {% endfor %}
+                <!-- Static fallback values -->
+                <div class="text-center">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl bg-[#bfe3d5]">🎁</div>
+                    <h3 class="font-bold text-ink text-sm">Easy gifting</h3>
+                    <p class="mt-1 text-xs text-ink/55">Gift-wrapped on request</p>
+                </div>
+                <div class="text-center">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl bg-[#b8deeb]">🚚</div>
+                    <h3 class="font-bold text-ink text-sm">Free delivery</h3>
+                    <p class="mt-1 text-xs text-ink/55">On orders over ৳1,000</p>
+                </div>
+                <div class="text-center">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl bg-[#f9d35b]">✨</div>
+                    <h3 class="font-bold text-ink text-sm">Thoughtfully selected</h3>
+                    <p class="mt-1 text-xs text-ink/55">Every toy is quality-tested</p>
+                </div>
+                <div class="text-center">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl bg-[#ded8f4]">🤍</div>
+                    <h3 class="font-bold text-ink text-sm">Made with care</h3>
+                    <p class="mt-1 text-xs text-ink/55">Safe materials, happy kids</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     5. EDITORIAL FEATURE BLOCK
+══════════════════════════════════════════════════ -->
+<section class="py-16 sm:py-20" aria-label="Build their world">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-8 items-center">
+            <!-- Left: illustration panel -->
+            <div class="rounded-3xl bg-peach min-h-[320px] flex items-center justify-center text-9xl">
+                🏗️
+            </div>
+            <!-- Right: copy -->
+            <div class="px-0 lg:px-8">
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Creative play</span>
+                <h2 class="mt-3 text-4xl sm:text-5xl font-bold leading-tight text-ink">
+                    Build a world <em class="not-italic text-coral">of their own.</em>
+                </h2>
+                <p class="mt-5 text-sm text-ink/60 leading-relaxed">
+                    From stacking blocks to imaginative role play, our creative range grows with your child. Every piece is designed to spark that beautiful, chaotic, wonderful imagination.
+                </p>
+                <a href="{% url 'storefront:shop' %}"
+                   class="mt-7 inline-flex items-center gap-2 rounded-2xl bg-coral px-7 py-4 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition-all">
+                    Explore creative toys →
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     6. DARK CAMPAIGN BANNER
+══════════════════════════════════════════════════ -->
+<section class="py-8 sm:py-12" aria-label="Campaign">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 overflow-hidden rounded-3xl">
+            <!-- Left: dark copy -->
+            <div class="bg-ink px-8 py-12 sm:px-14 sm:py-16 flex flex-col justify-center">
+                <h2 class="text-4xl sm:text-5xl font-bold text-cream leading-tight">
+                    Childhood is<br>the <em class="not-italic text-butter">main event.</em>
+                </h2>
+                <p class="mt-5 text-sm text-cream/60 leading-relaxed max-w-xs">
+                    Every moment of play counts. Help them build memories that last longer than any toy ever could.
+                </p>
+                <a href="{% url 'storefront:shop' %}"
+                   class="mt-7 self-start inline-flex items-center gap-2 rounded-2xl bg-butter px-6 py-3 text-sm font-bold text-ink hover:opacity-90 transition-opacity">
+                    Start their collection →
+                </a>
+            </div>
+            <!-- Right: mint illustration panel -->
+            <div class="bg-mint flex items-center justify-center min-h-[240px] sm:min-h-[320px] text-8xl">
+                🌟
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock %}

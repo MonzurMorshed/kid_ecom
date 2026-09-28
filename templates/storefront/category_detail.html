@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ selected_category.name }} — Kidurabd{% endblock %}
+{% block meta_description %}Shop {{ selected_category.name }} toys at Kidurabd. {{ selected_category.description }}{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════════════
+     CATEGORY HERO STRIP
+══════════════════════════════════════════════════ -->
+<section class="py-12 sm:py-16" style="background-color: {{ selected_category.theme_color|default:'#e6f0e8' }};" aria-label="Category header">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-4xl">{{ selected_category.emoji|default:"🧸" }}</span>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-ink/50">Collection</span>
+                </div>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-ink leading-tight">
+                    {{ selected_category.name }}
+                </h1>
+                {% if selected_category.description %}
+                <p class="mt-3 text-base text-ink/60 max-w-lg">{{ selected_category.description }}</p>
+                {% endif %}
+            </div>
+            <!-- Breadcrumb -->
+            <nav aria-label="Breadcrumb" class="text-xs text-ink/50">
+                <ol class="flex items-center gap-1.5">
+                    <li><a href="{% url 'storefront:index' %}" class="hover:text-coral">Home</a></li>
+                    <li aria-hidden="true">/</li>
+                    <li><a href="{% url 'storefront:shop' %}" class="hover:text-coral">Shop</a></li>
+                    <li aria-hidden="true">/</li>
+                    <li class="font-semibold text-ink" aria-current="page">{{ selected_category.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     CATEGORY NAVIGATION RAIL
+══════════════════════════════════════════════════ -->
+<div class="border-b border-ink/10 bg-cream sticky top-[72px] z-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex gap-1 overflow-x-auto py-3 scrollbar-none">
+            {% for cat in categories %}
+            <a href="{% url 'storefront:category_detail' cat.slug %}"
+               class="shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap
+                      {% if cat.slug == selected_category.slug %}bg-ink text-cream{% else %}bg-[#f3ede3] text-ink/60 hover:bg-ink/10{% endif %}">
+                {{ cat.emoji|default:"•" }} {{ cat.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     FILTER PILLS (Alpine.js UI state + Django URL params)
+══════════════════════════════════════════════════ -->
+<div class="bg-cream py-6 border-b border-ink/5"
+     x-data="{ activePill: '{{ active_pill|default:'all' }}' }">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-wrap gap-2 items-center">
+        <span class="text-[11px] font-bold uppercase tracking-widest text-ink/40 mr-2">Filter</span>
+        {% for pill in filter_pills %}
+        <a href="{% url 'storefront:category_detail' selected_category.slug %}?filter={{ pill.key }}"
+           class="rounded-full px-4 py-2 text-[11px] font-bold transition-colors
+                  {% if active_pill == pill.key %}bg-ink text-cream{% else %}bg-[#f3ede3] text-ink/60 hover:bg-ink/10{% endif %}"
+           @click.prevent="
+               activePill = '{{ pill.key }}';
+               window.location.href = '{% url 'storefront:category_detail' selected_category.slug %}?filter={{ pill.key }}';
+           ">
+            {{ pill.label }}
+        </a>
+        {% empty %}
+        <!-- Fallback static pills -->
+        {% for key, label in filter_pill_defaults %}
+        <a href="{% url 'storefront:category_detail' selected_category.slug %}?filter={{ key }}"
+           class="rounded-full px-4 py-2 text-[11px] font-bold transition-colors
+                  {% if active_pill == key %}bg-ink text-cream{% else %}bg-[#f3ede3] text-ink/60 hover:bg-ink/10{% endif %}">
+            {{ label }}
+        </a>
+        {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION A: MOST-LOVED PICKS
+══════════════════════════════════════════════════ -->
+{% if most_loved %}
+<section class="py-14 sm:py-16" aria-label="Most-loved {{ selected_category.name }} picks">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Top rated</span>
+                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink">
+                    Our <em class="not-italic text-coral">most-loved</em> {{ selected_category.name|lower }} picks.
+                </h2>
+            </div>
+            <a href="{% url 'storefront:category_detail' selected_category.slug %}?filter=bestseller"
+               class="shrink-0 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                View all bestsellers →
+            </a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for product in most_loved %}
+            {% include "storefront/partials/product_card.html" with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════
+     SECTION B: NEW IN THIS CATEGORY
+══════════════════════════════════════════════════ -->
+{% if new_in %}
+<section class="py-14 sm:py-16 bg-[#fffdf4]" aria-label="New {{ selected_category.name }} products">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-softmint">Just arrived</span>
+                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink">
+                    <em class="not-italic text-coral">New</em> in {{ selected_category.name|lower }}.
+                </h2>
+            </div>
+            <a href="{% url 'storefront:category_detail' selected_category.slug %}?filter=new"
+               class="shrink-0 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                See all new arrivals →
+            </a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for product in new_in %}
+            {% include "storefront/partials/product_card.html" with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════
+     SECTION C: ALL PRODUCTS IN CATEGORY
+══════════════════════════════════════════════════ -->
+<section class="py-14 sm:py-16" aria-label="All {{ selected_category.name }} products">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Full collection</span>
+                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink">
+                    All <em class="not-italic text-coral">{{ selected_category.name|lower }}</em> toys.
+                </h2>
+            </div>
+        </div>
+
+        {% if all_products %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for product in all_products %}
+            {% include "storefront/partials/product_card.html" with product=product %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty state -->
+        <div class="flex flex-col items-center justify-center py-20 text-center">
+            <div class="text-6xl mb-4">🔍</div>
+            <h3 class="text-xl font-bold text-ink mb-2">No products found</h3>
+            <p class="text-sm text-muted mb-6">Try a different filter or browse another category.</p>
+            <a href="{% url 'storefront:category_detail' selected_category.slug %}"
+               class="rounded-2xl bg-coral px-6 py-3 text-sm font-bold text-white hover:bg-coral/90 transition-colors">
+                Clear filters
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Pass filter pills from server if not in template context (fallback)
+    const DEFAULT_PILLS = [
+        { key: 'all',        label: 'All' },
+        { key: 'bestseller', label: 'Best sellers' },
+        { key: 'new',        label: 'New arrivals' },
+        { key: 'featured',   label: 'Featured' },
+        { key: 'under25',    label: 'Under ৳2,500' },
+    ];
+</script>
+{% endblock %}
