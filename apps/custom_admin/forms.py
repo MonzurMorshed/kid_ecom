@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import SiteSettings, PaymentMethod, HeroSlide, Banner, AdminProfile
+from .models import SiteSettings, PaymentMethod, HeroSlide, Banner, AdminProfile, Page
 
 User = get_user_model()
 
@@ -310,3 +310,49 @@ class ChangePasswordForm(forms.Form):
         if pw and cpw and pw != cpw:
             raise forms.ValidationError('Passwords do not match.')
         return cleaned
+
+
+# ── Page Builder Form ────────────────────────────────────────────────────────
+
+class PageForm(forms.ModelForm):
+    class Meta:
+        model  = Page
+        fields = ['title', 'slug', 'content', 'meta_title', 'meta_description',
+                  'is_published', 'show_in_footer', 'sort_order']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg '
+                         'text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 '
+                         'focus:ring-sky-500 focus:border-transparent transition text-sm',
+                'placeholder': 'Page title, e.g. Privacy Policy',
+            }),
+            'slug': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg '
+                         'text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 '
+                         'focus:ring-sky-500 focus:border-transparent transition text-sm font-mono',
+                'placeholder': 'privacy-policy',
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'rich-editor w-full',
+                'rows': 20,
+                'placeholder': 'Write your page content here...',
+            }),
+            'meta_title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg '
+                         'text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 '
+                         'focus:ring-sky-500 focus:border-transparent transition text-sm',
+                'placeholder': 'SEO title (leave blank to use page title)',
+            }),
+            'meta_description': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg '
+                         'text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 '
+                         'focus:ring-sky-500 focus:border-transparent transition text-sm resize-none',
+                'rows': 3,
+                'placeholder': 'A short SEO description of this page (recommended 150-160 chars)',
+            }),
+            'sort_order': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg '
+                         'text-slate-100 focus:outline-none focus:ring-2 '
+                         'focus:ring-sky-500 focus:border-transparent transition text-sm',
+            }),
+        }

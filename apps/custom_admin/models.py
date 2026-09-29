@@ -305,3 +305,42 @@ class ActivityLog(models.Model):
         if x_forwarded:
             return x_forwarded.split(',')[0].strip()
         return request.META.get('REMOTE_ADDR')
+
+
+# ── Page Builder ──────────────────────────────────────────────────────────────
+
+class Page(models.Model):
+    """Dynamic pages like Privacy Policy, About Us, Terms & Conditions, etc."""
+
+    title           = models.CharField(max_length=255)
+    slug            = models.SlugField(max_length=255, unique=True,
+                                       help_text='URL slug, e.g. "privacy-policy" → /page/privacy-policy/')
+    content         = models.TextField(blank=True, help_text='Full page HTML content (supports CKEditor rich text).')
+    meta_title      = models.CharField(max_length=255, blank=True, help_text='SEO title (defaults to page title if empty).')
+    meta_description = models.TextField(blank=True, help_text='SEO meta description.')
+
+    is_published    = models.BooleanField(default=True)
+    show_in_footer  = models.BooleanField(default=True, help_text='Show a link to this page in the storefront footer.')
+    sort_order      = models.PositiveSmallIntegerField(default=0, help_text='Lower = shown first.')
+
+    created_at      = models.DateTimeField(auto_now_add=True)
+    updated_at      = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering            = ['sort_order', 'title']
+        verbose_name        = 'Page'
+        verbose_name_plural = 'Pages'
+
+    def __str__(self):
+        status = '✓' if self.is_published else '✗'
+        return f'[{status}] {self.title}'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('storefront:page_detail', kwargs={'slug': self.slug})

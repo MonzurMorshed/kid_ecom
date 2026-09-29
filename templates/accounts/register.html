@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Account — Kidurabd{% endblock %}
+{% block meta_description %}Join Kidurabd and discover thoughtful toys for curious minds.{% endblock %}
+
+{% block content %}
+<section class="min-h-[calc(100vh-72px)] flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-lg">
+
+        <div class="bg-white rounded-3xl shadow-toy border border-ink/5 overflow-hidden">
+            <div class="h-1.5 bg-gradient-to-r from-softmint via-butter to-coral"></div>
+
+            <div class="p-8 sm:p-10">
+
+                <!-- Heading -->
+                <div class="text-center mb-8">
+                    <a href="{% url 'storefront:index' %}" class="inline-flex items-center gap-2 mb-6">
+                        <span class="grid h-9 w-9 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-xl shadow-[3px_3px_0_#19253b] font-bold">K</span>
+                        <span class="text-[24px] font-bold tracking-[-.075em]">Kidurabd<span class="text-coral">.</span></span>
+                    </a>
+                    <h1 class="text-2xl font-bold text-ink">Create your account</h1>
+                    <p class="mt-1.5 text-sm text-ink/50">Join thousands of happy parents</p>
+                </div>
+
+                <!-- Messages -->
+                {% if messages %}
+                {% for message in messages %}
+                <div class="mb-5 px-4 py-3 rounded-xl text-sm font-medium
+                    {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200
+                    {% elif message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                    {% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="mb-5 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700">
+                    {{ form.non_field_errors|join:", " }}
+                </div>
+                {% endif %}
+
+                <form method="post" id="registerForm" novalidate>
+                    {% csrf_token %}
+
+                    <div class="space-y-4">
+
+                        <!-- Name row -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="id_first_name" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">First Name <span class="text-coral">*</span></label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.first_name.errors|join:", " }}</p>{% endif %}
+                            </div>
+                            <div>
+                                <label for="id_last_name" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Last Name</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.last_name.errors|join:", " }}</p>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="id_email" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Email <span class="text-coral">*</span></label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.email.errors|join:", " }}</p>{% endif %}
+                        </div>
+
+                        <!-- Phone -->
+                        <div>
+                            <label for="id_phone_number" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Phone Number</label>
+                            {{ form.phone_number }}
+                            {% if form.phone_number.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.phone_number.errors|join:", " }}</p>{% endif %}
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <label for="id_password" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Password <span class="text-coral">*</span></label>
+                            <div class="relative">
+                                {{ form.password }}
+                                <button type="button" id="togglePw"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition text-sm"
+                                        aria-label="Show/hide password">👁</button>
+                            </div>
+                            <!-- Strength bar -->
+                            <div class="mt-2 flex gap-1" id="strengthBars">
+                                <div class="h-1 flex-1 rounded-full bg-ink/10" id="bar1"></div>
+                                <div class="h-1 flex-1 rounded-full bg-ink/10" id="bar2"></div>
+                                <div class="h-1 flex-1 rounded-full bg-ink/10" id="bar3"></div>
+                                <div class="h-1 flex-1 rounded-full bg-ink/10" id="bar4"></div>
+                            </div>
+                            <p class="mt-1 text-xs text-ink/40" id="strengthLabel">Min. 8 characters</p>
+                            {% if form.password.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.password.errors|join:", " }}</p>{% endif %}
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div>
+                            <label for="id_password_confirm" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Confirm Password <span class="text-coral">*</span></label>
+                            {{ form.password_confirm }}
+                            {% if form.password_confirm.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.password_confirm.errors|join:", " }}</p>{% endif %}
+                        </div>
+
+                    </div>
+
+                    <button type="submit"
+                            class="mt-6 w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm
+                                   shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
+                        Create Account
+                    </button>
+
+                    <p class="mt-4 text-center text-xs text-ink/40">
+                        By creating an account you agree to our
+                        <a href="/page/terms-conditions/" class="text-coral hover:underline">Terms</a> &amp;
+                        <a href="/page/privacy-policy/" class="text-coral hover:underline">Privacy Policy</a>.
+                    </p>
+                </form>
+
+                <div class="my-6 flex items-center gap-3">
+                    <span class="flex-1 h-px bg-ink/10"></span>
+                    <span class="text-xs text-ink/30 font-medium">Already have an account?</span>
+                    <span class="flex-1 h-px bg-ink/10"></span>
+                </div>
+
+                <a href="{% url 'accounts:login' %}"
+                   class="block w-full py-3.5 rounded-2xl border-2 border-ink/15 text-ink font-bold text-sm text-center hover:border-coral hover:text-coral transition-all">
+                    Sign In
+                </a>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Password visibility toggle
+    const togglePw = document.getElementById('togglePw');
+    const pwField  = document.getElementById('id_password');
+    if (togglePw && pwField) {
+        togglePw.addEventListener('click', () => {
+            const isText = pwField.type === 'text';
+            pwField.type = isText ? 'password' : 'text';
+            togglePw.textContent = isText ? '👁' : '🙈';
+        });
+    }
+
+    // Password strength meter
+    const bars   = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
+    const label  = document.getElementById('strengthLabel');
+    const colors = ['bg-rose-400', 'bg-amber-400', 'bg-yellow-400', 'bg-emerald-400'];
+    const labels = ['Too short', 'Weak', 'Fair', 'Strong'];
+
+    function scorePassword(pw) {
+        if (pw.length < 6) return 0;
+        let score = 0;
+        if (pw.length >= 8) score++;
+        if (/[A-Z]/.test(pw)) score++;
+        if (/[0-9]/.test(pw)) score++;
+        if (/[^A-Za-z0-9]/.test(pw)) score++;
+        return Math.min(score, 4);
+    }
+
+    if (pwField) {
+        pwField.addEventListener('input', () => {
+            const score = scorePassword(pwField.value);
+            bars.forEach((bar, i) => {
+                bar.className = 'h-1 flex-1 rounded-full ' + (i < score ? colors[score - 1] : 'bg-ink/10');
+            });
+            label.textContent = pwField.value.length === 0 ? 'Min. 8 characters' : labels[score - 1] || 'Too short';
+        });
+    }
+</script>
+{% endblock %}

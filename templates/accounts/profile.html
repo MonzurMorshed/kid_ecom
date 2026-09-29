@@ -1,1 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
 
+{% block title %}My Account — Kidurabd{% endblock %}
+
+{% block content %}
+<section class="py-10 sm:py-14 px-4">
+<div class="mx-auto max-w-5xl">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-ink">My Account</h1>
+            <p class="text-sm text-ink/50 mt-1">Welcome back, <strong class="text-ink/80">{{ customer.first_name|default:customer.email }}</strong> 👋</p>
+        </div>
+        <a href="{% url 'accounts:logout' %}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-ink/15 text-sm font-medium text-ink/60 hover:border-coral hover:text-coral transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Sign Out
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- LEFT: Profile Card -->
+        <div class="space-y-5">
+
+            <!-- Avatar & info -->
+            <div class="bg-white rounded-3xl shadow-toy border border-ink/5 p-6 text-center">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-coral/20 to-butter/40 border-4 border-white shadow-lg flex items-center justify-center text-3xl font-bold text-coral mx-auto mb-4">
+                    {{ customer.first_name|slice:":1"|upper|default:customer.email|slice:":1"|upper }}
+                </div>
+                <h2 class="text-lg font-bold text-ink">{{ customer.get_full_name|default:customer.email }}</h2>
+                <p class="text-sm text-ink/50 mt-0.5">{{ customer.email }}</p>
+                {% if customer.phone_number %}
+                <p class="text-sm text-ink/50">{{ customer.phone_number }}</p>
+                {% endif %}
+                <div class="mt-5 space-y-2">
+                    <a href="{% url 'accounts:profile_edit' %}"
+                       class="block w-full py-2.5 rounded-xl bg-coral text-white font-bold text-sm hover:bg-coral/90 transition-all">
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'accounts:change_password' %}"
+                       class="block w-full py-2.5 rounded-xl border-2 border-ink/10 text-ink/70 font-bold text-sm hover:border-coral hover:text-coral transition-all">
+                        Change Password
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-4 text-center">
+                    <p class="text-2xl font-bold text-coral">{{ customer.orders.count }}</p>
+                    <p class="text-xs text-ink/50 mt-0.5">Orders</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-4 text-center">
+                    <p class="text-2xl font-bold text-ink">৳{{ total_spent|floatformat:0 }}</p>
+                    <p class="text-xs text-ink/50 mt-0.5">Total Spent</p>
+                </div>
+            </div>
+
+            <!-- Delivery Address -->
+            {% if customer.address %}
+            <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-5">
+                <h3 class="text-xs font-bold text-ink/50 uppercase tracking-widest mb-3">📍 Delivery Address</h3>
+                <p class="text-sm text-ink/70 leading-relaxed">{{ customer.address }}</p>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- RIGHT: Recent Orders -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-3xl shadow-toy border border-ink/5 overflow-hidden">
+                <div class="px-6 py-5 border-b border-ink/5 flex items-center justify-between">
+                    <h3 class="font-bold text-ink">Recent Orders</h3>
+                    {% if customer.orders.count > 5 %}
+                    <span class="text-xs text-ink/40">Showing last 5</span>
+                    {% endif %}
+                </div>
+
+                {% if recent_orders %}
+                <div class="divide-y divide-ink/5">
+                    {% for order in recent_orders %}
+                    <div class="px-6 py-4 flex items-center justify-between gap-4">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-ink truncate">#{{ order.id }}</p>
+                            <p class="text-xs text-ink/45 mt-0.5">{{ order.created_at|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-sm font-bold text-ink">৳{{ order.total_amount }}</p>
+                            <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                {% if order.status == 'DELIVERED' %}bg-emerald-100 text-emerald-700
+                                {% elif order.status == 'CANCELLED' %}bg-rose-100 text-rose-700
+                                {% elif order.status == 'PROCESSING' %}bg-amber-100 text-amber-700
+                                {% else %}bg-sky-100 text-sky-700{% endif %}">
+                                {{ order.get_status_display|default:order.status }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="py-16 text-center">
+                    <div class="text-5xl mb-4">🛍️</div>
+                    <p class="text-sm text-ink/50 mb-4">No orders yet — start exploring!</p>
+                    <a href="{% url 'storefront:shop' %}"
+                       class="inline-flex items-center gap-2 rounded-2xl bg-coral px-6 py-3 text-sm font-bold text-white hover:bg-coral/90 transition-all">
+                        Browse the shop →
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+</section>
+{% endblock %}

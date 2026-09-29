@@ -60,7 +60,11 @@ urlpatterns = [
     path('customers/', views.customer_list, name='customer_list'),
     path('customers/<int:pk>/', views.customer_detail, name='customer_detail'),
     path('customers/<int:pk>/toggle/', views.customer_block_toggle, name='customer_block_toggle'),
-    # path('customers/<int:pk>/edit/', views.customer_edit, name='customer_edit'),
-    # path('customers/<int:pk>/delete/', views.customer_delete, name='customer_delete'),
 
+    # ── Page Builder ──────────────────────────────────────────────────────────
+    path('pages/', views.page_list, name='page_list'),
+    path('pages/create/', views.page_create, name='page_create'),
+    path('pages/<int:pk>/edit/', views.page_edit, name='page_edit'),
+    path('pages/<int:pk>/toggle/', views.page_toggle, name='page_toggle'),
+    path('pages/<int:pk>/delete/', views.page_delete, name='page_delete'),
 ]

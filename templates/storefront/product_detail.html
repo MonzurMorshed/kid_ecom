@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}{{ product.title }} — Kidurabd{% endblock %}
-{% block meta_description %}{{ product.description|truncatechars:160 }}{% endblock %}
+{% block meta_description %}{{ product.description|striptags|truncatechars:160 }}{% endblock %}
 
 {% block content %}
 
@@ -25,7 +25,7 @@
      PRODUCT DETAIL
 ══════════════════════════════════════════════════ -->
 <section class="py-10 sm:py-16" aria-label="Product details"
-         x-data="{ qty: 1, activeImage: 0 }">
+         x-data="{ qty: 1, activeImage: 0, selectedVariant: null }">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-2 gap-10 lg:gap-16">
 
@@ -99,19 +99,25 @@
                     {% if product.is_featured %}<span class="rounded-full bg-lavender px-3 py-1 text-xs font-bold text-ink">Featured</span>{% endif %}
                 </div>
 
-                <!-- Description -->
+                <!-- Short Description -->
                 {% if product.description %}
-                <p class="mt-6 text-sm text-ink/65 leading-relaxed">{{ product.description }}</p>
+                <p class="mt-6 text-sm text-ink/75 leading-relaxed">{{ product.description }}</p>
                 {% endif %}
 
                 <!-- Variants -->
                 {% if product.variants.all %}
                 <div class="mt-6">
-                    <span class="text-xs font-bold uppercase tracking-widest text-ink/50">Options</span>
-                    <div class="mt-2 flex flex-wrap gap-2">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-widest text-ink/50">Options</span>
+                        <span x-show="selectedVariant" class="text-xs font-semibold text-coral" x-cloak>Selected</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
                         {% for variant in product.variants.all %}
                         {% if variant.is_active %}
-                        <button class="rounded-xl border-2 border-ink/15 px-4 py-2 text-xs font-bold hover:border-coral transition-colors">
+                        <button type="button"
+                                @click="selectedVariant = (selectedVariant === {{ variant.id }} ? null : {{ variant.id }})"
+                                :class="selectedVariant === {{ variant.id }} ? 'border-coral bg-coral/10 text-coral font-bold shadow-sm' : 'border-ink/15 text-ink hover:border-coral'"
+                                class="rounded-xl border-2 px-4 py-2 text-xs font-medium transition-all">
                             {{ variant.sku }}
                         </button>
                         {% endif %}
@@ -120,30 +126,52 @@
                 </div>
                 {% endif %}
 
-                <!-- Quantity + Add to cart -->
-                <div class="mt-8 flex items-center gap-4">
-                    <!-- Quantity control -->
-                    <div class="flex items-center gap-0 rounded-2xl border border-ink/15 overflow-hidden">
-                        <button @click="qty = Math.max(1, qty - 1)"
-                                class="h-12 w-12 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-lg"
-                                aria-label="Decrease quantity">−</button>
-                        <span class="w-10 text-center text-sm font-bold" x-text="qty" aria-live="polite"></span>
-                        <button @click="qty = qty + 1"
-                                class="h-12 w-12 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-lg"
-                                aria-label="Increase quantity">+</button>
+                <!-- Form for Add to bag & Buy now -->
+                <form method="post" action="{% url 'storefront:cart_add' %}" id="productForm" class="mt-8">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <input type="hidden" name="qty" :value="qty">
+                    <input type="hidden" name="variant_id" :value="selectedVariant || ''">
+                    <input type="hidden" name="next" id="productNextUrl" value="">
+
+                    <!-- Quantity + Actions -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Quantity control -->
+                        <div class="flex items-center gap-0 rounded-2xl border border-ink/15 overflow-hidden bg-white">
+                            <button type="button"
+                                    @click="qty = Math.max(1, qty - 1)"
+                                    class="h-12 w-11 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-lg"
+                                    aria-label="Decrease quantity">−</button>
+                            <span class="w-10 text-center text-sm font-bold" x-text="qty" aria-live="polite"></span>
+                            <button type="button"
+                                    @click="qty = qty + 1"
+                                    class="h-12 w-11 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-lg"
+                                    aria-label="Increase quantity">+</button>
+                        </div>
+
+                        <!-- Add to bag button (AJAX) -->
+                        <button type="button"
+                                @click="addToCart({{ product.id }}, qty, selectedVariant)"
+                                class="flex-1 min-w-[130px] flex items-center justify-center gap-2 rounded-2xl bg-coral px-5 py-3.5 text-sm font-bold text-white shadow-button hover:bg-coral/90 active:translate-y-0.5 transition-all"
+                                aria-label="Add {{ product.title }} to bag">
+                            Add to Bag 🛍️
+                        </button>
+
+                        <!-- Buy Now button (Direct to checkout) -->
+                        <button type="submit"
+                                onclick="document.getElementById('productNextUrl').value = '{% url 'storefront:checkout' %}';"
+                                class="flex-1 min-w-[130px] flex items-center justify-center gap-2 rounded-2xl bg-ink px-5 py-3.5 text-sm font-bold text-cream hover:bg-[#283b5d] active:translate-y-0.5 transition-all shadow-button"
+                                aria-label="Buy {{ product.title }} now">
+                            Buy Now ⚡
+                        </button>
+
+                        <!-- Wishlist -->
+                        <button type="button"
+                                class="toggle-favorite grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-ink/15 text-xl hover:border-coral hover:text-coral transition-colors"
+                                data-active="false"
+                                aria-label="Save to wishlist">♡</button>
                     </div>
-
-                    <!-- Add to bag -->
-                    <button class="add-to-cart flex-1 flex items-center justify-center gap-2 rounded-2xl bg-coral px-6 py-4 text-sm font-bold text-white shadow-button hover:bg-coral/90 active:translate-y-0.5 transition-all"
-                            aria-label="Add {{ product.title }} to bag">
-                        Add to bag ▣
-                    </button>
-
-                    <!-- Wishlist -->
-                    <button class="toggle-favorite grid h-12 w-12 place-items-center rounded-2xl border border-ink/15 text-xl hover:border-coral hover:text-coral transition-colors"
-                            data-active="false"
-                            aria-label="Save to wishlist">♡</button>
-                </div>
+                </form>
 
                 <!-- Delivery note -->
                 <div class="mt-6 rounded-2xl bg-mint/50 px-5 py-4 text-xs text-ink/60 leading-relaxed">
@@ -158,6 +186,148 @@
             </div>
         </div>
     </div>
+</section>
+
+<!-- Description & Specifications -->
+<section class="mt-4">
+
+    <div class="border-t border-orange-200 mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-1 gap-10 lg:gap-16">
+
+            <!-- Left: Images -->
+            <div>
+
+                <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-4">
+                    Description
+                    <span class="text-orange-500">&amp;</span>
+                    specifications
+                </h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+                    <!-- Description Card -->
+                    <div class="bg-[#f7f3fb] rounded-2xl p-5 md:p-6">
+
+                        <div class="flex items-start gap-4">
+
+                            <!-- Icon -->
+                            <div class="w-12 h-12 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+                                <svg
+                                    class="w-6 h-6 text-indigo-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"
+                                    />
+
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M8 7h8M8 10h6"
+                                    />
+
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"
+                                    />
+                                </svg>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-base md:text-lg font-bold text-slate-800 mb-2">
+                                    About this item
+                                </h3>
+
+                                {% if product.long_description %}
+                                <div class="text-sm leading-relaxed text-slate-600 space-y-2 prose prose-sm max-w-none">
+                                    {{ product.long_description|safe }}
+                                </div>
+                                {% elif product.description %}
+                                <div class="text-sm leading-relaxed text-slate-600 space-y-2 prose prose-sm max-w-none">
+                                    {{ product.description|safe }}
+                                </div>
+                                {% else %}
+                                <p class="text-sm leading-6 text-slate-500 italic">
+                                    No detailed description provided for this product yet.
+                                </p>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Product Details Card -->
+                    <div class="bg-[#f7f3fb] rounded-2xl p-5 md:p-6">
+
+                        <h3 class="text-base font-bold text-slate-800 mb-3">
+                            Product details
+                        </h3>
+
+                        {% if product.get_specifications_list %}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {% for spec in product.get_specifications_list %}
+                            <div class="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-slate-100/80">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-500 bg-indigo-50/60 shrink-0">
+                                    {% if 'age' in spec.label|lower %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                    {% elif 'piece' in spec.label|lower or 'item' in spec.label|lower or 'part' in spec.label|lower %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>
+                                    {% elif 'theme' in spec.label|lower or 'brand' in spec.label|lower %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6M8 10h.01M12 10h.01M16 10h.01"/></svg>
+                                    {% elif 'skill' in spec.label|lower or 'level' in spec.label|lower or 'difficulty' in spec.label|lower %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
+                                    {% elif 'box' in spec.label|lower or 'size' in spec.label|lower or 'dimension' in spec.label|lower or 'weight' in spec.label|lower %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5L12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 12v9M4 7.5l8 4.5 8-4.5M8 5l8 4.5"/></svg>
+                                    {% else %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>
+                                    {% endif %}
+                                </div>
+
+                                <div class="flex-1 flex justify-between items-center gap-3 min-w-0">
+                                    <span class="text-xs font-semibold text-slate-700 truncate">{{ spec.label }}</span>
+                                    <span class="text-xs font-semibold text-slate-800 text-right shrink-0">{{ spec.value }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {% if product.brand %}
+                            <div class="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-slate-100/80">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-500 bg-indigo-50/60 shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6M8 10h.01M12 10h.01M16 10h.01"/></svg>
+                                </div>
+                                <div class="flex-1 flex justify-between items-center gap-3 min-w-0">
+                                    <span class="text-xs font-semibold text-slate-700">Brand</span>
+                                    <span class="text-xs font-semibold text-slate-800">{{ product.brand.name }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-slate-100/80">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-500 bg-indigo-50/60 shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>
+                                </div>
+                                <div class="flex-1 flex justify-between items-center gap-3 min-w-0">
+                                    <span class="text-xs font-semibold text-slate-700">Category</span>
+                                    <span class="text-xs font-semibold text-slate-800">{{ product.category.name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
 </section>
 
 <!-- ══════════════════════════════════════════════════

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page.meta_title|default:page.title }} — Kidurabd{% endblock %}
+
+{% block meta_description %}{% if page.meta_description %}{{ page.meta_description }}{% endif %}{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════════════
+     PAGE HERO BANNER
+══════════════════════════════════════════════════ -->
+<section class="bg-mint/40 border-b border-ink/5 py-12 sm:py-16">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+        <nav class="flex items-center justify-center gap-2 text-xs text-ink/40 mb-5 font-medium">
+            <a href="{% url 'storefront:index' %}" class="hover:text-coral transition">Home</a>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span class="text-ink/70">{{ page.title }}</span>
+        </nav>
+        <h1 class="text-4xl sm:text-5xl font-bold text-ink tracking-tight leading-tight">{{ page.title }}</h1>
+        {% if page.meta_description %}
+        <p class="mt-4 text-base text-ink/50 max-w-xl mx-auto leading-relaxed">{{ page.meta_description }}</p>
+        {% endif %}
+        <p class="mt-3 text-xs text-ink/30">Last updated {{ page.updated_at|date:"F j, Y" }}</p>
+    </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     PAGE CONTENT
+══════════════════════════════════════════════════ -->
+<section class="py-12 sm:py-16">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+
+        <div class="bg-white rounded-3xl shadow-sm border border-ink/5 overflow-hidden">
+            <!-- Content area with rich prose styling -->
+            <div class="p-8 sm:p-12 prose prose-base sm:prose-lg max-w-none
+                        prose-headings:font-bold prose-headings:text-ink prose-headings:leading-snug
+                        prose-h1:text-3xl prose-h2:text-2xl prose-h2:mt-10 prose-h2:border-b prose-h2:border-ink/10 prose-h2:pb-3
+                        prose-h3:text-xl prose-h3:mt-8
+                        prose-p:text-ink/70 prose-p:leading-relaxed prose-p:mt-4
+                        prose-a:text-coral prose-a:no-underline hover:prose-a:underline prose-a:font-medium
+                        prose-strong:text-ink prose-strong:font-semibold
+                        prose-ul:text-ink/70 prose-li:my-1
+                        prose-ol:text-ink/70
+                        prose-blockquote:border-l-coral prose-blockquote:bg-coral/5 prose-blockquote:rounded-r-xl prose-blockquote:py-1
+                        prose-code:text-coral prose-code:bg-coral/10 prose-code:rounded prose-code:px-1 prose-code:text-sm
+                        prose-table:text-sm prose-th:bg-ink/5 prose-th:text-ink prose-td:text-ink/70
+                        ">
+                {% if page.content %}
+                    {{ page.content|safe }}
+                {% else %}
+                    <p class="text-center text-ink/40 py-10">This page has no content yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Back navigation -->
+        <div class="mt-8 text-center">
+            <a href="{% url 'storefront:index' %}"
+               class="inline-flex items-center gap-2 rounded-2xl bg-coral/10 px-6 py-3 text-sm font-bold text-coral hover:bg-coral hover:text-white transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Home
+            </a>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

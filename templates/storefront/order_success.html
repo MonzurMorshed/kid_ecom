@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Order Confirmed #{{ order.id }} — Kidurabd{% endblock %}
+
+{% block content %}
+<section class="py-12 sm:py-16 px-4">
+    <div class="mx-auto max-w-3xl">
+
+        <!-- Success Header Card -->
+        <div class="rounded-3xl bg-white border border-ink/8 p-8 sm:p-10 shadow-soft text-center mb-8">
+            <div class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl shadow-inner">
+                🎉
+            </div>
+            <span class="inline-block rounded-full bg-emerald-50 border border-emerald-200 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-3">
+                Order Placed Successfully
+            </span>
+            <h1 class="text-3xl sm:text-4xl font-black text-ink mb-2">Thank You for Your Order!</h1>
+            <p class="text-ink/60 text-sm sm:text-base max-w-md mx-auto">
+                We've received your order and are getting it ready. We'll contact you at <strong class="text-ink font-semibold">{{ order.phone_number }}</strong> to confirm delivery.
+            </p>
+
+            <!-- Order Ref Banner -->
+            <div class="mt-6 inline-flex flex-wrap items-center justify-center gap-4 sm:gap-8 rounded-2xl bg-cream/70 border border-ink/8 px-6 py-3.5 text-xs sm:text-sm">
+                <div>
+                    <span class="text-ink/45 block text-[11px] uppercase font-semibold">Order ID</span>
+                    <strong class="text-ink font-mono font-bold text-base">#{{ order.id }}</strong>
+                </div>
+                <div class="h-8 w-px bg-ink/10 hidden sm:block"></div>
+                <div>
+                    <span class="text-ink/45 block text-[11px] uppercase font-semibold">Order Date</span>
+                    <strong class="text-ink font-bold">{{ order.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+                <div class="h-8 w-px bg-ink/10 hidden sm:block"></div>
+                <div>
+                    <span class="text-ink/45 block text-[11px] uppercase font-semibold">Payment</span>
+                    <strong class="text-ink font-bold">Cash on Delivery</strong>
+                </div>
+                <div class="h-8 w-px bg-ink/10 hidden sm:block"></div>
+                <div>
+                    <span class="text-ink/45 block text-[11px] uppercase font-semibold">Status</span>
+                    <span class="inline-flex items-center gap-1 font-bold text-amber-600">
+                        <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+
+            <!-- Order Items (3 cols) -->
+            <div class="md:col-span-3 space-y-4">
+                <div class="rounded-3xl bg-white border border-ink/8 p-6 shadow-soft">
+                    <h2 class="text-lg font-bold text-ink mb-4 flex items-center justify-between">
+                        <span>Items in Order</span>
+                        <span class="text-xs text-ink/45 font-semibold">{{ order.items.count }} item{{ order.items.count|pluralize }}</span>
+                    </h2>
+
+                    <div class="divide-y divide-ink/8">
+                        {% for item in order.items.all %}
+                        <div class="py-3.5 first:pt-0 last:pb-0 flex items-center gap-3.5">
+                            <!-- Image or Fallback -->
+                            <div class="h-16 w-16 shrink-0 rounded-2xl bg-[#faf6ee] border border-ink/8 overflow-hidden flex items-center justify-center">
+                                {% if item.product and item.product.images.first %}
+                                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.title }}" class="h-full w-full object-cover">
+                                {% else %}
+                                    <span class="text-2xl">🧸</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Title & Qty -->
+                            <div class="flex-1 min-w-0">
+                                {% if item.product %}
+                                <a href="{% url 'storefront:product_detail' item.product.slug %}" class="text-sm font-bold text-ink hover:text-coral transition line-clamp-1">
+                                    {{ item.product.title }}
+                                </a>
+                                {% else %}
+                                <span class="text-sm font-bold text-ink">Product Unavailable</span>
+                                {% endif %}
+
+                                {% if item.variant %}
+                                <p class="text-xs text-ink/50 mt-0.5">Option: {{ item.variant.sku }}</p>
+                                {% endif %}
+                                <p class="text-xs text-ink/60 mt-0.5">Qty: {{ item.quantity }} × ৳{{ item.price }}</p>
+                            </div>
+
+                            <!-- Line total -->
+                            <div class="text-right">
+                                <span class="text-sm font-extrabold text-ink">৳{{ item.get_global }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Totals summary -->
+                    <div class="border-t border-ink/8 mt-5 pt-4 space-y-2 text-sm">
+                        <div class="flex justify-between text-ink/60 text-xs">
+                            <span>Subtotal</span>
+                            <span class="font-semibold text-ink">৳{{ order.total_amount }}</span>
+                        </div>
+                        <div class="flex justify-between text-ink/60 text-xs">
+                            <span>Delivery</span>
+                            <span class="font-semibold text-emerald-600">Free</span>
+                        </div>
+                        <div class="border-t border-ink/8 pt-2.5 flex justify-between text-base font-black text-ink">
+                            <span>Total Due (COD)</span>
+                            <span class="text-coral">৳{{ order.total_amount }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery & Details (2 cols) -->
+            <div class="md:col-span-2 space-y-4">
+                <div class="rounded-3xl bg-white border border-ink/8 p-6 shadow-soft space-y-5">
+                    <h2 class="text-lg font-bold text-ink">Delivery Details</h2>
+
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-ink/40 block mb-1">Recipient</span>
+                        <p class="text-sm font-bold text-ink">{{ order.full_name }}</p>
+                        <p class="text-xs text-ink/65">{{ order.phone_number }}</p>
+                        <p class="text-xs text-ink/65">{{ order.email }}</p>
+                    </div>
+
+                    <div class="border-t border-ink/8 pt-4">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-ink/40 block mb-1">Shipping Address</span>
+                        <p class="text-xs text-ink/80 leading-relaxed whitespace-pre-line">{{ order.shipping_address }}</p>
+                    </div>
+
+                    <div class="border-t border-ink/8 pt-4">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-ink/40 block mb-1">Delivery Estimate</span>
+                        <p class="text-xs text-ink/80 font-medium">🚚 2–4 business days within Bangladesh</p>
+                    </div>
+                </div>
+
+                <!-- Navigation buttons -->
+                <div class="flex flex-col gap-2.5">
+                    <a href="{% url 'storefront:shop' %}"
+                       class="w-full text-center rounded-2xl bg-coral px-5 py-3.5 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition">
+                        Continue Shopping 🛍️
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:profile' %}"
+                       class="w-full text-center rounded-2xl border border-ink/15 bg-white px-5 py-3 text-xs font-bold text-ink hover:bg-cream transition">
+                        View in Your Orders
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+{% endblock %}

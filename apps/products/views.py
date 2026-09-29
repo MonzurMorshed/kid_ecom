@@ -143,6 +143,7 @@ def product_create(request):
         price = request.POST.get('price', '0')
         stock = request.POST.get('stock', '0')
         description = request.POST.get('description', '').strip()
+        long_description = request.POST.get('long_description', '').strip()
         is_active = request.POST.get('is_active') == 'on'
 
         if not title:
@@ -158,6 +159,21 @@ def product_create(request):
             slug = f"{original_slug}-{counter}"
             counter += 1
 
+        # Parse specifications
+        specifications = []
+        specifications_json = request.POST.get('specifications_json', '[]')
+        try:
+            raw_specs = json.loads(specifications_json)
+            if isinstance(raw_specs, list):
+                for item in raw_specs:
+                    if isinstance(item, dict):
+                        lbl = str(item.get('label', '')).strip()
+                        val = str(item.get('value', '')).strip()
+                        if lbl and val:
+                            specifications.append({'label': lbl, 'value': val})
+        except Exception:
+            specifications = []
+
         product = Product.objects.create(
             title=title,
             slug=slug,
@@ -166,6 +182,8 @@ def product_create(request):
             price=price,
             stock=stock,
             description=description,
+            long_description=long_description,
+            specifications=specifications,
             is_active=is_active,
         )
 
@@ -237,6 +255,7 @@ def product_create(request):
     context = {
         'categories': categories,
         'brands': brands,
+        'specifications_json': '[]',
     }
     return render(request, 'custom_admin/products/product_create.html', context)
 
@@ -267,6 +286,7 @@ def product_update(request, pk):
         price = request.POST.get('price')
         stock = request.POST.get('stock')
         description = request.POST.get('description', '').strip()
+        long_description = request.POST.get('long_description', '').strip()
         is_active = request.POST.get('is_active') == 'on'
 
         # Ensure slug uniqueness (exclude current product)
@@ -284,7 +304,25 @@ def product_update(request, pk):
         product.price = price
         product.stock = stock
         product.description = description
+        product.long_description = long_description
         product.is_active = is_active
+
+        # Parse specifications
+        specifications = []
+        specifications_json = request.POST.get('specifications_json', '[]')
+        try:
+            raw_specs = json.loads(specifications_json)
+            if isinstance(raw_specs, list):
+                for item in raw_specs:
+                    if isinstance(item, dict):
+                        lbl = str(item.get('label', '')).strip()
+                        val = str(item.get('value', '')).strip()
+                        if lbl and val:
+                            specifications.append({'label': lbl, 'value': val})
+        except Exception:
+            specifications = []
+        product.specifications = specifications
+
         product.save()
 
         # Handle featured image upload
@@ -314,6 +352,7 @@ def product_update(request, pk):
         'product': product,
         'categories': categories,
         'brands': brands,
+        'specifications_json': json.dumps(product.get_specifications_list()),
     }
     return render(request, 'custom_admin/products/product_form.html', context)
 
@@ -503,7 +542,7 @@ def product_export(request):
     writer.writerow([
         'product_id', 'title', 'slug', 'category_id', 'category', 'brand', 
         'base_price', 'base_stock', 'sku', 'variant_options', 'variant_price', 
-        'variant_stock', 'is_active', 'description'
+        'variant_stock', 'is_active', 'description', 'long_description'
     ])
 
     products = Product.objects.select_related('category', 'brand').prefetch_related('variants__options__option').all()
@@ -533,6 +572,7 @@ def product_export(request):
                     variant.stock,
                     variant.is_active,
                     product.description or '',
+                    product.long_description or '',
                 ])
         else:
             writer.writerow([
@@ -550,6 +590,7 @@ def product_export(request):
                 '', # variant_stock
                 product.is_active,
                 product.description or '',
+                product.long_description or '',
             ])
 
     return response
@@ -563,19 +604,19 @@ def product_sample_csv(request):
     writer.writerow([
         'product_id', 'title', 'slug', 'category_id', 'category', 'brand', 
         'base_price', 'base_stock', 'sku', 'variant_options', 'variant_price', 
-        'variant_stock', 'is_active', 'description'
+        'variant_stock', 'is_active', 'description', 'long_description'
     ])
     
     # Sample Simple Product
     writer.writerow([
         '', 'Wooden Building Blocks Set', 'wooden-building-blocks-set', '1', 'Toys', 'Kidurabd', 
-        '1200.00', '15', '', '', '', '', 'True', 'Educational wooden toy set.'
+        '1200.00', '15', '', '', '', '', 'True', 'Educational wooden toy set.', 'Detailed description with full product specifications.'
     ])
     
     # Sample Variant Product - Base / Variant 1
     writer.writerow([
         '', 'Kids Cotton T-Shirt', 'kids-cotton-tshirt', '2', 'Clothing', 'Kidurabd', 
-        '450.00', '50', 'TS-S-BLUE', 'Size:Small|Color:Blue', '450.00', '15', 'True', 'Comfortable cotton t-shirt.'
+        '450.00', '50', 'TS-S-BLUE', 'Size:Small|Color:Blue', '450.00', '15', 'True', 'Comfortable cotton t-shirt.', 'Full product details and washing instructions.'
     ])
     
     # Sample Variant Product - Variant 2
@@ -649,6 +690,7 @@ def product_import(request):
                     base_price = row.get('base_price', '').strip() or row.get('price', '0.00').strip() or '0.00'
                     base_stock = row.get('base_stock', '').strip() or row.get('stock', '0').strip() or '0'
                     description = row.get('description', '').strip()
+                    long_description = row.get('long_description', '').strip()
                     is_active_raw = str(row.get('is_active', 'True')).strip().lower()
                     is_active = is_active_raw in ['true', '1', 'yes', 'on']
 
@@ -668,6 +710,8 @@ def product_import(request):
                         product.stock = base_stock
                         if description:
                             product.description = description
+                        if long_description:
+                            product.long_description = long_description
                         product.is_active = is_active
                         product.save()
                         updated_count += 1
@@ -688,6 +732,7 @@ def product_import(request):
                             price=base_price,
                             stock=base_stock,
                             description=description,
+                            long_description=long_description,
                             is_active=is_active
                         )
                         created_count += 1

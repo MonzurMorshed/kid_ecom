@@ -15,6 +15,95 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CKEditor 5 CDN -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <style>
+        /* CKEditor 5 Custom Dark Theme for Admin */
+        .ck.ck-editor {
+            width: 100% !important;
+        }
+        .ck.ck-editor__editable_inline {
+            min-height: 220px !important;
+            background-color: #020617 !important; /* slate-950 */
+            color: #f1f5f9 !important; /* slate-100 */
+            border: 1px solid #334155 !important; /* slate-700 */
+            border-top: none !important;
+            border-radius: 0 0 0.75rem 0.75rem !important;
+            padding: 1rem 1.25rem !important;
+            font-size: 0.875rem !important;
+            line-height: 1.625 !important;
+        }
+        .ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
+            border-color: #0ea5e9 !important; /* sky-500 */
+            box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.4) !important;
+        }
+        .ck.ck-toolbar {
+            background-color: #0f172a !important; /* slate-900 */
+            border: 1px solid #334155 !important; /* slate-700 */
+            border-radius: 0.75rem 0.75rem 0 0 !important;
+            padding: 0.35rem 0.5rem !important;
+        }
+        .ck.ck-toolbar .ck-toolbar__separator {
+            background: #334155 !important;
+        }
+        .ck.ck-button {
+            color: #94a3b8 !important; /* slate-400 */
+            border-radius: 0.5rem !important;
+            cursor: pointer !important;
+        }
+        .ck.ck-button:hover,
+        .ck.ck-button:active {
+            background: #1e293b !important; /* slate-800 */
+            color: #38bdf8 !important; /* sky-400 */
+        }
+        .ck.ck-button.ck-on {
+            background: #0369a1 !important; /* sky-700 */
+            color: #ffffff !important;
+        }
+        .ck.ck-button .ck-icon {
+            color: inherit !important;
+        }
+        .ck.ck-dropdown__panel {
+            background-color: #0f172a !important;
+            border: 1px solid #334155 !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+        }
+        .ck.ck-list {
+            background: #0f172a !important;
+        }
+        .ck.ck-list__item .ck-button {
+            color: #cbd5e1 !important;
+        }
+        .ck.ck-list__item .ck-button:hover:not(.ck-disabled) {
+            background: #1e293b !important;
+            color: #38bdf8 !important;
+        }
+        .ck.ck-list__item .ck-button.ck-on {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        .ck.ck-input-text {
+            background: #020617 !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        .ck.ck-balloon-panel {
+            background: #0f172a !important;
+            border-color: #334155 !important;
+        }
+        .ck.ck-balloon-panel[class*="arrow_n"]::after {
+            border-bottom-color: #0f172a !important;
+        }
+        .ck.ck-balloon-panel[class*="arrow_s"]::after {
+            border-top-color: #0f172a !important;
+        }
+        .ck.ck-placeholder::before {
+            color: #475569 !important; /* slate-600 */
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body x-data="{ sidebarOpen: false }" class="bg-slate-950 font-['Inter'] text-slate-100 min-h-screen flex flex-col md:flex-row">
@@ -108,6 +197,13 @@
                       {% if 'banner' in request.resolver_match.url_name %} bg-violet-500/10 text-violet-400 border border-violet-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
                 Banners
+            </a>
+
+            <a href="{% url 'custom_admin:page_list' %}"
+               class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
+                      {% if 'page' in request.resolver_match.url_name %} bg-teal-500/10 text-teal-400 border border-teal-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Pages
             </a>
 
             <!-- Settings Group -->
@@ -227,5 +323,50 @@
         </main>
     </div>
 
+    <!-- Global Rich Text Editor (CKEditor 5) Initializer -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Select all textareas marked for rich editor or description fields, excluding ones with data-no-editor
+            const textareas = document.querySelectorAll(
+                'textarea.rich-editor, textarea.editor, textarea.ckeditor, textarea[data-editor="true"], textarea#description, textarea#long_description'
+            );
+
+            textareas.forEach(textarea => {
+                if (textarea.dataset.noEditor === 'true' || textarea.dataset.editorInit === 'true') {
+                    return;
+                }
+                textarea.dataset.editorInit = 'true';
+
+                ClassicEditor.create(textarea, {
+                    toolbar: [
+                        'heading', '|',
+                        'bold', 'italic', 'underline', 'strikethrough', '|',
+                        'link', 'bulletedList', 'numberedList', 'blockQuote', '|',
+                        'insertTable', 'undo', 'redo'
+                    ],
+                    placeholder: textarea.getAttribute('placeholder') || 'Enter content here...'
+                })
+                .then(editor => {
+                    // Two-way sync on data change
+                    editor.model.document.on('change:data', () => {
+                        textarea.value = editor.getData();
+                    });
+
+                    // Synchronize value right before form submission
+                    const form = textarea.closest('form');
+                    if (form) {
+                        form.addEventListener('submit', () => {
+                            textarea.value = editor.getData();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('CKEditor init error:', error);
+                });
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

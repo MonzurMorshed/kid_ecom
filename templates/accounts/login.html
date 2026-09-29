@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign In — Kidurabd{% endblock %}
+{% block meta_description %}Sign in to your Kidurabd account to track orders and manage your profile.{% endblock %}
+
+{% block content %}
+<section class="min-h-[calc(100vh-72px)] flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-md">
+
+        <!-- Card -->
+        <div class="bg-white rounded-3xl shadow-toy border border-ink/5 overflow-hidden">
+
+            <!-- Top accent bar -->
+            <div class="h-1.5 bg-gradient-to-r from-coral via-butter to-softmint"></div>
+
+            <div class="p-8 sm:p-10">
+
+                <!-- Logo & heading -->
+                <div class="text-center mb-8">
+                    <a href="{% url 'storefront:index' %}" class="inline-flex items-center gap-2 mb-6">
+                        <span class="grid h-9 w-9 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-xl shadow-[3px_3px_0_#19253b] font-bold">K</span>
+                        <span class="text-[24px] font-bold tracking-[-.075em]">Kidurabd<span class="text-coral">.</span></span>
+                    </a>
+                    <h1 class="text-2xl font-bold text-ink">Welcome back</h1>
+                    <p class="mt-1.5 text-sm text-ink/50">Sign in to your account</p>
+                </div>
+
+                <!-- Messages -->
+                {% if messages %}
+                {% for message in messages %}
+                <div class="mb-5 px-4 py-3 rounded-xl text-sm font-medium
+                    {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200
+                    {% elif message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                    {% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- Form -->
+                <form method="post" id="loginForm" novalidate>
+                    {% csrf_token %}
+                    {% if request.GET.next %}
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+                    {% endif %}
+
+                    <div class="space-y-4">
+                        <!-- Email -->
+                        <div>
+                            <label for="id_email" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <p class="mt-1.5 text-xs text-rose-600">{{ form.email.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="id_password" class="text-xs font-semibold text-ink/60 uppercase tracking-wide">Password</label>
+                                <a href="{% url 'accounts:forgot_password' %}" class="text-xs text-coral hover:underline font-medium">Forgot password?</a>
+                            </div>
+                            <div class="relative">
+                                {{ form.password }}
+                                <button type="button" id="togglePw"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition text-sm"
+                                        aria-label="Show/hide password">👁</button>
+                            </div>
+                            {% if form.password.errors %}
+                            <p class="mt-1.5 text-xs text-rose-600">{{ form.password.errors|join:", " }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Remember me -->
+                        <div class="flex items-center gap-2.5">
+                            <input type="checkbox" name="remember_me" id="id_remember_me"
+                                   class="w-4 h-4 rounded border-ink/20 text-coral focus:ring-coral/30 cursor-pointer">
+                            <label for="id_remember_me" class="text-sm text-ink/60 cursor-pointer">Remember me for 30 days</label>
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                            class="mt-6 w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm
+                                   shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
+                        Sign In
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="my-6 flex items-center gap-3">
+                    <span class="flex-1 h-px bg-ink/10"></span>
+                    <span class="text-xs text-ink/30 font-medium">New here?</span>
+                    <span class="flex-1 h-px bg-ink/10"></span>
+                </div>
+
+                <a href="{% url 'accounts:register' %}"
+                   class="block w-full py-3.5 rounded-2xl border-2 border-ink/15 text-ink font-bold text-sm text-center hover:border-coral hover:text-coral transition-all">
+                    Create an account
+                </a>
+
+            </div>
+        </div>
+
+        <p class="mt-6 text-center text-xs text-ink/35">
+            By continuing, you agree to our
+            <a href="/page/terms-conditions/" class="hover:text-coral transition">Terms</a> &amp;
+            <a href="/page/privacy-policy/" class="hover:text-coral transition">Privacy Policy</a>.
+        </p>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Toggle password visibility
+    const togglePw = document.getElementById('togglePw');
+    const pwField  = document.querySelector('#loginForm input[type="password"]');
+    if (togglePw && pwField) {
+        togglePw.addEventListener('click', () => {
+            const isText = pwField.type === 'text';
+            pwField.type = isText ? 'password' : 'text';
+            togglePw.textContent = isText ? '👁' : '🙈';
+        });
+    }
+</script>
+{% endblock %}

@@ -32,15 +32,21 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ("title", "category", "price", "compare_price", "is_active", "is_featured", "is_bestseller", "is_new", "rating", "stock")
     list_editable = ("is_active", "is_featured", "is_bestseller", "is_new")
     list_filter = ("category", "is_active", "is_featured", "is_bestseller", "is_new")
-    search_fields = ("title", "description")
+    search_fields = ("title", "description", "long_description")
     prepopulated_fields = {"slug": ("title",)}
     inlines = [ProductOptionInline, ProductImageInline]
     fieldsets = (
-        (None, {"fields": ("category", "brand", "title", "slug", "description")}),
+        (None, {"fields": ("category", "brand", "title", "slug", "description", "long_description")}),
         ("Pricing & Stock", {"fields": ("price", "compare_price", "stock")}),
         ("Storefront Flags", {"fields": ("is_active", "is_featured", "is_bestseller", "is_new", "rating")}),
         ("Soft Delete", {"fields": ("is_deleted", "deleted_at"), "classes": ("collapse",)}),
     )
+
+    class Media:
+        js = (
+            "https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js",
+            "js/admin_ckeditor.js",
+        )
 
 
 @admin.register(ProductVariant)

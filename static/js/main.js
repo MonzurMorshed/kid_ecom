@@ -1,3 +1,21 @@
+function specificationsBuilder(initialSpecs = []) {
+    return {
+        specs: Array.isArray(initialSpecs) && initialSpecs.length > 0 
+            ? initialSpecs 
+            : (typeof getInitialProductSpecs === 'function' ? getInitialProductSpecs() : []),
+        addSpec(label = '', value = '') {
+            this.specs.push({ label: label, value: value });
+        },
+        addPreset(label, defaultValue = '') {
+            this.specs.push({ label: label, value: defaultValue });
+        },
+        removeSpec(index) {
+            this.specs.splice(index, 1);
+        }
+    };
+}
+window.specificationsBuilder = specificationsBuilder;
+
 document.addEventListener('alpine:init', () => {
     // Category Form Component (supports Create and Edit)
     Alpine.data('categoryForm', (initialData = {}) => ({
@@ -28,4 +46,7 @@ document.addEventListener('alpine:init', () => {
             }
         }
     }));
+
+    // Register with Alpine.data
+    Alpine.data('specificationsBuilder', specificationsBuilder);
 });

@@ -1,1 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
 
+{% block title %}Your Bag — Kidurabd{% endblock %}
+
+{% block content %}
+<section class="py-10 sm:py-14 px-4">
+<div class="mx-auto max-w-6xl">
+
+    <h1 class="text-3xl sm:text-4xl font-bold text-ink mb-8">Your Bag
+        {% if cart_count > 0 %}<span class="text-coral"> ({{ cart_count }})</span>{% endif %}
+    </h1>
+
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="px-4 py-3 rounded-xl text-sm font-medium
+            {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+            {% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if cart_count == 0 %}
+    <!-- Empty Cart -->
+    <div class="text-center py-24">
+        <div class="text-8xl mb-6">🛍️</div>
+        <h2 class="text-2xl font-bold text-ink mb-3">Your bag is empty</h2>
+        <p class="text-ink/50 mb-8 max-w-sm mx-auto">Looks like you haven't added any toys yet. Let's fix that!</p>
+        <a href="{% url 'storefront:shop' %}"
+           class="inline-flex items-center gap-2 rounded-2xl bg-coral px-8 py-4 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
+            Browse the shop →
+        </a>
+    </div>
+
+    {% else %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-data="cartManager()">
+
+        <!-- Left: Cart Items -->
+        <div class="lg:col-span-2 space-y-4">
+            {% for item in cart %}
+            <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-5 flex gap-4 items-start"
+                 data-key="{{ item.key }}" id="cart-item-{{ item.key }}">
+
+                <!-- Image/Emoji -->
+                <div class="w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-mint/50 flex items-center justify-center">
+                    {% if item.image %}
+                    <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-full object-contain p-1">
+                    {% else %}
+                    <span class="text-4xl">{{ item.emoji }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Details -->
+                <div class="flex-1 min-w-0">
+                    <a href="{% url 'storefront:product_detail' item.slug %}"
+                       class="font-bold text-ink hover:text-coral transition line-clamp-2 text-sm leading-snug">{{ item.title }}</a>
+                    <p class="text-xs text-ink/40 mt-0.5">৳{{ item.price }} each</p>
+
+                    <!-- Quantity controls -->
+                    <div class="flex items-center gap-3 mt-3">
+                        <div class="flex items-center gap-0 rounded-xl border border-ink/15 overflow-hidden">
+                            <button type="button"
+                                    class="h-9 w-9 grid place-items-center text-ink hover:bg-[#f5eee4] transition text-base"
+                                    onclick="updateQty('{{ item.key }}', {{ item.qty }} - 1)"
+                                    aria-label="Decrease">−</button>
+                            <span class="w-8 text-center text-sm font-bold" id="qty-{{ item.key }}">{{ item.qty }}</span>
+                            <button type="button"
+                                    class="h-9 w-9 grid place-items-center text-ink hover:bg-[#f5eee4] transition text-base"
+                                    onclick="updateQty('{{ item.key }}', {{ item.qty }} + 1)"
+                                    aria-label="Increase">+</button>
+                        </div>
+
+                        <form method="post" action="{% url 'storefront:cart_remove' %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="key" value="{{ item.key }}">
+                            <button type="submit" class="text-xs text-rose-400 hover:text-rose-600 transition font-medium">Remove</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Line total -->
+                <div class="text-right shrink-0">
+                    <p class="font-bold text-ink" id="total-{{ item.key }}">৳{{ item.line_total }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Right: Order Summary -->
+        <div class="space-y-5">
+            <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-6 sticky top-24">
+                <h2 class="font-bold text-ink text-lg mb-5">Order Summary</h2>
+
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between text-ink/60">
+                        <span>Subtotal ({{ cart_count }} item{{ cart_count|pluralize }})</span>
+                        <span id="summary-subtotal">৳{{ cart_total }}</span>
+                    </div>
+                    <div class="flex justify-between text-ink/60">
+                        <span>Delivery</span>
+                        <span class="font-medium {% if cart_delivery_fee == 0 %}text-emerald-600{% else %}text-ink{% endif %}">
+                            {% if cart_delivery_fee == 0 %}Free{% else %}৳{{ cart_delivery_fee }}{% endif %}
+                        </span>
+                    </div>
+                    <div class="pt-3 border-t border-ink/10 flex justify-between font-bold text-ink text-base">
+                        <span>Total</span>
+                        <span id="summary-total">৳{{ cart_grand_total }}</span>
+                    </div>
+                </div>
+
+                <a href="{% url 'storefront:checkout' %}"
+                   class="mt-6 w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-coral text-white font-bold text-sm shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
+                    Proceed to Checkout →
+                </a>
+                <a href="{% url 'storefront:shop' %}"
+                   class="mt-3 w-full flex items-center justify-center py-3 rounded-2xl border-2 border-ink/10 text-ink/60 font-semibold text-sm hover:border-coral hover:text-coral transition-all">
+                    ← Continue Shopping
+                </a>
+
+                <!-- Trust badges -->
+                <div class="mt-5 pt-4 border-t border-ink/8 space-y-2 text-xs text-ink/40">
+                    <div class="flex items-center gap-2"><span>🔒</span> Secure checkout</div>
+                    <div class="flex items-center gap-2"><span>📦</span> Tracked delivery</div>
+                    <div class="flex items-center gap-2"><span>↩</span> 7-day easy returns</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updateQty(key, qty) {
+    if (qty <= 0) {
+        if (!confirm('Remove this item from your bag?')) return;
+    }
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "storefront:cart_update" %}';
+
+    const csrf = document.createElement('input');
+    csrf.type  = 'hidden';
+    csrf.name  = 'csrfmiddlewaretoken';
+    csrf.value = '{{ csrf_token }}';
+    form.appendChild(csrf);
+
+    const keyInput = document.createElement('input');
+    keyInput.type  = 'hidden';
+    keyInput.name  = 'key';
+    keyInput.value = key;
+    form.appendChild(keyInput);
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type  = 'hidden';
+    qtyInput.name  = 'qty';
+    qtyInput.value = qty;
+    form.appendChild(qtyInput);
+
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}

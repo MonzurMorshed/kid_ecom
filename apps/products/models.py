@@ -134,6 +134,20 @@ class Product(models.Model):
     description = models.TextField(
         blank=True,
         null=True,
+        help_text="Short description / summary of the product.",
+    )
+
+    long_description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Full detailed description of the product.",
+    )
+
+    specifications = models.JSONField(
+        default=list,
+        blank=True,
+        null=True,
+        help_text="Dynamic specifications list e.g. [{'label': 'Pieces', 'value': '500'}]",
     )
 
     price = models.DecimalField(
@@ -197,6 +211,23 @@ class Product(models.Model):
         self.is_deleted = False
         self.deleted_at = None
         self.save(update_fields=['is_deleted', 'deleted_at'])
+
+    def get_specifications_list(self):
+        """Returns specifications as a list of dicts [{'label': ..., 'value': ...}]"""
+        if not self.specifications:
+            return []
+        if isinstance(self.specifications, list):
+            result = []
+            for item in self.specifications:
+                if isinstance(item, dict):
+                    label = item.get('label') or item.get('key') or item.get('name')
+                    value = item.get('value')
+                    if label and value:
+                        result.append({'label': str(label).strip(), 'value': str(value).strip()})
+            return result
+        if isinstance(self.specifications, dict):
+            return [{'label': str(k).strip(), 'value': str(v).strip()} for k, v in self.specifications.items() if v]
+        return []
 
 
 # =========================================================
