@@ -15,8 +15,8 @@
         </div>
         <a href="{% url 'accounts:logout' %}"
            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-ink/15 text-sm font-medium text-ink/60 hover:border-coral hover:text-coral transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-            Sign Out
+            <i class="fa-solid fa-arrow-right-from-bracket text-xs" aria-hidden="true"></i>
+            <span>Sign Out</span>
         </a>
     </div>
 
@@ -37,12 +37,14 @@
                 {% endif %}
                 <div class="mt-5 space-y-2">
                     <a href="{% url 'accounts:profile_edit' %}"
-                       class="block w-full py-2.5 rounded-xl bg-coral text-white font-bold text-sm hover:bg-coral/90 transition-all">
-                        Edit Profile
+                       class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-coral text-white font-bold text-sm hover:bg-coral/90 transition-all">
+                        <i class="fa-solid fa-user-pen text-xs" aria-hidden="true"></i>
+                        <span>Edit Profile</span>
                     </a>
                     <a href="{% url 'accounts:change_password' %}"
-                       class="block w-full py-2.5 rounded-xl border-2 border-ink/10 text-ink/70 font-bold text-sm hover:border-coral hover:text-coral transition-all">
-                        Change Password
+                       class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border-2 border-ink/10 text-ink/70 font-bold text-sm hover:border-coral hover:text-coral transition-all">
+                        <i class="fa-solid fa-key text-xs" aria-hidden="true"></i>
+                        <span>Change Password</span>
                     </a>
                 </div>
             </div>
@@ -62,7 +64,10 @@
             <!-- Delivery Address -->
             {% if customer.address %}
             <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-5">
-                <h3 class="text-xs font-bold text-ink/50 uppercase tracking-widest mb-3">📍 Delivery Address</h3>
+                <h3 class="text-xs font-bold text-ink/50 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <i class="fa-solid fa-location-dot text-coral" aria-hidden="true"></i>
+                    <span>Delivery Address</span>
+                </h3>
                 <p class="text-sm text-ink/70 leading-relaxed">{{ customer.address }}</p>
             </div>
             {% endif %}
@@ -102,11 +107,14 @@
                 </div>
                 {% else %}
                 <div class="py-16 text-center">
-                    <div class="text-5xl mb-4">🛍️</div>
+                    <div class="w-16 h-16 rounded-full bg-coral/10 text-coral text-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                    </div>
                     <p class="text-sm text-ink/50 mb-4">No orders yet — start exploring!</p>
                     <a href="{% url 'storefront:shop' %}"
                        class="inline-flex items-center gap-2 rounded-2xl bg-coral px-6 py-3 text-sm font-bold text-white hover:bg-coral/90 transition-all">
-                        Browse the shop →
+                        <span>Browse the shop</span>
+                        <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
                     </a>
                 </div>
                 {% endif %}

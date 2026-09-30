@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Brand, Product, ProductOption, ProductOptionValue, ProductVariant, ProductImage
+from .models import Category, Brand, Product, ProductOption, ProductOptionValue, ProductVariant, ProductImage, ProductReview
 
 
 @admin.register(Category)
@@ -54,3 +54,11 @@ class ProductVariantAdmin(admin.ModelAdmin):
     list_display = ("product", "sku", "stock", "is_active")
     list_filter = ("is_active",)
     search_fields = ("sku", "product__title")
+
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ("product", "name", "rating", "title", "is_approved", "created_at")
+    list_filter = ("rating", "is_approved", "created_at")
+    search_fields = ("name", "email", "title", "comment", "product__title")
+    list_editable = ("is_approved",)

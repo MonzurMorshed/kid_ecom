@@ -121,7 +121,7 @@
                         <p class="text-2xl font-bold {% if product.stock < 5 %}text-rose-400{% elif product.stock < 20 %}text-amber-400{% else %}text-slate-200{% endif %}">
                             {{ product.stock }}
                         </p>
-                        {% if product.stock < 5 %}<p class="text-xs text-rose-400 mt-1 font-medium">⚠ Low stock</p>{% endif %}
+                        {% if product.stock < 5 %}<p class="text-xs text-rose-400 mt-1 font-medium"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Low stock</p>{% endif %}
                     </div>
                     <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 col-span-2 sm:col-span-1">
                         <p class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1.5">Product ID</p>

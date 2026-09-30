@@ -9,6 +9,7 @@
     <!-- Alpine.js CDN -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="bg-slate-950 font-['Inter'] text-slate-100 min-h-screen flex items-center justify-center p-4 py-8">
 
@@ -16,10 +17,8 @@
         
         <!-- Header -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-sky-500/10 text-sky-400 rounded-xl mb-3 border border-sky-500/20">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-sky-500/10 text-sky-400 rounded-xl mb-3 border border-sky-500/20 text-lg">
+                <i class="fa-solid fa-user-plus"></i>
             </div>
             <h1 class="text-2xl font-bold text-white tracking-tight">Kidurabd Admin</h1>
             <p class="text-sm text-slate-400 mt-1">Create a new admin account</p>
@@ -85,15 +84,19 @@
             </div>
 
             <button type="submit" 
-                    class="w-full py-3.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/25 active:scale-[0.99] transition duration-200 mt-2">
-                Register Admin Account
+                    class="w-full py-3.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/25 active:scale-[0.99] transition duration-200 mt-2 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Register Admin Account</span>
             </button>
         </form>
 
         <!-- Footer -->
         <div class="mt-8 text-center text-sm text-slate-400">
             Already have an admin account? 
-            <a href="{% url 'custom_admin:login' %}" class="text-sky-400 font-medium hover:underline">Sign In</a>
+            <a href="{% url 'custom_admin:login' %}" class="inline-flex items-center gap-1.5 text-sky-400 font-medium hover:underline ml-1">
+                <span>Sign In</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
         </div>
     </div>
 

@@ -1,4 +1,4 @@
-﻿{% extends 'custom_admin/admin_base.html' %}
+{% extends 'custom_admin/admin_base.html' %}
 
 {% block title %}Customers{% endblock %}
 {% block page_title %}Customers{% endblock %}
@@ -166,7 +166,10 @@
         <div class="flex items-center gap-1">
             {% if customers.has_previous %}
             <a href="?{% if q %}q={{ q }}&{% endif %}{% if status %}status={{ status }}&{% endif %}page={{ customers.previous_page_number }}"
-               class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">&laquo; Prev</a>
+               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                <span>Prev</span>
+            </a>
             {% endif %}
             {% for num in customers.paginator.page_range %}
                 {% if customers.number == num %}
@@ -178,7 +181,10 @@
             {% endfor %}
             {% if customers.has_next %}
             <a href="?{% if q %}q={{ q }}&{% endif %}{% if status %}status={{ status }}&{% endif %}page={{ customers.next_page_number }}"
-               class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">Next &raquo;</a>
+               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                <span>Next</span>
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            </a>
             {% endif %}
         </div>
     </div>

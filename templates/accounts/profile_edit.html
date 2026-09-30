@@ -11,9 +11,9 @@
         <div class="p-8 sm:p-10">
 
             <!-- Back link -->
-            <a href="{% url 'accounts:profile' %}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-coral transition mb-6">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Back to Profile
+            <a href="{% url 'accounts:profile' %}" class="inline-flex items-center gap-2 text-sm text-ink/50 hover:text-coral transition mb-6">
+                <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
+                <span>Back to Profile</span>
             </a>
 
             <h1 class="text-2xl font-bold text-ink mb-1">Edit Profile</h1>
@@ -66,8 +66,9 @@
 
                 <div class="mt-6 flex gap-3">
                     <button type="submit"
-                            class="flex-1 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
-                        Save Changes
+                            class="flex-1 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-button hover:bg-coral/90 transition-all active:translate-y-1 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk text-xs" aria-hidden="true"></i>
+                        <span>Save Changes</span>
                     </button>
                     <a href="{% url 'accounts:profile' %}"
                        class="px-5 py-3.5 rounded-2xl border-2 border-ink/15 text-ink/70 font-bold text-sm hover:border-rose-300 hover:text-rose-500 transition-all">

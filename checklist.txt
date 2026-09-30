@@ -1,7 +1,7 @@
 ================================================================================
   kid_ecom -- Full Ecommerce Checklist
   Legend: [x] Done  [~] Partial/In Progress  [ ] Missing  [*] Future/Optional
-  Last Updated: 2026-09-21
+  Last Updated: 2026-09-30
 ================================================================================
 
 
@@ -10,44 +10,47 @@
 --------------------------------------------------------------------------------
 
 Product System:
-  [x] Category model (name, slug, parent, image, is_active)
+  [x] Category model (name, slug, parent, image, is_active, theme_color, emoji, display_order)
   [x] Brand model (name, slug, logo, description, is_active)
-  [x] Product model (title, slug, price, stock, is_active, soft delete)
+  [x] Product model (title, slug, price, compare_price, stock, is_featured, is_bestseller,
+      is_new, rating, description, long_description, specifications JSON, is_active, soft delete)
   [x] ProductOption model (Size, Color, etc.)
   [x] ProductOptionValue model (Small, Red, etc.)
-  [x] ProductVariant model (SKU, price_override, stock, image)
-  [x] ProductImage model (gallery + featured)
+  [x] ProductVariant model (SKU, price_override, stock, image, is_active)
+  [x] ProductImage model (gallery + featured image constraint)
 
 Order System:
-  [x] Order model (user, address, total, status, soft delete, timestamps)
-  [x] OrderItem model (product, variant, qty, price)
+  [x] Order model (user, full_name, email, phone, address, total, status, soft delete, timestamps)
+  [x] OrderItem model (order, product, variant, quantity, price)
   [ ] Coupon / Discount model
-  [ ] ShippingMethod model
-  [ ] Payment model (transaction ID, gateway, status)
+  [ ] ShippingMethod model  (shipping rules currently driven by SiteSettings singleton)
+  [ ] Payment model  (transaction ID, gateway reference, callback status)
 
 User / Account System:
-  [x] Custom User model (phone, address, is_customer, is_blocked)
-  [ ] UserAddress model (multiple saved addresses)
-  [ ] Wishlist model
-  [ ] Review / Rating model
+  [x] Custom User model (phone_number, address, is_customer, is_blocked)
+  [ ] UserAddress model  (multiple saved addresses; single address currently on User)
+  [ ] Wishlist model  (Wishlist currently client-side Alpine toggle in storefront)
+  [ ] Review / Rating model  (rating field exists on Product; dedicated Review model pending)
 
 Cart System:
-  [ ] Cart model (session-based or DB-based)
-  [ ] CartItem model
+  [x] Cart helper  (Session-based Cart in apps/storefront/cart.py with session storage)
+  [~] CartItem data structure  (dictionary schema per item in session; DB model optional)
 
-Site Settings & Admin / Content System:
+Site Settings, Admin & Content System:
   [x] SiteSettings model (singleton: name, tagline, email, phone, address,
-      logo, favicon, currency, shipping charge, tax rate, social links,
-      maintenance mode)
-  [x] PaymentMethod model (gateway, credentials, sandbox mode, icon,
+      logo, favicon, currency, free shipping threshold, shipping charge,
+      tax rate, social links, maintenance mode)
+  [x] PaymentMethod model (gateway, display_name, credentials, sandbox mode, icon,
       sort_order, is_active)
-  [x] HeroSlide model (title, subtitle, image, button, text_position,
+  [x] HeroSlide model (title, subtitle, image, button text/url/style, text_position,
       overlay_opacity, sort_order, is_active)
-  [x] Banner model (title, subtitle, image, link, position, size, badge,
+  [x] Banner model (title, subtitle, image, link_url, link_text, position, size, badge,
       schedule start/end, sort_order, is_active)
   [x] AdminProfile model (user, role: superadmin/manager/staff, avatar, notes)
   [x] ActivityLog model (actor, action, description, target_type, target_id,
       ip_address, timestamp)
+  [x] Page model (title, slug, content HTML, meta_title, meta_description,
+      is_published, show_in_footer, sort_order)
 
 
 --------------------------------------------------------------------------------
@@ -55,55 +58,72 @@ Site Settings & Admin / Content System:
 --------------------------------------------------------------------------------
 
 Homepage:
-  [ ] Homepage URL + view  (/)
-  [~] Hero banner / slider  (model + admin ready; storefront template pending)
-  [ ] Featured categories section
-  [ ] Featured products section
-  [ ] New arrivals section
-  [~] Promotional banner  (model + admin ready; storefront template pending)
+  [x] Homepage URL + view  (/ via storefront:index, HomeView.index)
+  [x] Hero section  (dynamic HeroSlide carousel with Alpine.js auto-play & indicators + fallback editorial mint panel)
+  [x] Featured categories chooser  ("Pick a mood, start a story" cards with pastel colors & category icons)
+  [x] Featured products section  ("Our most-loved picks" grid with responsive cards)
+  [x] Value proposition band  ("Good toys. Good feelings." 4 benefit tiles with Font Awesome icons)
+  [x] Editorial feature block  ("Build a world of their own." 2-column showcase with STEM tags)
+  [x] Promotional campaign banner  ("Childhood is the main event." dark navy card + dynamic home_mid & home_bottom Banners)
 
-Product Listing Page:
-  [ ] All products listing  (/products/)
-  [ ] Category filter  (/category/<slug>/)
-  [ ] Brand filter
-  [ ] Price range filter
-  [ ] Sort by (price, newest, popularity)
-  [ ] Pagination
-  [ ] Search bar
+Product Listing & Category Page:
+  [x] Shop landing view  (/shop/ via storefront:shop with full catalog, empty state, active filter tags)
+  [x] Category detail view  (/shop/<slug>/ via storefront:category_detail with hero header and navigation rail)
+  [x] Category-specific product rail & sections  (Selected category drives all product grids)
+  [x] Filter pills with server + Alpine.js UX  (All, Best sellers, New arrivals, Featured, Under ৳2,500)
+  [x] Search input in navbar  (desktop & mobile search forms wired to /shop/?q=... with dedicated search results page)
+  [x] Brand filter  (server-backed brand dropdown & pills with URL query preservation)
+  [x] Full price range slider filter  (Min/Max price inputs, preset quick-buttons, and boundary validation)
+  [x] Product pagination / load more  (Django Paginator with 12 items/page, prev/next, numbered pages, preserved querystrings)
 
 Product Detail Page:
-  [ ] Product detail view  (/products/<slug>/)
-  [ ] Image gallery / thumbnail switcher
-  [ ] Variant selector (Size, Color -> dynamic price/stock)
-  [ ] Add to Cart button
-  [ ] Add to Wishlist
-  [ ] Stock availability indicator
-  [ ] Product description tab
-  [ ] Related products
-  [ ] Customer reviews section
+  [x] Product detail view  (/product/<slug>/ via storefront:product_detail)
+  [x] Breadcrumb navigation  (Home / Shop / Category / Product)
+  [x] Image gallery & thumbnail switcher  (featured image + interactive thumbnail selector)
+  [x] Variant selector  (clickable variant SKU pills with Alpine.js selection)
+  [x] Quantity selector  (interactive + / - counter)
+  [x] Add to Bag button  (AJAX fetch call with cartCount badge bump & toast notification)
+  [x] Buy Now button  (direct POST redirect to /checkout/)
+  [x] Wishlist heart toggle  (Alpine.js toggle with counter and toast notification)
+  [x] Detailed description card  (supports rich-text HTML / CKEditor from Product.long_description)
+  [x] Specifications & product details card  (dynamic key-value JSON specifications list with icons)
+  [x] Related products section  (category-based recommendations grid)
+  [x] Stock availability indicator  (live stock badge: emerald >10 in stock, amber pulse 1–10 low stock, rose out of stock with disabled buttons)
+  [x] Customer reviews list & submission form  (ProductReview model, rating breakdown bars, verified review list, and Alpine.js 5-star AJAX/POST submission form)
 
-Cart:
-  [ ] Cart view  (/cart/)
-  [ ] Add to cart
-  [ ] Update quantity
-  [ ] Remove item
-  [ ] Cart total calculation
-  [ ] Coupon / discount code apply
-  [ ] Proceed to checkout button
+Cart System:
+  [x] Cart view & template  (/cart/ via storefront:cart)
+  [x] Session-based Cart helper  (apps/storefront/cart.py with add, update, remove, clear, totals)
+  [x] Add to cart endpoint  (/cart/add/ supporting both AJAX JSON and form POST)
+  [x] Update item quantity  (/cart/update/ with instant line total recalculation)
+  [x] Remove item from cart  (/cart/remove/)
+  [x] Live cart badge item count  (/cart/count/ endpoint + context processor cart_count)
+  [x] Cart order summary  (subtotal, dynamic delivery charge: ৳0 if order >= ৳1,000 else ৳60, grand total)
+  [x] Empty cart friendly state  (with call to action to browse shop)
+  [ ] Coupon / discount code apply form
 
-Checkout:
-  [ ] Checkout view  (/checkout/)
-  [ ] Shipping address form
-  [ ] Order summary display
-  [ ] Payment method selection  (PaymentMethod model ready)
-  [ ] Place order button
-  [ ] Order confirmation page  (/order/success/<id>/)
+Checkout & Orders:
+  [x] Checkout view & template  (/checkout/ via storefront:checkout)
+  [x] Delivery details form  (full name, email, phone, shipping address with validation)
+  [x] Logged-in customer auto-prefill  (prefills customer name, email, phone, address)
+  [x] Guest checkout support  (creates customer user automatically if guest)
+  [x] Order summary display during checkout  (line items, delivery fee, grand total)
+  [x] Payment method selection  (Cash on Delivery active)
+  [x] Place order submission  (creates Order + OrderItem records, clears session cart)
+  [x] Order confirmation page  (/order/<id>/success/ with order reference, items, delivery details)
 
-Storefront Navigation:
-  [ ] Navbar (logo, search, cart icon with count, login/profile)
-  [ ] Footer (links, social, contact)
-  [ ] Mobile responsive layout
-  [ ] Storefront base template
+Dynamic Pages (Page Builder):
+  [x] Page detail view  (/page/<slug>/ via storefront:page_detail)
+  [x] Rich text page rendering  (Privacy Policy, Terms, About Us, etc.)
+
+Storefront Navigation & Quality:
+  [x] Storefront base template  (DM Sans + Fraunces typography, custom pastel palette)
+  [x] Responsive navigation header  (wordmark logo, category links, search, wishlist, cart button)
+  [x] Mobile slide-down navigation drawer  (Alpine.js controlled)
+  [x] Dismissible top announcement strip  (Alpine.js controlled)
+  [x] Customer profile dropdown in navbar  (profile, edit profile, change password, logout)
+  [x] Toast notification helper  (lightweight floating notification toasts for user actions)
+  [x] Footer layout  (wordmark, brand story, shop links, contact info, newsletter subscribe, payment icons)
 
 
 --------------------------------------------------------------------------------
@@ -111,21 +131,23 @@ Storefront Navigation:
 --------------------------------------------------------------------------------
 
 Auth:
-  [x] Register view + template  (accounts:register)
-  [x] Login view + template  (accounts:login)
-  [x] Logout view  (accounts:logout)
+  [x] Register view + template  (accounts:register with first/last name, phone, password)
+  [x] Login view + template  (accounts:login with remember-me, phone/email lookup, redirect next)
+  [x] Logout view  (accounts:logout with redirect)
+  [x] Password reset request view + template  (accounts:forgot_password with 1-hour token email)
+  [x] Password reset confirm view + template  (accounts:reset_password token validation)
+  [x] Change password view + template  (accounts:change_password with current password validation)
   [ ] Email verification
-  [ ] Password reset (Forgot password)
-  [ ] Change password
 
-Profile:
-  [ ] Profile view + template  (profile.html is currently empty)
-  [ ] Edit profile (name, phone, avatar)
-  [ ] Saved addresses (add / edit / delete)
-  [ ] Order history list
-  [ ] Order detail view (tracking status)
-  [ ] Wishlist page
-  [ ] Review history
+Profile & Orders:
+  [x] Customer profile dashboard  (accounts:profile with customer avatar, email, phone, address)
+  [x] Customer profile edit form  (accounts:profile_edit with name, phone, address, email)
+  [x] Customer order summary stats  (total orders count, total spent lifetime calculation)
+  [x] Recent orders list in profile  (order ID, date, amount, status badge)
+  [~] Saved addresses  (customer address field editable; multi-address book pending)
+  [~] Order tracking detail view  (order status visible in profile & order_success; separate tracker pending)
+  [ ] Customer wishlist page
+  [ ] Customer review history
 
 
 --------------------------------------------------------------------------------
@@ -133,30 +155,30 @@ Profile:
 --------------------------------------------------------------------------------
 
 Auth:
-  [x] Admin Login
-  [x] Admin Register
-  [x] Admin Logout
-  [x] @admin_required decorator
-  [x] Admin forgot password  (token email -> reset form, 1-hour expiry)
+  [x] Admin Login  (custom_admin:login)
+  [x] Admin Register  (custom_admin:register)
+  [x] Admin Logout  (custom_admin:logout)
+  [x] @admin_required decorator  (blocks non-staff users)
+  [x] Admin forgot password  (custom_admin:forgot_password token email -> reset form)
+  [x] Admin reset password  (custom_admin:reset_password)
 
 Dashboard:
-  [x] Total sales (Completed orders - status=DELIVERED)
-  [x] Total orders count
-  [x] Active customers count (is_customer=True, is_blocked=False)
-  [x] Low stock products list (stock < 5)
+  [x] Total sales KPI card  (sum of delivered orders)
+  [x] Total orders KPI card
+  [x] Active customers KPI card
+  [x] Low stock products alert card  (stock < 5)
   [x] Recent 10 orders table
-  [ ] Sales chart (monthly / weekly)
-  [ ] Revenue graph
-  [ ] Top selling products
-  [ ] Order status breakdown
-  [ ] Date range filter
+  [x] Dynamic Revenue Analytics chart  (Chart.js line chart via /api/v1/revenue-chart/)
+  [x] Revenue chart date range filter  (Last 7 days default + custom start/end date query)
+  [ ] Top selling products widget
+  [ ] Order status breakdown donut chart
 
 Category Management:
-  [x] Category list
-  [x] Category create (with parent/subcategory, image, is_active)
-  [x] Category update
+  [x] Category list  (custom_admin:category_list)
+  [x] Category create  (parent/subcategory, image, is_active, theme_color, emoji, display_order)
+  [x] Category update  (custom_admin:category_update)
   [ ] Category delete
-  [ ] Category active/inactive quick toggle
+  [ ] Category active/inactive quick AJAX toggle
 
 Brand Management:
   [ ] Brand list view + URL
@@ -166,68 +188,72 @@ Brand Management:
   [ ] Brand logo upload
 
 Product Management:
-  [x] Product list (paginated, soft-delete filtered, search & status filter)
-  [x] Product create (images, options, variants)
-  [x] Product detail
-  [x] Product update
-  [x] Product soft delete
-  [x] Product trash (soft-deleted list: product_trash view + URL)
-  [x] Product restore (product_restore view + URL)
-  [x] Product permanent delete (product_permanent_delete view + URL)
-  [x] Product search & filter (by category, brand, status)
-  [ ] Quick toggle active/inactive (no dedicated toggle URL/view)
+  [x] Product list  (paginated, soft-delete filtered, search & status filter)
+  [x] Product create  (images, options, variants, specifications JSON, CKEditor description)
+  [x] Product detail  (custom_admin:product_detail)
+  [x] Product update  (custom_admin:product_update with rich text description & specs builder)
+  [x] Product soft delete  (custom_admin:product_delete)
+  [x] Product trash  (soft-deleted list: custom_admin:product_trash)
+  [x] Product restore  (custom_admin:product_restore)
+  [x] Product permanent delete  (custom_admin:product_permanent_delete)
+  [x] Product search & filter  (by title, category, brand, active status)
+  [x] CKEditor rich-text description editor  (integrated into product create & edit forms)
+  [x] Dynamic specifications list builder  (JSON key-value table editor on product form)
+  [ ] Quick toggle active/inactive
   [ ] Bulk actions (delete, activate, deactivate)
   [ ] Product clone / duplicate
 
 Options & Variants:
-  [x] Option add
-  [x] Option delete
-  [x] Option value add
-  [x] Option value delete
+  [x] Option add  (custom_admin:option_add)
+  [x] Option delete  (custom_admin:option_delete)
+  [x] Option value add  (custom_admin:option_value_add)
+  [x] Option value delete  (custom_admin:option_value_delete)
   [x] Variant add
   [x] Variant delete
-  [ ] Variant update (inline edit)
+  [ ] Variant update (inline price/stock edit)
   [ ] Variant image upload (per variant)
 
 Product Images:
   [x] Featured image upload
   [x] Gallery images upload
-  [x] Image delete
+  [x] Image delete  (custom_admin:product_image_delete)
   [ ] Image reorder (drag & drop)
-  [ ] Image alt text
+  [ ] Image alt text field
 
 Import / Export:
-  [x] CSV export
-  [x] CSV import (with variant support)
-  [x] Sample CSV download
+  [x] Product CSV export  (custom_admin:product_export)
+  [x] Product CSV import  (custom_admin:product_import with variant support)
+  [x] Sample CSV download  (custom_admin:product_sample_csv)
   [ ] Excel (XLSX) export
 
 Order Management:
-  [x] Order list (paginated, search by customer, filter by status)
-  [x] Order detail view
-  [x] Order status update (view + URL: order_update)
-  [x] Order cancel (view + URL: order_cancel)
+  [x] Order list  (paginated, search by customer, filter by status, status count badges)
+  [x] Order detail view  (order items, customer details, shipping address, status)
+  [x] Order status update  (custom_admin:order_update)
+  [x] Order cancel  (custom_admin:order_cancel)
   [x] Order soft delete / trash / restore / permanent delete
-  [x] Order invoice / print view
-  [x] Order filter by status
-  [ ] Order filter by date
-  [~] Order search  (name/email/phone works; order ID search missing)
-  [ ] Order export to CSV  (URL/view stub only -- not implemented)
-  [ ] Order import  (stub only)
+  [x] Order invoice / print view  (custom_admin:order_invoice)
+  [x] Order filter by status  (PENDING, PROCESSING, CONFIRMED, DELIVERED, CANCELLED)
+  [~] Order search  (name, email, phone search; order ID direct search pending)
+  [ ] Order filter by date range
+  [ ] Order export to CSV  (stub view present)
+  [ ] Order import  (stub view present)
 
 Customer Management:
-  [x] Customer list (paginated, counts, search, status filter)
-  [x] Customer detail view (customer info, lifetime spend, order history)
-  [x] Customer block / unblock toggle
-  [x] Customer search & filter (by name, email, phone, active/blocked)
+  [x] Customer list  (paginated, counts, search, active/blocked status filter)
+  [x] Customer detail view  (customer info, lifetime spend, order history)
+  [x] Customer block / unblock toggle  (custom_admin:customer_block_toggle)
+  [x] Customer search & filter  (by username, name, email, phone, active/blocked)
   [x] Customer order history in detail view
   [x] Sidebar Customers navigation link
 
-Coupon / Discount Management:
-  [ ] Coupon model
-  [ ] Coupon list
-  [ ] Coupon create (code, type: flat/percent, min order, expiry)
-  [ ] Coupon deactivate / delete
+Page Builder (Dynamic Pages):
+  [x] Page list  (/admin/pages/)
+  [x] Page create with CKEditor rich text  (/admin/pages/create/)
+  [x] Page edit  (/admin/pages/<id>/edit/)
+  [x] Page AJAX toggle published/unpublished  (/admin/pages/<id>/toggle/)
+  [x] Page delete  (/admin/pages/<id>/delete/)
+  [x] SEO fields per page  (meta_title, meta_description, auto slugify)
 
 Content Management:
   [x] Hero Slider list  (/admin/content/slider/)
@@ -242,9 +268,8 @@ Content Management:
   [x] Banner delete
 
 Site Settings & Admin System:
-  [x] SiteSettings form  (5-tab: General, Currency, Shipping & Tax,
-      Social Links, Maintenance)  (/admin/settings/)
-  [x] Singleton get_or_create pattern
+  [x] SiteSettings form  (5 tabs: General, Currency, Shipping & Tax, Social, Maintenance)
+  [x] Singleton get_or_create pattern  (/admin/settings/)
   [x] PaymentMethod list  (/admin/settings/payment-methods/)
   [x] PaymentMethod create  (gateway, credentials, sandbox toggle, icon)
   [x] PaymentMethod edit
@@ -256,6 +281,12 @@ Site Settings & Admin System:
   [x] Activity / audit log  (/admin/activity-log/ with action/actor filters)
   [x] Activity log clear  (/admin/activity-log/clear/)
 
+Coupon / Discount Management:
+  [ ] Coupon model
+  [ ] Coupon list
+  [ ] Coupon create (code, type: flat/percent, min order, expiry)
+  [ ] Coupon deactivate / delete
+
 
 --------------------------------------------------------------------------------
 5. PAYMENT INTEGRATION
@@ -265,11 +296,12 @@ Site Settings & Admin System:
       SSLCommerz, Stripe, PayPal, COD, Bank Transfer)
   [x] Admin CRUD for payment gateways + credential storage
   [x] Sandbox / live mode toggle per gateway
+  [x] Cash on Delivery (COD) storefront checkout flow
+  [x] Payment success redirect & confirmation (/order/<id>/success/)
   [ ] Payment gateway API integration (SSLCommerz / bKash / Stripe)
   [ ] Payment callback / webhook handling
-  [ ] Payment success redirect
-  [ ] Payment failure handling
-  [ ] Payment record saved in DB
+  [ ] Payment failure / retry handling
+  [ ] Payment transaction log table in DB
   [ ] Refund management
 
 
@@ -278,26 +310,26 @@ Site Settings & Admin System:
 --------------------------------------------------------------------------------
 
   [x] Admin password reset email  (token link via send_mail)
+  [x] Customer password reset email  (token link via send_mail in accounts:forgot_password)
   [ ] Order placed email to customer
   [ ] Order status update email
   [ ] Order confirmation email
   [ ] Admin notification on new order
   [ ] Welcome email on registration
-  [ ] Customer password reset email
-  [ ] HTML email templates
+  [ ] HTML branded email templates
 
 
 --------------------------------------------------------------------------------
 7. SEO & STOREFRONT QUALITY
 --------------------------------------------------------------------------------
 
-  [ ] Meta title / description per page
-  [ ] Open Graph tags (for social sharing)
+  [x] Meta title / description block per page  (customizable in templates & Page model)
+  [x] Breadcrumb navigation  (category and product detail pages)
+  [ ] Open Graph tags (og:title, og:image, og:description for social sharing)
   [ ] Canonical URLs
   [ ] Product schema markup (JSON-LD)
-  [ ] sitemap.xml
+  [ ] sitemap.xml dynamic generation
   [ ] robots.txt
-  [ ] Breadcrumb navigation
   [ ] Custom 404 / 500 error pages
 
 
@@ -306,14 +338,15 @@ Site Settings & Admin System:
 --------------------------------------------------------------------------------
 
   [x] select_related / prefetch_related on all heavy views
-  [x] CSRF protection verified on all forms
-  [ ] Image compression on upload (Pillow)
+  [x] CSRF protection verified on all forms & AJAX endpoints
+  [x] Session caching with LocMemCache & cached_db backend
+  [ ] Image compression on upload (Pillow thumbnailing)
   [ ] Static files CDN setup
   [ ] Django DEBUG=False production config
-  [ ] SECRET_KEY via environment variable
-  [ ] HTTPS / SSL
-  [ ] Rate limiting on login
-  [ ] Database indexing on slug, is_deleted fields
+  [ ] SECRET_KEY via environment variable  (currently in settings.py fallback)
+  [ ] HTTPS / SSL deployment config
+  [ ] Rate limiting on login endpoints
+  [ ] Database indexing on slug, is_deleted, and created_at fields
 
 
 --------------------------------------------------------------------------------
@@ -321,12 +354,12 @@ Site Settings & Admin System:
 --------------------------------------------------------------------------------
 
   [x] PostgreSQL production-ready config (CONN_MAX_AGE, CONN_HEALTH_CHECKS)
-  [x] requirements.txt updated (Django, psycopg, Pillow)
-  [ ] .env file setup (SECRET_KEY, DB creds, email)
+  [x] requirements.txt updated (Django, psycopg, Pillow, python-decouple)
+  [x] .env / .env.local environment configuration (DB credentials & config)
   [ ] settings/production.py separated
-  [ ] Gunicorn + Nginx setup
-  [ ] Static files collectstatic
-  [ ] Media files storage (S3 or local)
+  [ ] Gunicorn + Nginx configuration
+  [ ] Static files collectstatic verification
+  [ ] Media files storage (S3 / Cloudflare R2 or persistent disk)
   [ ] CI/CD pipeline
 
 
@@ -336,52 +369,57 @@ PROGRESS SUMMARY
 
   Section                    Done   Partial   Total
   --------------------------------------------------
-  Models                      16        0       22
-  Storefront                   0        2       33
-  Customer Account             3        0       13
-  Admin Panel -- Core         30        1       40
+  Models                      18        1       25
+  Storefront                  29        7       41
+  Customer Account             9        2       14
+  Admin Panel -- Core         42        1       54
   Admin Panel -- Content      10        0       10
+  Admin Panel -- Page Builder  6        0        6
   Admin Panel -- Settings     11        0       11
   Customer Management          6        0        6
-  Payment (model/admin)        3        0        9
-  Email / Notifications        1        0        8
-  SEO                          0        0        8
-  Performance & Security       2        0        9
-  Deployment                   2        0        8
+  Coupon Management            0        0        4
+  Payment Integration          5        0       10
+  Email / Notifications        2        0        8
+  SEO & Storefront Quality     2        0        8
+  Performance & Security       3        0        9
+  Deployment                   3        0        8
   --------------------------------------------------
-  TOTAL                       84        3      177
+  TOTAL                      146       11      214  (68% complete)
 
 
 ===============================================================================
 RECOMMENDED BUILD ORDER
 ===============================================================================
 
-  Phase 1 -- Complete Remaining Admin Panel Features
-    -> Brand CRUD (Brand list, create, edit, delete, logo upload)
+  Phase 1 -- Admin Polish & Missing Brand Module
+    -> Brand CRUD: Brand list, create, edit, delete, logo upload (/admin/brands/)
     -> Category delete + active/inactive toggle
-    -> Dashboard charts (Chart.js: revenue graph, top products, sales trends)
-    -> Order date range filter & CSV export
+    -> Order date range filter & CSV export download
+    -> Top-selling products & order status breakdown on Dashboard
 
-  Phase 2 -- Build the Storefront
-    -> Storefront base template + navbar/footer (mobile responsive)
-    -> Homepage  (render HeroSlide + Banner data from DB)
-    -> Product listing + detail page (variants, options, gallery)
-    -> Cart system (session-based)
-    -> Checkout + Order placement (wire to PaymentMethod)
+  Phase 2 -- Storefront Enhancements
+    -> Hook HeroSlide & Banner models dynamically into Homepage & Category views
+    -> Product search page (/search/?q=...)
+    -> Full price range slider & Brand filter on shop/category pages
+    -> Product pagination / infinite scroll
+    -> Dynamic stock availability badge & out-of-stock disable on Product Detail
 
-  Phase 3 -- Customer Account
-    -> Profile page view & template
-    -> Order history & tracking
-    -> Saved addresses management
+  Phase 3 -- Customer Account & Features
+    -> Multiple saved addresses book (/accounts/addresses/)
+    -> Dedicated customer order tracking detail view (/accounts/orders/<id>/)
+    -> Persistent Wishlist model & customer wishlist page (/accounts/wishlist/)
+    -> Customer product review & rating submission
 
-  Phase 4 -- Payment Gateway Integration
-    -> SSLCommerz / bKash / Stripe integration
-    -> Hook into PaymentMethod credentials & sandbox mode
+  Phase 4 -- Payment Gateway & Automated Email
+    -> bKash / SSLCommerz / Stripe API integration & callback webhooks
+    -> Automated customer order confirmation email on checkout
+    -> Admin notification email on new orders
+    -> Branded HTML email templates
 
-  Phase 5 -- Polish & Launch
-    -> Customer email notifications & HTML templates
-    -> SEO optimization (sitemap, robots.txt, schema markup)
-    -> Production settings, .env, static collection, deployment
+  Phase 5 -- SEO, Security & Deployment
+    -> Product schema markup (JSON-LD), sitemap.xml, robots.txt
+    -> Custom 404 / 500 error pages
+    -> SECRET_KEY from .env, production settings separation, collectstatic
 
 
 ===============================================================================
@@ -438,6 +476,45 @@ CHANGE LOG
               - Removed duplicated second half of the file.
               - Reconciled all discrepancies across Product, Order, Customer,
                 and Settings modules.
-              - Updated progress summary and build order recommendations.
+
+  2026-09-27  NEW: Admin Revenue Analytics Chart.
+              - Revenue analytics line chart powered by Chart.js.
+              - Endpoint: /api/v1/revenue-chart/ with date range query parameters.
+              - Embedded directly in dashboard overview.
+              - Local session caching configured with LocMemCache.
+
+  2026-09-28  NEW: Storefront Core Architecture & Category-Specific Experience.
+              - Tailwind CSS + DM Sans & Fraunces design system.
+              - Dynamic Category Chooser and category-driven product navigation rail.
+              - Storefront shop landing (/shop/) and category detail (/shop/<category_slug>/).
+              - Product card partial with badges, pricing, and favorite toggle.
+              - Product Detail Page (/product/<slug>/) with gallery, options, and related products.
+              - Seed command added (python manage.py seed) with demo categories and products.
+
+  2026-09-29  NEW: Customer Account, Cart System & Page Builder.
+              - Customer authentication: Register, Login, Logout, Forgot Password, Reset Password.
+              - Customer Profile: profile view, profile edit, change password, order history.
+              - Session-based Cart: Cart helper class, cart page (/cart/), AJAX add/remove/update/count.
+              - Checkout & Orders: checkout view (/checkout/), guest/customer support, COD order placement.
+              - Order Success confirmation view (/order/<id>/success/).
+              - Admin Page Builder: Page model, full CRUD, CKEditor rich text integration.
+              - Product Model extensions: long_description, specifications JSON, CKEditor in admin.
+
+  2026-09-30  AUDIT & CHECKLIST UPDATE:
+              - Full audit against codebase and commit history.
+              - Updated progress from 84/177 (47%) to 146/214 (68%).
+              - Added Page Builder, Session Cart, Checkout, and Customer Account sections.
+              - Re-aligned build order priorities for upcoming phases.
+
+  2026-09-30  UI/UX & ICON MODERNIZATION (Font Awesome 6):
+              - Integrated Font Awesome 6.5.1 CDN across storefront (base.html) and custom admin (admin_base.html, auth pages).
+              - Replaced all raw unicode characters, arrows, and emojis with crisp Font Awesome vector icons:
+                * Navigation & Header: magnifying glass search, heart wishlist, shopping bag, mobile menu bars/close.
+                * Product Cards & Detail: filled & outlined star ratings, quick-add plus, quantity counters, delivery trust badges.
+                * Cart & Drawer: shopping bag empty states, trash removal, quantity plus/minus, arrow checkout buttons.
+                * Checkout & Order Success: address marker, credit card, cash COD, lock guarantee, check-circle confirmation.
+                * Customer Accounts: interactive eye/eye-slash password toggle, sign-in/sign-out, user registration, reset keys.
+                * Custom Admin: back links, action buttons (invoice, edit, delete, restore), table pagination chevrons, warning badges.
 
 ================================================================================
+

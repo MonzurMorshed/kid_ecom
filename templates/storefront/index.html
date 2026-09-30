@@ -8,16 +8,121 @@
 <!-- ══════════════════════════════════════════════════
      1. HERO SECTION
 ══════════════════════════════════════════════════ -->
-<section class="bg-mint overflow-hidden" aria-label="Hero">
+<!-- ══════════════════════════════════════════════════
+     1. HERO SECTION (Dynamic Slider or Fallback Hero)
+══════════════════════════════════════════════════ -->
+{% if hero_slides %}
+<section class="relative overflow-hidden bg-mint" aria-label="Hero carousel"
+         x-data="{
+             currentSlide: 0,
+             totalSlides: {{ hero_slides|length }},
+             autoplay: null,
+             init() {
+                 this.startAutoplay();
+             },
+             startAutoplay() {
+                 this.autoplay = setInterval(() => {
+                     this.next();
+                 }, 6000);
+             },
+             stopAutoplay() {
+                 if (this.autoplay) clearInterval(this.autoplay);
+             },
+             next() {
+                 this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+             },
+             prev() {
+                 this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+             }
+         }"
+         @mouseenter="stopAutoplay()"
+         @mouseleave="startAutoplay()">
+
+    <div class="relative min-h-[460px] sm:min-h-[520px] lg:min-h-[580px] w-full overflow-hidden">
+        {% for slide in hero_slides %}
+        <div x-show="currentSlide === {{ forloop.counter0 }}"
+             x-transition:enter="transition ease-out duration-700"
+             x-transition:enter-start="opacity-0 scale-98"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="absolute inset-0 flex items-center bg-cover bg-center"
+             style="background-image: url('{{ slide.image.url }}');">
+
+            <!-- Overlay -->
+            <div class="absolute inset-0 bg-ink"
+                 style="opacity: {{ slide.overlay_opacity|default:35|floatformat:0 }}%;"></div>
+
+            <!-- Content Container -->
+            <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 w-full">
+                <div class="max-w-2xl {% if slide.text_position == 'center' %}mx-auto text-center{% elif slide.text_position == 'right' %}ml-auto text-right{% else %}text-left{% endif %} text-white">
+                    <span class="inline-block rounded-full bg-white/20 backdrop-blur-md px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white mb-4 shadow-sm border border-white/20">
+                        <i class="fa-solid fa-sparkles text-butter mr-1.5" aria-hidden="true"></i> Featured Collection
+                    </span>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-white drop-shadow-sm font-display">
+                        {{ slide.title }}
+                    </h1>
+                    {% if slide.subtitle %}
+                    <p class="mt-4 text-base sm:text-lg text-white/90 leading-relaxed font-sans max-w-xl {% if slide.text_position == 'center' %}mx-auto{% elif slide.text_position == 'right' %}ml-auto{% endif %}">
+                        {{ slide.subtitle }}
+                    </p>
+                    {% endif %}
+                    {% if slide.button_text %}
+                    <div class="mt-8 flex gap-4 {% if slide.text_position == 'center' %}justify-center{% elif slide.text_position == 'right' %}justify-end{% else %}justify-start{% endif %}">
+                        <a href="{{ slide.button_url|default:'/shop/' }}"
+                           class="inline-flex items-center gap-2 rounded-2xl {% if slide.button_style == 'dark' %}bg-ink text-white hover:bg-ink/90{% elif slide.button_style == 'secondary' %}border-2 border-white bg-white/10 backdrop-blur-sm text-white hover:bg-white hover:text-ink{% else %}bg-coral text-white hover:bg-coral/90{% endif %} px-8 py-4 text-sm font-bold shadow-button transition-all transform active:scale-95">
+                            {{ slide.button_text }} <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Navigation Arrows -->
+    {% if hero_slides|length > 1 %}
+    <button @click="prev()"
+            type="button"
+            aria-label="Previous slide"
+            class="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-white/80 hover:bg-white text-ink shadow-md backdrop-blur-sm flex items-center justify-center transition-all hover:scale-105 active:scale-95">
+        <i class="fa-solid fa-chevron-left text-sm" aria-hidden="true"></i>
+    </button>
+    <button @click="next()"
+            type="button"
+            aria-label="Next slide"
+            class="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-white/80 hover:bg-white text-ink shadow-md backdrop-blur-sm flex items-center justify-center transition-all hover:scale-105 active:scale-95">
+        <i class="fa-solid fa-chevron-right text-sm" aria-hidden="true"></i>
+    </button>
+
+    <!-- Slide Indicators -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+        {% for slide in hero_slides %}
+        <button @click="currentSlide = {{ forloop.counter0 }}"
+                type="button"
+                :aria-current="currentSlide === {{ forloop.counter0 }} ? 'true' : 'false'"
+                :aria-label="'Go to slide {{ forloop.counter }}'"
+                :class="currentSlide === {{ forloop.counter0 }} ? 'w-8 bg-white' : 'w-2.5 bg-white/50 hover:bg-white/80'"
+                class="h-2.5 rounded-full transition-all duration-300">
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% else %}
+<!-- Editorial Fallback Hero -->
+<section class="bg-mint overflow-hidden relative" aria-label="Hero">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
             <!-- Left: copy -->
             <div class="text-center lg:text-left">
-                <span class="inline-block rounded-full bg-white/70 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-coral mb-6">
-                    New arrivals every week ✦
+                <span class="inline-block rounded-full bg-white/80 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-coral mb-6 shadow-sm">
+                    <i class="fa-solid fa-sparkles text-butter mr-1.5" aria-hidden="true"></i>New arrivals every week
                 </span>
-                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-ink">
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-ink font-display">
                     Big joy for<br><em class="not-italic text-coral">little</em> humans.
                 </h1>
                 <p class="mt-6 text-base sm:text-lg text-ink/60 leading-relaxed max-w-md mx-auto lg:mx-0">
@@ -26,7 +131,7 @@
                 <div class="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start">
                     <a href="{% url 'storefront:shop' %}"
                        class="inline-flex items-center gap-2 rounded-2xl bg-coral px-7 py-4 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
-                        Shop all toys →
+                        Shop all toys <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
                     </a>
                     <a href="#categories"
                        class="inline-flex items-center gap-2 rounded-2xl border-2 border-ink/15 px-7 py-4 text-sm font-bold text-ink hover:border-coral hover:text-coral transition-all">
@@ -34,37 +139,38 @@
                     </a>
                 </div>
                 <!-- Trust badges -->
-                <div class="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start text-[11px] text-ink/50 font-medium">
-                    <span class="flex items-center gap-1.5"><span class="text-softmint">✓</span> Free delivery over ৳1,000</span>
-                    <span class="flex items-center gap-1.5"><span class="text-softmint">✓</span> Cash on delivery</span>
-                    <span class="flex items-center gap-1.5"><span class="text-softmint">✓</span> 7-day returns</span>
+                <div class="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start text-[11px] text-ink/60 font-medium">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-softmint text-xs" aria-hidden="true"></i> Free delivery over ৳1,000</span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-softmint text-xs" aria-hidden="true"></i> Cash on delivery</span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-softmint text-xs" aria-hidden="true"></i> 7-day returns</span>
                 </div>
             </div>
 
             <!-- Right: illustration area -->
             <div class="relative flex justify-center lg:justify-end">
-                <!-- Yellow circle backdrop -->
                 <div class="relative h-72 w-72 sm:h-80 sm:w-80 lg:h-96 lg:w-96">
                     <div class="absolute inset-0 rounded-full bg-butter opacity-60"></div>
-                    <!-- Central illustration -->
-                    <div class="absolute inset-4 rounded-full bg-butter flex items-center justify-center text-9xl">
-                        🧸
+                    <!-- Central visual badge with icon -->
+                    <div class="absolute inset-4 rounded-full bg-butter flex flex-col items-center justify-center text-ink text-center p-6 shadow-inner">
+                        <i class="fa-solid fa-shapes text-7xl sm:text-8xl text-coral drop-shadow-sm mb-2" aria-hidden="true"></i>
+                        <span class="text-xs font-bold uppercase tracking-wider text-ink/70">Kidurabd Toys</span>
                     </div>
                     <!-- Floating sticker badges -->
-                    <div class="absolute -top-4 -right-2 rotate-12 rounded-2xl bg-white/90 backdrop-blur-sm px-3 py-2 shadow-toy text-xs font-bold text-ink">
-                        ★ 4.9 / 5
+                    <div class="absolute -top-4 -right-2 rotate-12 rounded-2xl bg-white/95 backdrop-blur-sm px-3.5 py-2 shadow-toy text-xs font-bold text-ink flex items-center gap-1.5 border border-ink/5">
+                        <i class="fa-solid fa-star text-amber-400 text-xs" aria-hidden="true"></i> 4.9 / 5 rating
                     </div>
                     <div class="absolute -bottom-4 -left-4 -rotate-6 rounded-2xl bg-coral px-4 py-2 shadow-toy text-xs font-bold text-white">
-                        New in!
+                        <i class="fa-solid fa-bolt mr-1 text-butter" aria-hidden="true"></i> New In!
                     </div>
-                    <div class="absolute top-1/2 -right-8 rotate-3 rounded-2xl bg-lavender px-3 py-1.5 shadow-toy text-xs font-bold text-ink">
-                        🎉 Gift-ready
+                    <div class="absolute top-1/2 -right-8 rotate-3 rounded-2xl bg-lavender px-3.5 py-2 shadow-toy text-xs font-bold text-ink flex items-center gap-1.5 border border-ink/5">
+                        <i class="fa-solid fa-gift text-coral text-xs" aria-hidden="true"></i> Gift-ready
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- ══════════════════════════════════════════════════
      2. CATEGORY CHOOSER
@@ -73,7 +179,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
             <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Explore</span>
-            <h2 class="mt-2 text-4xl sm:text-5xl font-bold leading-tight text-ink">
+            <h2 class="mt-2 text-4xl sm:text-5xl font-bold leading-tight text-ink font-display">
                 Pick a mood, <em class="not-italic text-coral">start</em> a story.
             </h2>
             <p class="mt-3 text-sm text-muted max-w-md mx-auto">Every category is a new adventure waiting to happen.</p>
@@ -83,15 +189,21 @@
         <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {% for cat in categories %}
             <a href="{% url 'storefront:category_detail' cat.slug %}"
-               class="category-card group block rounded-3xl p-6 sm:p-8 text-center border border-ink/5 hover:border-transparent"
+               class="category-card group block rounded-3xl p-6 sm:p-8 text-center border border-ink/5 hover:border-transparent transition-all transform hover:-translate-y-1"
                style="background-color: {{ cat.theme_color|default:'#e6f0e8' }};">
-                <div class="mb-4 text-5xl sm:text-6xl leading-none">{{ cat.emoji|default:"🧸" }}</div>
+                <div class="mb-4 text-5xl sm:text-6xl leading-none transition-transform group-hover:scale-110 duration-200">
+                    {% if cat.image %}
+                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto">
+                    {% else %}
+                    <span class="text-4xl text-ink/70"><i class="fa-solid fa-cubes text-coral" aria-hidden="true"></i></span>
+                    {% endif %}
+                </div>
                 <h3 class="text-base sm:text-lg font-bold text-ink group-hover:text-coral transition-colors">{{ cat.name }}</h3>
                 {% if cat.description %}
-                <p class="mt-1 text-xs text-ink/55">{{ cat.description }}</p>
+                <p class="mt-1 text-xs text-ink/55 line-clamp-2">{{ cat.description }}</p>
                 {% endif %}
-                <span class="mt-3 inline-block text-[11px] font-bold text-ink/40 group-hover:text-coral transition-colors">
-                    Shop now →
+                <span class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-ink/40 group-hover:text-coral transition-colors">
+                    Shop now <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
                 </span>
             </a>
             {% endfor %}
@@ -103,6 +215,40 @@
 </section>
 
 <!-- ══════════════════════════════════════════════════
+     PROMOTIONAL BANNER (Middle if set)
+══════════════════════════════════════════════════ -->
+{% if home_mid_banner %}
+<section class="py-6 sm:py-8" aria-label="Special promotion">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <a href="{{ home_mid_banner.link_url|default:'/shop/' }}"
+           class="group relative block overflow-hidden rounded-3xl bg-cover bg-center min-h-[220px] sm:min-h-[280px] shadow-sm transition-all hover:shadow-md"
+           style="background-image: url('{{ home_mid_banner.image.url }}');">
+            <div class="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/50 to-transparent flex items-center p-8 sm:p-12">
+                <div class="max-w-md text-white">
+                    {% if home_mid_banner.badge_text %}
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-coral text-white mb-3">
+                        {{ home_mid_banner.badge_text }}
+                    </span>
+                    {% endif %}
+                    <h3 class="text-2xl sm:text-3xl font-bold font-display text-white group-hover:text-butter transition-colors">
+                        {{ home_mid_banner.title }}
+                    </h3>
+                    {% if home_mid_banner.subtitle %}
+                    <p class="mt-2 text-sm text-white/80">{{ home_mid_banner.subtitle }}</p>
+                    {% endif %}
+                    {% if home_mid_banner.link_text %}
+                    <span class="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-bold text-ink shadow-sm group-hover:bg-coral group-hover:text-white transition-all">
+                        {{ home_mid_banner.link_text }} <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+    </div>
+</section>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════
      3. FEATURED PRODUCTS SECTION
 ══════════════════════════════════════════════════ -->
 {% if featured_products %}
@@ -111,13 +257,13 @@
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <div>
                 <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Handpicked</span>
-                <h2 class="mt-2 text-4xl sm:text-5xl font-bold text-ink">
+                <h2 class="mt-2 text-4xl sm:text-5xl font-bold text-ink font-display">
                     Our <em class="not-italic text-coral">most-loved</em> picks.
                 </h2>
             </div>
             <a href="{% url 'storefront:shop' %}"
-               class="shrink-0 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
-                View all toys →
+               class="shrink-0 inline-flex items-center gap-1.5 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                View all toys <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
             </a>
         </div>
 
@@ -137,45 +283,44 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="rounded-3xl bg-peach/40 px-6 py-12 sm:px-12 sm:py-16">
             <div class="text-center mb-10">
-                <h2 class="text-4xl sm:text-5xl font-bold text-ink">
+                <h2 class="text-4xl sm:text-5xl font-bold text-ink font-display">
                     Good toys. <em class="not-italic text-coral">Good</em> feelings.
                 </h2>
+                <p class="mt-2 text-sm text-ink/60 max-w-md mx-auto">We hold our collection to the highest standard so parents can relax and kids can play.</p>
             </div>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                {% for item in values %}
-                <div class="text-center">
-                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl"
-                         style="background-color: {{ item.color }}">{{ item.icon }}</div>
-                    <h3 class="font-bold text-ink text-sm">{{ item.title }}</h3>
-                    <p class="mt-1 text-xs text-ink/55">{{ item.desc }}</p>
+                <!-- Tile 1 -->
+                <div class="text-center p-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-xl bg-[#bfe3d5] text-emerald-800 shadow-sm">
+                        <i class="fa-solid fa-gift" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-bold text-ink text-sm">Easy Gifting</h3>
+                    <p class="mt-1 text-xs text-ink/55">Gift-wrapped on request for every birthday</p>
                 </div>
-                {% empty %}
-                {% for item in "1234" %}
-                {% with icons="🎁🚚✨🤍" titles="Easy gifting,Free delivery,Thoughtfully selected,Made with care" descs="Gift-wrapped on request,On orders over ৳1000,Every toy is tested,Safe for all ages" colors="#f7c9bd #bfe3d5 #f9d35b #ded8f4" %}
-                {% endwith %}
-                {% endfor %}
-                <!-- Static fallback values -->
-                <div class="text-center">
-                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl bg-[#bfe3d5]">🎁</div>
-                    <h3 class="font-bold text-ink text-sm">Easy gifting</h3>
-                    <p class="mt-1 text-xs text-ink/55">Gift-wrapped on request</p>
+                <!-- Tile 2 -->
+                <div class="text-center p-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-xl bg-[#b8deeb] text-sky-800 shadow-sm">
+                        <i class="fa-solid fa-truck-fast" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-bold text-ink text-sm">Free Delivery</h3>
+                    <p class="mt-1 text-xs text-ink/55">On all nationwide orders over ৳1,000</p>
                 </div>
-                <div class="text-center">
-                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl bg-[#b8deeb]">🚚</div>
-                    <h3 class="font-bold text-ink text-sm">Free delivery</h3>
-                    <p class="mt-1 text-xs text-ink/55">On orders over ৳1,000</p>
+                <!-- Tile 3 -->
+                <div class="text-center p-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-xl bg-[#f9d35b] text-amber-800 shadow-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-bold text-ink text-sm">Thoughtfully Curated</h3>
+                    <p class="mt-1 text-xs text-ink/55">Quality tested for safety and lasting fun</p>
                 </div>
-                <div class="text-center">
-                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl bg-[#f9d35b]">✨</div>
-                    <h3 class="font-bold text-ink text-sm">Thoughtfully selected</h3>
-                    <p class="mt-1 text-xs text-ink/55">Every toy is quality-tested</p>
+                <!-- Tile 4 -->
+                <div class="text-center p-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm">
+                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-xl bg-[#ded8f4] text-purple-800 shadow-sm">
+                        <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="font-bold text-ink text-sm">Safe & Certified</h3>
+                    <p class="mt-1 text-xs text-ink/55">Non-toxic materials, 100% child safe</p>
                 </div>
-                <div class="text-center">
-                    <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl text-2xl bg-[#ded8f4]">🤍</div>
-                    <h3 class="font-bold text-ink text-sm">Made with care</h3>
-                    <p class="mt-1 text-xs text-ink/55">Safe materials, happy kids</p>
-                </div>
-                {% endfor %}
             </div>
         </div>
     </div>
@@ -186,23 +331,32 @@
 ══════════════════════════════════════════════════ -->
 <section class="py-16 sm:py-20" aria-label="Build their world">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-8 items-center">
-            <!-- Left: illustration panel -->
-            <div class="rounded-3xl bg-peach min-h-[320px] flex items-center justify-center text-9xl">
-                🏗️
+        <div class="grid lg:grid-cols-2 gap-8 items-center bg-white rounded-3xl p-8 sm:p-12 border border-ink/5 shadow-sm">
+            <!-- Left: Graphic Panel -->
+            <div class="rounded-3xl bg-peach/60 min-h-[300px] flex flex-col items-center justify-center text-center p-8 relative overflow-hidden">
+                <div class="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-butter/50"></div>
+                <div class="relative z-10 w-28 h-28 rounded-3xl bg-white shadow-toy flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-cubes-stacked text-5xl text-coral" aria-hidden="true"></i>
+                </div>
+                <div class="relative z-10 font-bold text-ink text-base">Spark their inner creator</div>
+                <p class="relative z-10 text-xs text-ink/60 mt-1 max-w-xs">Endless combinations, open-ended problem solving</p>
             </div>
             <!-- Right: copy -->
-            <div class="px-0 lg:px-8">
-                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Creative play</span>
-                <h2 class="mt-3 text-4xl sm:text-5xl font-bold leading-tight text-ink">
+            <div class="px-0 lg:px-6">
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Creative Play</span>
+                <h2 class="mt-3 text-4xl sm:text-5xl font-bold leading-tight text-ink font-display">
                     Build a world <em class="not-italic text-coral">of their own.</em>
                 </h2>
                 <p class="mt-5 text-sm text-ink/60 leading-relaxed">
                     From stacking blocks to imaginative role play, our creative range grows with your child. Every piece is designed to spark that beautiful, chaotic, wonderful imagination.
                 </p>
+                <div class="mt-6 flex flex-wrap gap-4 text-xs font-semibold text-ink/75">
+                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-cream px-3 py-1.5"><i class="fa-solid fa-check text-softmint" aria-hidden="true"></i> STEM & logic toys</span>
+                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-cream px-3 py-1.5"><i class="fa-solid fa-check text-softmint" aria-hidden="true"></i> Motor skills builder</span>
+                </div>
                 <a href="{% url 'storefront:shop' %}"
                    class="mt-7 inline-flex items-center gap-2 rounded-2xl bg-coral px-7 py-4 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition-all">
-                    Explore creative toys →
+                    Explore creative toys <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
                 </a>
             </div>
         </div>
@@ -210,14 +364,44 @@
 </section>
 
 <!-- ══════════════════════════════════════════════════
-     6. DARK CAMPAIGN BANNER
+     6. CAMPAIGN BANNER (Dynamic or Curated Navy Card)
 ══════════════════════════════════════════════════ -->
+{% if home_bottom_banner %}
+<section class="py-8 sm:py-12" aria-label="Campaign">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <a href="{{ home_bottom_banner.link_url|default:'/shop/' }}"
+           class="group relative block overflow-hidden rounded-3xl bg-cover bg-center min-h-[260px] sm:min-h-[320px] shadow-sm transition-all hover:shadow-md"
+           style="background-image: url('{{ home_bottom_banner.image.url }}');">
+            <div class="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/60 to-transparent flex items-center p-8 sm:p-16">
+                <div class="max-w-md text-white">
+                    {% if home_bottom_banner.badge_text %}
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-butter text-ink mb-3 font-semibold">
+                        {{ home_bottom_banner.badge_text }}
+                    </span>
+                    {% endif %}
+                    <h2 class="text-3xl sm:text-4xl font-bold font-display text-white group-hover:text-butter transition-colors">
+                        {{ home_bottom_banner.title }}
+                    </h2>
+                    {% if home_bottom_banner.subtitle %}
+                    <p class="mt-3 text-sm text-white/80 leading-relaxed">{{ home_bottom_banner.subtitle }}</p>
+                    {% endif %}
+                    {% if home_bottom_banner.link_text %}
+                    <span class="mt-6 inline-flex items-center gap-2 rounded-2xl bg-butter px-6 py-3 text-sm font-bold text-ink group-hover:bg-white transition-all shadow-sm">
+                        {{ home_bottom_banner.link_text }} <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+    </div>
+</section>
+{% else %}
 <section class="py-8 sm:py-12" aria-label="Campaign">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-2 overflow-hidden rounded-3xl">
             <!-- Left: dark copy -->
             <div class="bg-ink px-8 py-12 sm:px-14 sm:py-16 flex flex-col justify-center">
-                <h2 class="text-4xl sm:text-5xl font-bold text-cream leading-tight">
+                <h2 class="text-4xl sm:text-5xl font-bold text-cream leading-tight font-display">
                     Childhood is<br>the <em class="not-italic text-butter">main event.</em>
                 </h2>
                 <p class="mt-5 text-sm text-cream/60 leading-relaxed max-w-xs">
@@ -225,15 +409,20 @@
                 </p>
                 <a href="{% url 'storefront:shop' %}"
                    class="mt-7 self-start inline-flex items-center gap-2 rounded-2xl bg-butter px-6 py-3 text-sm font-bold text-ink hover:opacity-90 transition-opacity">
-                    Start their collection →
+                    Start their collection <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
                 </a>
             </div>
-            <!-- Right: mint illustration panel -->
-            <div class="bg-mint flex items-center justify-center min-h-[240px] sm:min-h-[320px] text-8xl">
-                🌟
+            <!-- Right: mint graphic panel -->
+            <div class="bg-mint flex flex-col items-center justify-center min-h-[240px] sm:min-h-[320px] p-8 text-center">
+                <div class="w-24 h-24 rounded-full bg-white/70 shadow-sm flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-star text-4xl text-amber-400" aria-hidden="true"></i>
+                </div>
+                <span class="font-bold text-ink text-base">Play, Learn, Grow</span>
+                <span class="text-xs text-ink/60 mt-0.5">Explore 500+ curated toys</span>
             </div>
         </div>
     </div>
 </section>
+{% endif %}
 
 {% endblock %}

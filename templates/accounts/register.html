@@ -82,7 +82,7 @@
                                 {{ form.password }}
                                 <button type="button" id="togglePw"
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition text-sm"
-                                        aria-label="Show/hide password">👁</button>
+                                        aria-label="Show/hide password"><i class="fa-regular fa-eye"></i></button>
                             </div>
                             <!-- Strength bar -->
                             <div class="mt-2 flex gap-1" id="strengthBars">
@@ -106,8 +106,9 @@
 
                     <button type="submit"
                             class="mt-6 w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm
-                                   shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
-                        Create Account
+                                   shadow-button hover:bg-coral/90 transition-all active:translate-y-1 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Create Account</span>
                     </button>
 
                     <p class="mt-4 text-center text-xs text-ink/40">
@@ -124,8 +125,9 @@
                 </div>
 
                 <a href="{% url 'accounts:login' %}"
-                   class="block w-full py-3.5 rounded-2xl border-2 border-ink/15 text-ink font-bold text-sm text-center hover:border-coral hover:text-coral transition-all">
-                    Sign In
+                   class="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl border-2 border-ink/15 text-ink font-bold text-sm text-center hover:border-coral hover:text-coral transition-all">
+                    <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+                    <span>Sign In</span>
                 </a>
 
             </div>
@@ -143,7 +145,7 @@
         togglePw.addEventListener('click', () => {
             const isText = pwField.type === 'text';
             pwField.type = isText ? 'password' : 'text';
-            togglePw.textContent = isText ? '👁' : '🙈';
+            togglePw.innerHTML = isText ? '<i class="fa-regular fa-eye"></i>' : '<i class="fa-regular fa-eye-slash"></i>';
         });
     }
 

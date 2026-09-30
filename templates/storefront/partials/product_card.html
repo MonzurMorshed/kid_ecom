@@ -37,9 +37,11 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
             </div>
 
             <!-- Favorite button -->
-            <button class="toggle-favorite absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm text-ink/40 hover:text-coral transition-colors"
+            <button class="toggle-favorite absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm text-ink/40 hover:text-coral transition-colors shadow-sm"
                     data-active="false"
-                    aria-label="Save {{ product.title }} to wishlist">♡</button>
+                    aria-label="Save {{ product.title }} to wishlist">
+                <i class="fa-regular fa-heart text-xs" aria-hidden="true"></i>
+            </button>
         </div>
     </a>
 
@@ -58,13 +60,17 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
 
         <!-- Rating (if available) -->
         {% if product.rating %}
-        <div class="mt-1 text-[11px] text-yellow-500">
+        <div class="mt-1 flex items-center gap-1 text-[11px] text-amber-400">
             {% with rating_int=product.rating|floatformat:0 %}
             {% for i in "12345" %}
-            {% if forloop.counter <= rating_int|add:"0" %}★{% else %}☆{% endif %}
+                {% if forloop.counter <= rating_int|add:"0" %}
+                    <i class="fa-solid fa-star text-[10px]" aria-hidden="true"></i>
+                {% else %}
+                    <i class="fa-regular fa-star text-[10px] text-slate-300" aria-hidden="true"></i>
+                {% endif %}
             {% endfor %}
             {% endwith %}
-            <span class="text-ink/40 ml-1">{{ product.rating }}</span>
+            <span class="text-ink/40 ml-1 font-semibold">{{ product.rating }}</span>
         </div>
         {% endif %}
 
@@ -77,9 +83,11 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
                 {% endif %}
             </div>
             <!-- Quick add-to-cart -->
-            <button class="add-to-cart flex h-8 w-8 items-center justify-center rounded-xl bg-coral text-white hover:bg-coral/90 transition-colors text-sm"
+            <button class="add-to-cart flex h-8 w-8 items-center justify-center rounded-xl bg-coral text-white hover:bg-coral/90 transition-colors text-xs shadow-sm"
                     data-product-id="{{ product.id }}"
-                    aria-label="Add {{ product.title }} to bag">+</button>
+                    aria-label="Add {{ product.title }} to bag">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            </button>
         </div>
     </div>
 </article>

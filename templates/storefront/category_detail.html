@@ -1,10 +1,39 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ selected_category.name }} — Kidurabd{% endblock %}
+{% block title %}{{ selected_category.name }} Toys — Kidurabd{% endblock %}
 {% block meta_description %}Shop {{ selected_category.name }} toys at Kidurabd. {{ selected_category.description }}{% endblock %}
 
 {% block content %}
+
+<!-- ══════════════════════════════════════════════════
+     PROMOTIONAL CATEGORY BANNER (If set)
+══════════════════════════════════════════════════ -->
+{% if category_top_banner %}
+<section class="py-6 bg-cream border-b border-ink/5" aria-label="Category promotion">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <a href="{{ category_top_banner.link_url|default:'#' }}"
+           class="group relative block overflow-hidden rounded-3xl bg-cover bg-center min-h-[160px] sm:min-h-[200px] shadow-sm transition-all hover:shadow-md"
+           style="background-image: url('{{ category_top_banner.image.url }}');">
+            <div class="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/40 to-transparent flex items-center p-6 sm:p-10">
+                <div class="max-w-md text-white">
+                    {% if category_top_banner.badge_text %}
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-coral text-white mb-2">
+                        {{ category_top_banner.badge_text }}
+                    </span>
+                    {% endif %}
+                    <h2 class="text-2xl sm:text-3xl font-bold font-display text-white group-hover:text-butter transition-colors">
+                        {{ category_top_banner.title }}
+                    </h2>
+                    {% if category_top_banner.subtitle %}
+                    <p class="mt-1 text-xs sm:text-sm text-white/80">{{ category_top_banner.subtitle }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+    </div>
+</section>
+{% endif %}
 
 <!-- ══════════════════════════════════════════════════
      CATEGORY HERO STRIP
@@ -17,19 +46,19 @@
                     <span class="text-4xl">{{ selected_category.emoji|default:"🧸" }}</span>
                     <span class="text-[11px] font-bold uppercase tracking-widest text-ink/50">Collection</span>
                 </div>
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-ink leading-tight">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-ink leading-tight font-display">
                     {{ selected_category.name }}
                 </h1>
                 {% if selected_category.description %}
-                <p class="mt-3 text-base text-ink/60 max-w-lg">{{ selected_category.description }}</p>
+                <p class="mt-3 text-base text-ink/65 max-w-lg leading-relaxed">{{ selected_category.description }}</p>
                 {% endif %}
             </div>
             <!-- Breadcrumb -->
-            <nav aria-label="Breadcrumb" class="text-xs text-ink/50">
-                <ol class="flex items-center gap-1.5">
-                    <li><a href="{% url 'storefront:index' %}" class="hover:text-coral">Home</a></li>
+            <nav aria-label="Breadcrumb" class="text-xs text-ink/50 self-start sm:self-auto bg-white/70 backdrop-blur-sm px-4 py-2 rounded-2xl border border-ink/5">
+                <ol class="flex items-center gap-1.5 flex-wrap">
+                    <li><a href="{% url 'storefront:index' %}" class="hover:text-coral transition-colors">Home</a></li>
                     <li aria-hidden="true">/</li>
-                    <li><a href="{% url 'storefront:shop' %}" class="hover:text-coral">Shop</a></li>
+                    <li><a href="{% url 'storefront:shop' %}" class="hover:text-coral transition-colors">Shop</a></li>
                     <li aria-hidden="true">/</li>
                     <li class="font-semibold text-ink" aria-current="page">{{ selected_category.name }}</li>
                 </ol>
@@ -39,16 +68,20 @@
 </section>
 
 <!-- ══════════════════════════════════════════════════
-     CATEGORY NAVIGATION RAIL
+     CATEGORY NAVIGATION RAIL (Sticky)
 ══════════════════════════════════════════════════ -->
-<div class="border-b border-ink/10 bg-cream sticky top-[72px] z-20">
+<div class="border-b border-ink/10 bg-cream sticky top-[72px] z-20 shadow-xs">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex gap-1 overflow-x-auto py-3 scrollbar-none">
+        <div class="flex gap-2 overflow-x-auto py-3 scrollbar-none items-center">
+            <a href="{% url 'storefront:shop' %}"
+               class="shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap bg-[#f3ede3] text-ink/70 hover:bg-ink/10">
+                <i class="fa-solid fa-shapes mr-1.5 text-[11px]"></i> All Toys
+            </a>
             {% for cat in categories %}
             <a href="{% url 'storefront:category_detail' cat.slug %}"
-               class="shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap
-                      {% if cat.slug == selected_category.slug %}bg-ink text-cream{% else %}bg-[#f3ede3] text-ink/60 hover:bg-ink/10{% endif %}">
-                {{ cat.emoji|default:"•" }} {{ cat.name }}
+               class="shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap
+                      {% if cat.slug == selected_category.slug %}bg-ink text-cream shadow-sm{% else %}bg-[#f3ede3] text-ink/70 hover:bg-ink/10{% endif %}">
+                <span class="mr-1">{{ cat.emoji|default:"🧸" }}</span> {{ cat.name }}
             </a>
             {% endfor %}
         </div>
@@ -56,51 +89,183 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════
-     FILTER PILLS (Alpine.js UI state + Django URL params)
+     FILTER & SORT CONTROLS
 ══════════════════════════════════════════════════ -->
-<div class="bg-cream py-6 border-b border-ink/5"
-     x-data="{ activePill: '{{ active_pill|default:'all' }}' }">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-wrap gap-2 items-center">
-        <span class="text-[11px] font-bold uppercase tracking-widest text-ink/40 mr-2">Filter</span>
-        {% for pill in filter_pills %}
-        <a href="{% url 'storefront:category_detail' selected_category.slug %}?filter={{ pill.key }}"
-           class="rounded-full px-4 py-2 text-[11px] font-bold transition-colors
-                  {% if active_pill == pill.key %}bg-ink text-cream{% else %}bg-[#f3ede3] text-ink/60 hover:bg-ink/10{% endif %}"
-           @click.prevent="
-               activePill = '{{ pill.key }}';
-               window.location.href = '{% url 'storefront:category_detail' selected_category.slug %}?filter={{ pill.key }}';
-           ">
-            {{ pill.label }}
-        </a>
-        {% empty %}
-        <!-- Fallback static pills -->
-        {% for key, label in filter_pill_defaults %}
-        <a href="{% url 'storefront:category_detail' selected_category.slug %}?filter={{ key }}"
-           class="rounded-full px-4 py-2 text-[11px] font-bold transition-colors
-                  {% if active_pill == key %}bg-ink text-cream{% else %}bg-[#f3ede3] text-ink/60 hover:bg-ink/10{% endif %}">
-            {{ label }}
-        </a>
-        {% endfor %}
-        {% endfor %}
+<div class="bg-cream py-5 border-b border-ink/5"
+     x-data="{ showPriceFilter: false }">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
+
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+            <!-- Left: Filter Pills -->
+            <div class="flex flex-wrap gap-2 items-center">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-ink/40 mr-1 hidden sm:inline">Highlight:</span>
+                {% for pill in filter_pills %}
+                <a href="?{% if selected_brand %}brand={{ selected_brand.slug }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}&{% endif %}{% if active_sort %}sort={{ active_sort }}&{% endif %}filter={{ pill.key }}"
+                   class="rounded-full px-3.5 py-1.5 text-xs font-bold transition-all
+                          {% if active_pill == pill.key %}bg-coral text-white shadow-xs{% else %}bg-white border border-ink/10 text-ink/70 hover:border-coral hover:text-coral{% endif %}">
+                    {{ pill.label }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Right: Sort & Price & Brand filters -->
+            <div class="flex flex-wrap items-center gap-3">
+
+                <!-- Brand Filter Dropdown -->
+                {% if brands %}
+                <form method="get" class="flex items-center gap-1.5">
+                    {% if active_pill and active_pill != 'all' %}<input type="hidden" name="filter" value="{{ active_pill }}">{% endif %}
+                    {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+                    {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+                    {% if active_sort and active_sort != 'featured' %}<input type="hidden" name="sort" value="{{ active_sort }}">{% endif %}
+
+                    <label for="brandSelect" class="text-xs font-bold text-ink/60 hidden sm:inline">Brand:</label>
+                    <div class="relative">
+                        <select id="brandSelect"
+                                name="brand"
+                                onchange="this.form.submit()"
+                                class="appearance-none bg-white border border-ink/15 rounded-xl pl-3 pr-8 py-2 text-xs font-semibold text-ink cursor-pointer focus:outline-none focus:border-coral shadow-xs">
+                            <option value="">All Brands</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.slug }}" {% if selected_brand and selected_brand.slug == brand.slug %}selected{% endif %}>
+                                {{ brand.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink/40 pointer-events-none" aria-hidden="true"></i>
+                    </div>
+                </form>
+                {% endif %}
+
+                <!-- Price Range Toggle -->
+                <button type="button"
+                        @click="showPriceFilter = !showPriceFilter"
+                        :class="showPriceFilter ? 'bg-coral text-white border-coral' : 'bg-white text-ink border-ink/15 hover:border-coral'"
+                        class="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors shadow-xs">
+                    <i class="fa-solid fa-sliders text-[11px]"></i>
+                    <span>Price</span>
+                    {% if min_price or max_price %}
+                    <span class="w-2 h-2 rounded-full bg-butter"></span>
+                    {% endif %}
+                </button>
+
+                <!-- Sort Dropdown Form -->
+                <form method="get" class="flex items-center gap-1.5">
+                    {% if selected_brand %}<input type="hidden" name="brand" value="{{ selected_brand.slug }}">{% endif %}
+                    {% if active_pill and active_pill != 'all' %}<input type="hidden" name="filter" value="{{ active_pill }}">{% endif %}
+                    {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+                    {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+
+                    <label for="catSortSelect" class="text-xs font-bold text-ink/60 hidden sm:inline">Sort:</label>
+                    <div class="relative">
+                        <select id="catSortSelect"
+                                name="sort"
+                                onchange="this.form.submit()"
+                                class="appearance-none bg-white border border-ink/15 rounded-xl pl-3 pr-8 py-2 text-xs font-semibold text-ink cursor-pointer focus:outline-none focus:border-coral shadow-xs">
+                            {% for choice in sort_choices %}
+                            <option value="{{ choice.key }}" {% if active_sort == choice.key %}selected{% endif %}>
+                                {{ choice.label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink/40 pointer-events-none" aria-hidden="true"></i>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Collapsible Price Range Form -->
+        <div x-show="showPriceFilter"
+             x-cloak
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="bg-white rounded-2xl p-4 border border-ink/10 shadow-sm max-w-md ml-auto">
+            <form method="get" class="space-y-3">
+                {% if selected_brand %}<input type="hidden" name="brand" value="{{ selected_brand.slug }}">{% endif %}
+                {% if active_pill and active_pill != 'all' %}<input type="hidden" name="filter" value="{{ active_pill }}">{% endif %}
+                {% if active_sort and active_sort != 'featured' %}<input type="hidden" name="sort" value="{{ active_sort }}">{% endif %}
+
+                <div class="flex items-center gap-3">
+                    <div class="flex-1">
+                        <label class="text-[10px] text-ink/50 font-bold uppercase block mb-1">Min Price (৳)</label>
+                        <input type="number" name="min_price" value="{{ min_price|default:'' }}" placeholder="৳ 0"
+                               class="w-full bg-[#f8f5f0] border border-ink/10 rounded-xl px-3 py-2 text-xs font-semibold text-ink focus:outline-none focus:border-coral">
+                    </div>
+                    <span class="text-ink/30 mt-4">–</span>
+                    <div class="flex-1">
+                        <label class="text-[10px] text-ink/50 font-bold uppercase block mb-1">Max Price (৳)</label>
+                        <input type="number" name="max_price" value="{{ max_price|default:'' }}" placeholder="৳ 5,000"
+                               class="w-full bg-[#f8f5f0] border border-ink/10 rounded-xl px-3 py-2 text-xs font-semibold text-ink focus:outline-none focus:border-coral">
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit"
+                                class="rounded-xl bg-coral px-4 py-2 text-xs font-bold text-white hover:bg-coral/90 transition-colors shadow-xs">
+                            Apply
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Active Filter Tags Ribbon -->
+        {% if selected_brand or min_price or max_price or active_pill != 'all' %}
+        <div class="flex flex-wrap gap-2 items-center pt-2">
+            <span class="text-[11px] font-bold text-ink/50 uppercase tracking-wider mr-1">Active filters:</span>
+
+            {% if selected_brand %}
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-butter text-ink text-xs font-bold px-3 py-1">
+                Brand: {{ selected_brand.name }}
+                <a href="?{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}&{% endif %}{% if active_pill %}filter={{ active_pill }}&{% endif %}{% if active_sort %}sort={{ active_sort }}{% endif %}" class="hover:text-coral">
+                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                </a>
+            </span>
+            {% endif %}
+
+            {% if min_price or max_price %}
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-lavender text-purple-900 text-xs font-bold px-3 py-1">
+                Price: ৳{{ min_price|default:0 }} – ৳{{ max_price|default:'Max' }}
+                <a href="?{% if selected_brand %}brand={{ selected_brand.slug }}&{% endif %}{% if active_pill %}filter={{ active_pill }}&{% endif %}{% if active_sort %}sort={{ active_sort }}{% endif %}" class="hover:text-coral">
+                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                </a>
+            </span>
+            {% endif %}
+
+            {% if active_pill != 'all' %}
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-peach text-ink text-xs font-bold px-3 py-1">
+                Filter: {{ active_pill|capfirst }}
+                <a href="?{% if selected_brand %}brand={{ selected_brand.slug }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}&{% endif %}{% if active_sort %}sort={{ active_sort }}&{% endif %}filter=all" class="hover:text-coral">
+                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                </a>
+            </span>
+            {% endif %}
+
+            <a href="{% url 'storefront:category_detail' selected_category.slug %}" class="text-xs font-bold text-coral underline underline-offset-2 ml-2 hover:text-ink">
+                Clear all
+            </a>
+        </div>
+        {% endif %}
+
     </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
-     SECTION A: MOST-LOVED PICKS
+     SECTION A: MOST-LOVED PICKS (Default landing only)
 ══════════════════════════════════════════════════ -->
-{% if most_loved %}
-<section class="py-14 sm:py-16" aria-label="Most-loved {{ selected_category.name }} picks">
+{% if is_default_view and most_loved %}
+<section class="py-12 sm:py-16" aria-label="Most-loved {{ selected_category.name }} picks">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
                 <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Top rated</span>
-                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink">
+                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink font-display">
                     Our <em class="not-italic text-coral">most-loved</em> {{ selected_category.name|lower }} picks.
                 </h2>
             </div>
             <a href="{% url 'storefront:category_detail' selected_category.slug %}?filter=bestseller"
-               class="shrink-0 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
-                View all bestsellers →
+               class="shrink-0 inline-flex items-center gap-1.5 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                View all bestsellers <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
             </a>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -113,21 +278,21 @@
 {% endif %}
 
 <!-- ══════════════════════════════════════════════════
-     SECTION B: NEW IN THIS CATEGORY
+     SECTION B: NEW IN THIS CATEGORY (Default landing only)
 ══════════════════════════════════════════════════ -->
-{% if new_in %}
-<section class="py-14 sm:py-16 bg-[#fffdf4]" aria-label="New {{ selected_category.name }} products">
+{% if is_default_view and new_in %}
+<section class="py-12 sm:py-16 bg-[#fffdf4]" aria-label="New {{ selected_category.name }} products">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
                 <span class="text-[11px] font-bold uppercase tracking-widest text-softmint">Just arrived</span>
-                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink">
+                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink font-display">
                     <em class="not-italic text-coral">New</em> in {{ selected_category.name|lower }}.
                 </h2>
             </div>
             <a href="{% url 'storefront:category_detail' selected_category.slug %}?filter=new"
-               class="shrink-0 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
-                See all new arrivals →
+               class="shrink-0 inline-flex items-center gap-1.5 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                See all new arrivals <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
             </a>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -140,51 +305,96 @@
 {% endif %}
 
 <!-- ══════════════════════════════════════════════════
-     SECTION C: ALL PRODUCTS IN CATEGORY
+     SECTION C: ALL / FILTERED PRODUCTS IN CATEGORY
 ══════════════════════════════════════════════════ -->
-<section class="py-14 sm:py-16" aria-label="All {{ selected_category.name }} products">
+<section class="py-12 sm:py-16" aria-label="All {{ selected_category.name }} products">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
-                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Full collection</span>
-                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink">
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Collection Catalog</span>
+                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink font-display">
                     All <em class="not-italic text-coral">{{ selected_category.name|lower }}</em> toys.
                 </h2>
             </div>
+            <div class="text-xs font-semibold text-ink/60">
+                <span class="font-bold text-coral">{{ total_count }}</span> toy{{ total_count|pluralize }} found
+            </div>
         </div>
 
-        {% if all_products %}
+        {% if products %}
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {% for product in all_products %}
+            {% for product in products %}
             {% include "storefront/partials/product_card.html" with product=product %}
             {% endfor %}
         </div>
+
+        <!-- Pagination Controls -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Pagination" class="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-ink/10 pt-6">
+            <div class="text-xs text-ink/60">
+                Showing <span class="font-bold text-ink">{{ page_obj.start_index }}</span> to <span class="font-bold text-ink">{{ page_obj.end_index }}</span> of <span class="font-bold text-ink">{{ total_count }}</span> products
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <!-- Prev -->
+                {% if page_obj.has_previous %}
+                <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                   class="flex h-9 items-center gap-1 rounded-xl bg-white border border-ink/15 px-3.5 text-xs font-bold text-ink hover:bg-cream hover:border-coral transition-colors">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i> Previous
+                </a>
+                {% else %}
+                <span class="flex h-9 items-center gap-1 rounded-xl bg-ink/5 px-3.5 text-xs font-bold text-ink/30 cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i> Previous
+                </span>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                <div class="flex items-center gap-1">
+                    {% for num in paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <span class="grid h-9 w-9 place-items-center rounded-xl bg-coral text-xs font-bold text-white shadow-xs">
+                            {{ num }}
+                        </span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}"
+                           class="grid h-9 w-9 place-items-center rounded-xl bg-white border border-ink/10 text-xs font-bold text-ink/70 hover:border-coral hover:text-coral transition-colors">
+                            {{ num }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Next -->
+                {% if page_obj.has_next %}
+                <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}"
+                   class="flex h-9 items-center gap-1 rounded-xl bg-white border border-ink/15 px-3.5 text-xs font-bold text-ink hover:bg-cream hover:border-coral transition-colors">
+                    Next <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </a>
+                {% else %}
+                <span class="flex h-9 items-center gap-1 rounded-xl bg-ink/5 px-3.5 text-xs font-bold text-ink/30 cursor-not-allowed">
+                    Next <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </span>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+
         {% else %}
         <!-- Empty state -->
-        <div class="flex flex-col items-center justify-center py-20 text-center">
-            <div class="text-6xl mb-4">🔍</div>
-            <h3 class="text-xl font-bold text-ink mb-2">No products found</h3>
-            <p class="text-sm text-muted mb-6">Try a different filter or browse another category.</p>
+        <div class="flex flex-col items-center justify-center py-16 text-center bg-white rounded-3xl border border-ink/8 p-8">
+            <div class="w-16 h-16 rounded-full bg-peach/40 text-coral text-2xl flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </div>
+            <h3 class="text-xl font-bold text-ink mb-2 font-display">No products found</h3>
+            <p class="text-sm text-ink/60 mb-6 max-w-sm">No toys in {{ selected_category.name }} match your current filter selection.</p>
             <a href="{% url 'storefront:category_detail' selected_category.slug %}"
-               class="rounded-2xl bg-coral px-6 py-3 text-sm font-bold text-white hover:bg-coral/90 transition-colors">
-                Clear filters
+               class="inline-flex items-center gap-2 rounded-2xl bg-coral px-6 py-3 text-sm font-bold text-white hover:bg-coral/90 transition-colors shadow-button">
+                <i class="fa-solid fa-rotate-left text-xs" aria-hidden="true"></i>
+                <span>Reset Category Filters</span>
             </a>
         </div>
         {% endif %}
     </div>
 </section>
 
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-    // Pass filter pills from server if not in template context (fallback)
-    const DEFAULT_PILLS = [
-        { key: 'all',        label: 'All' },
-        { key: 'bestseller', label: 'Best sellers' },
-        { key: 'new',        label: 'New arrivals' },
-        { key: 'featured',   label: 'Featured' },
-        { key: 'under25',    label: 'Under ৳2,500' },
-    ];
-</script>
 {% endblock %}

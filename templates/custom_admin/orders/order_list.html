@@ -260,8 +260,9 @@
         <div class="flex items-center gap-1">
             {% if orders.has_previous %}
             <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ orders.previous_page_number }}"
-               class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
-                &laquo; Prev
+               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                <span>Prev</span>
             </a>
             {% endif %}
 
@@ -278,8 +279,9 @@
 
             {% if orders.has_next %}
             <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ orders.next_page_number }}"
-               class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
-                Next &raquo;
+               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                <span>Next</span>
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
             </a>
             {% endif %}
         </div>

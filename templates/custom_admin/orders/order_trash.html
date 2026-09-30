@@ -13,8 +13,8 @@
         </div>
         <a href="{% url 'custom_admin:order_list' %}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Back to Orders
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            <span>Back to Orders</span>
         </a>
     </div>
 
@@ -78,11 +78,17 @@
             <div class="flex items-center gap-1">
                 {% if orders.has_previous %}
                 <a href="?page={{ orders.previous_page_number }}"
-                   class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">&laquo; Prev</a>
+                   class="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    <span>Prev</span>
+                </a>
                 {% endif %}
                 {% if orders.has_next %}
                 <a href="?page={{ orders.next_page_number }}"
-                   class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">Next &raquo;</a>
+                   class="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition">
+                    <span>Next</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </a>
                 {% endif %}
             </div>
         </div>

@@ -285,14 +285,16 @@
             <div class="flex items-center gap-2">
                 {% if page_obj.has_previous %}
                 <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if cat_id %}&category={{ cat_id }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
-                    class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
-                    Previous
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    <span>Previous</span>
                 </a>
                 {% endif %}
                 {% if page_obj.has_next %}
                 <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if cat_id %}&category={{ cat_id }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
-                    class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
-                    Next
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+                    <span>Next</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
                 </a>
                 {% endif %}
             </div>

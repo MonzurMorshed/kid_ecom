@@ -8,10 +8,8 @@
 <div class="mx-auto max-w-6xl">
 
     <div class="flex items-center gap-4 mb-8">
-        <a href="{% url 'storefront:cart' %}" class="text-ink/40 hover:text-coral transition">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
+        <a href="{% url 'storefront:cart' %}" class="grid h-10 w-10 place-items-center rounded-xl bg-white border border-ink/10 text-ink/60 hover:text-coral hover:border-coral transition shadow-sm" aria-label="Back to bag">
+            <i class="fa-solid fa-arrow-left text-sm" aria-hidden="true"></i>
         </a>
         <h1 class="text-3xl font-bold text-ink">Checkout</h1>
     </div>
@@ -32,8 +30,10 @@
             <div class="lg:col-span-2 space-y-6">
 
                 <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-6 sm:p-8">
-                    <h2 class="font-bold text-ink text-lg mb-6 flex items-center gap-2">
-                        <span class="w-7 h-7 rounded-full bg-coral text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <h2 class="font-bold text-ink text-lg mb-6 flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-full bg-coral text-white text-xs font-bold flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-location-dot text-xs" aria-hidden="true"></i>
+                        </span>
                         Delivery Information
                     </h2>
 
@@ -85,17 +85,21 @@
 
                 <!-- Payment method (COD) -->
                 <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-6 sm:p-8">
-                    <h2 class="font-bold text-ink text-lg mb-5 flex items-center gap-2">
-                        <span class="w-7 h-7 rounded-full bg-coral text-white text-xs font-bold flex items-center justify-center">2</span>
+                    <h2 class="font-bold text-ink text-lg mb-5 flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-full bg-coral text-white text-xs font-bold flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-credit-card text-xs" aria-hidden="true"></i>
+                        </span>
                         Payment Method
                     </h2>
-                    <label class="flex items-center gap-4 p-4 rounded-xl border-2 border-coral bg-coral/5 cursor-pointer">
+                    <label class="flex items-center gap-4 p-4 rounded-xl border-2 border-coral bg-coral/5 cursor-pointer transition">
                         <input type="radio" name="payment_method" value="cod" checked class="w-4 h-4 accent-coral">
-                        <div>
+                        <div class="flex-1">
                             <p class="font-semibold text-ink text-sm">Cash on Delivery</p>
-                            <p class="text-xs text-ink/50 mt-0.5">Pay when your order arrives</p>
+                            <p class="text-xs text-ink/50 mt-0.5">Pay in cash when your order arrives</p>
                         </div>
-                        <span class="ml-auto text-2xl">💵</span>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg shrink-0">
+                            <i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i>
+                        </div>
                     </label>
                     <p class="mt-3 text-xs text-ink/40">More payment methods (bKash, card) coming soon.</p>
                 </div>
@@ -147,7 +151,7 @@
 
                     <button type="submit"
                             class="mt-6 w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-coral text-white font-bold text-sm shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
-                        🎉 Place Order
+                        <i class="fa-solid fa-lock text-xs mr-1" aria-hidden="true"></i> Place Order
                     </button>
 
                     <p class="mt-4 text-center text-xs text-ink/35">

@@ -46,6 +46,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&display=swap" rel="stylesheet">
 
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -95,13 +98,13 @@
     <div x-data="{ show: true }" x-show="show" x-cloak
          class="bg-ink text-cream text-[10px] sm:text-[11px] uppercase tracking-[.12em] relative">
         <div class="mx-auto flex min-h-[34px] max-w-7xl items-center justify-center gap-3 px-4 text-center">
-            <span class="text-butter">✦</span>
+            <i class="fa-solid fa-sparkles text-butter text-xs" aria-hidden="true"></i>
             <span>{{ announcement|default:"Free delivery on orders over ৳1,000 · Designed for curious little humans" }}</span>
-            <span class="text-butter">✦</span>
+            <i class="fa-solid fa-sparkles text-butter text-xs" aria-hidden="true"></i>
         </div>
         <button @click="show = false"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-cream/60 hover:text-cream text-sm leading-none"
-                aria-label="Dismiss announcement">×</button>
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-cream/60 hover:text-cream text-xs leading-none transition-colors"
+                aria-label="Dismiss announcement"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
     <!-- ── Header / Navigation ──────────────────────────── -->
@@ -113,10 +116,10 @@
                     @click="mobileMenuOpen = !mobileMenuOpen"
                     :aria-expanded="mobileMenuOpen"
                     aria-controls="mainNav"
-                    class="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-[#f5eee4] lg:hidden"
+                    class="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-[#f5eee4] lg:hidden transition-colors"
                     aria-label="Open menu">
-                <span x-show="!mobileMenuOpen" aria-hidden="true">☰</span>
-                <span x-show="mobileMenuOpen"  aria-hidden="true">✕</span>
+                <span x-show="!mobileMenuOpen" aria-hidden="true"><i class="fa-solid fa-bars text-base"></i></span>
+                <span x-show="mobileMenuOpen"  aria-hidden="true"><i class="fa-solid fa-xmark text-base"></i></span>
             </button>
 
             <!-- Logo / Wordmark -->
@@ -139,28 +142,34 @@
             <!-- Right controls -->
             <div class="ml-auto lg:ml-0 flex items-center gap-1 sm:gap-2">
                 <!-- Search -->
-                <label class="search-field hidden h-10 items-center gap-2 overflow-hidden rounded-xl px-3 text-ink/60 sm:flex"
-                       aria-label="Search toys">
-                    <span aria-hidden="true">⌕</span>
+                <form action="{% url 'storefront:shop' %}" method="get"
+                      class="search-field hidden h-10 items-center gap-2 overflow-hidden rounded-xl px-3 text-ink/60 sm:flex border border-transparent focus-within:border-coral transition-all"
+                      aria-label="Search toys">
+                    <button type="submit" aria-label="Search button" class="text-ink/50 hover:text-coral transition-colors">
+                        <i class="fa-solid fa-magnifying-glass text-xs" aria-hidden="true"></i>
+                    </button>
                     <input id="searchInput"
-                           class="min-w-0 border-0 bg-transparent text-xs text-ink outline-none placeholder:text-ink/40"
+                           name="q"
+                           value="{{ search_query|default:'' }}"
+                           class="min-w-0 border-0 bg-transparent text-xs text-ink outline-none placeholder:text-ink/40 w-32 lg:w-44 focus:w-56 transition-all duration-200"
                            placeholder="Find a new favorite..." type="search">
-                </label>
+                </form>
 
                 <!-- Wishlist -->
                 <button id="wishlistButton"
-                        class="relative grid h-10 w-10 place-items-center rounded-xl text-coral hover:bg-[#f5eee4]"
+                        class="relative grid h-10 w-10 place-items-center rounded-xl text-coral hover:bg-[#f5eee4] transition-colors"
                         aria-label="Wishlist">
-                    ♡<span id="wishlistCount"
-                           class="absolute right-0 top-0 hidden h-4 min-w-4 rounded-full border-2 border-cream bg-coral px-1 text-[9px] font-bold leading-3 text-white">0</span>
+                    <i class="fa-regular fa-heart text-base"></i>
+                    <span id="wishlistCount"
+                          class="absolute right-0 top-0 hidden h-4 min-w-4 rounded-full border-2 border-cream bg-coral px-1 text-[9px] font-bold leading-3 text-white">0</span>
                 </button>
 
                 <!-- Cart -->
                 <a href="{% url 'storefront:cart' %}"
                    id="cartButton"
-                   class="flex h-10 items-center gap-1.5 rounded-xl bg-ink px-2.5 text-cream hover:bg-[#283b5d]"
+                   class="flex h-10 items-center gap-2 rounded-xl bg-ink px-3 text-cream hover:bg-[#283b5d] transition-colors"
                    aria-label="Shopping bag">
-                    <span aria-hidden="true">▣</span>
+                    <i class="fa-solid fa-bag-shopping text-sm" aria-hidden="true"></i>
                     <span class="hidden text-xs font-bold sm:inline">Bag</span>
                     <span id="cartCount"
                           class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">{{ cart_count|default:"0" }}</span>
@@ -224,8 +233,19 @@
              x-transition:leave-end="opacity-0 -translate-y-2"
              class="absolute left-0 right-0 top-[72px] flex flex-col gap-1 border-b border-ink/10 bg-cream px-6 py-5 shadow-xl lg:hidden"
              role="menu">
+            <!-- Mobile Search -->
+            <form action="{% url 'storefront:shop' %}" method="get" class="mb-3 flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 border border-ink/10 shadow-xs focus-within:border-coral">
+                <i class="fa-solid fa-magnifying-glass text-xs text-ink/40" aria-hidden="true"></i>
+                <input name="q"
+                       value="{{ search_query|default:'' }}"
+                       class="w-full border-0 bg-transparent text-xs text-ink outline-none placeholder:text-ink/40"
+                       placeholder="Search all toys..." type="search">
+                <button type="submit" class="text-[11px] font-bold text-coral uppercase tracking-wider">Go</button>
+            </form>
             <a class="block py-2 text-sm font-semibold text-ink/65 hover:text-coral"
                href="{% url 'storefront:index' %}" @click="mobileMenuOpen = false">Home</a>
+            <a class="block py-2 text-sm font-semibold text-ink/65 hover:text-coral"
+               href="{% url 'storefront:shop' %}" @click="mobileMenuOpen = false">All Toys</a>
             {% for cat in nav_categories %}
             <a class="block py-2 text-sm font-semibold {% if selected_category.slug == cat.slug %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
                href="{% url 'storefront:category_detail' cat.slug %}" @click="mobileMenuOpen = false">{{ cat.name }}</a>
@@ -256,16 +276,18 @@
              class="w-full max-w-sm bg-cream shadow-2xl flex flex-col">
             <div class="flex items-center justify-between border-b border-ink/10 px-6 py-5">
                 <h2 class="text-lg font-bold">Your bag</h2>
-                <button @click="cartDrawerOpen = false" class="grid h-8 w-8 place-items-center rounded-full hover:bg-[#f5eee4]" aria-label="Close bag">✕</button>
+                <button @click="cartDrawerOpen = false" class="grid h-8 w-8 place-items-center rounded-full hover:bg-[#f5eee4] transition-colors" aria-label="Close bag"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="flex-1 flex items-center justify-center p-8 text-center">
                 <div>
-                    <div class="text-6xl mb-4">🛍️</div>
+                    <div class="w-16 h-16 rounded-full bg-coral/10 text-coral text-3xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                    </div>
                     <p class="text-sm text-muted">Your bag is empty.<br>Start exploring and add something wonderful.</p>
                     <a href="{% url 'storefront:shop' %}"
                        @click="cartDrawerOpen = false"
                        class="mt-6 inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-3 text-sm font-bold text-white hover:bg-coral/90 transition-colors">
-                        Browse the shop →
+                        Browse the shop <i class="fa-solid fa-arrow-right text-xs"></i>
                     </a>
                 </div>
             </div>
@@ -283,9 +305,15 @@
                 </a>
                 <p class="mt-4 text-xs leading-5 text-ink/55">Toys with a little more heart.<br>Made for big little lives.</p>
                 <div class="mt-5 flex gap-2">
-                    <a href="#" class="grid h-8 w-8 place-items-center rounded-full bg-[#f3ede3] hover:bg-coral hover:text-cream transition-colors" aria-label="Instagram">◎</a>
-                    <a href="#" class="grid h-8 w-8 place-items-center rounded-full bg-[#f3ede3] hover:bg-coral hover:text-cream transition-colors" aria-label="TikTok">♪</a>
-                    <a href="#" class="grid h-8 w-8 place-items-center rounded-full bg-[#f3ede3] hover:bg-coral hover:text-cream transition-colors" aria-label="Facebook">f</a>
+                    <a href="#" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Instagram">
+                        <i class="fa-brands fa-instagram text-sm"></i>
+                    </a>
+                    <a href="#" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="TikTok">
+                        <i class="fa-brands fa-tiktok text-sm"></i>
+                    </a>
+                    <a href="#" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Facebook">
+                        <i class="fa-brands fa-facebook-f text-sm"></i>
+                    </a>
                 </div>
             </div>
 
@@ -299,7 +327,9 @@
                 </div>
                 <div>
                     <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Need help?</h4>
-                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="mailto:hello@kidurabd.com">Contact us</a>
+                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral" href="mailto:hello@kidurabd.com">
+                        <i class="fa-regular fa-envelope text-coral text-xs"></i> Contact us
+                    </a>
                     <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#">Delivery &amp; returns</a>
                     <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#">Payment &amp; safety</a>
                 </div>
@@ -309,8 +339,10 @@
                     <form id="newsletterForm" class="flex border-b border-ink/30 pb-2">
                         {% csrf_token %}
                         <input class="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-ink/40"
-                               placeholder="Your email address" type="email" required>
-                        <button type="submit" class="text-coral" aria-label="Subscribe">→</button>
+                                placeholder="Your email address" type="email" required>
+                        <button type="submit" class="text-coral hover:text-coral/80 transition-colors" aria-label="Subscribe">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
                     </form>
                 </div>
             </div>
@@ -409,12 +441,25 @@
             btn.addEventListener('click', () => {
                 const active = btn.dataset.active === 'true';
                 btn.dataset.active = String(!active);
-                btn.textContent = active ? '♡' : '♥';
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    if (active) {
+                        icon.classList.remove('fa-solid', 'text-coral');
+                        icon.classList.add('fa-regular');
+                    } else {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid', 'text-coral');
+                    }
+                } else {
+                    btn.innerHTML = active ? '<i class="fa-regular fa-heart"></i>' : '<i class="fa-solid fa-heart text-coral"></i>';
+                }
                 btn.classList.toggle('text-coral', !active);
                 wishlistCount += active ? -1 : 1;
                 const badge = document.getElementById('wishlistCount');
-                badge.textContent = wishlistCount;
-                badge.classList.toggle('hidden', wishlistCount === 0);
+                if (badge) {
+                    badge.textContent = wishlistCount;
+                    badge.classList.toggle('hidden', wishlistCount === 0);
+                }
                 toast(active ? 'Removed from wishlist' : 'Saved to wishlist ♥');
             });
         });

@@ -1,4 +1,4 @@
-﻿{% extends 'custom_admin/admin_base.html' %}
+{% extends 'custom_admin/admin_base.html' %}
 
 {% block title %}Customer: {{ customer.username }}{% endblock %}
 {% block page_title %}Customer Detail{% endblock %}
@@ -9,10 +9,8 @@
 <div class="flex items-center justify-between mb-6">
     <a href="{% url 'custom_admin:customer_list' %}"
         class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Customers
+        <i class="fa-solid fa-arrow-left text-xs"></i>
+        <span>Back to Customers</span>
     </a>
 
     <form method="post" action="{% url 'custom_admin:customer_block_toggle' customer.pk %}"
@@ -22,17 +20,11 @@
                        {% if customer.is_blocked %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20
                        {% else %}bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20{% endif %}">
             {% if customer.is_blocked %}
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            Unblock Customer
+            <i class="fa-solid fa-lock-open text-xs"></i>
+            <span>Unblock Customer</span>
             {% else %}
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-            </svg>
-            Block Customer
+            <i class="fa-solid fa-ban text-xs"></i>
+            <span>Block Customer</span>
             {% endif %}
         </button>
     </form>

@@ -73,13 +73,17 @@
 
                 <!-- Rating -->
                 {% if product.rating %}
-                <div class="mt-3 flex items-center gap-2">
-                    <span class="text-yellow-500 text-sm">
-                        {% with r=product.rating|floatformat:0|add:"0" %}
-                        {% for i in "12345" %}{% if forloop.counter <= r %}★{% else %}☆{% endif %}{% endfor %}
-                        {% endwith %}
-                    </span>
-                    <span class="text-xs text-muted">{{ product.rating }} / 5</span>
+                <div class="mt-3 flex items-center gap-1.5 text-amber-400 text-sm">
+                    {% with r=product.rating|floatformat:0|add:"0" %}
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= r %}
+                            <i class="fa-solid fa-star text-xs" aria-hidden="true"></i>
+                        {% else %}
+                            <i class="fa-regular fa-star text-xs text-slate-300" aria-hidden="true"></i>
+                        {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                    <span class="text-xs text-muted ml-1 font-semibold">{{ product.rating }} / 5</span>
                 </div>
                 {% endif %}
 
@@ -92,11 +96,28 @@
                     {% endif %}
                 </div>
 
-                <!-- Flags -->
-                <div class="mt-3 flex flex-wrap gap-2">
+                <!-- Flags & Stock Indicator -->
+                <div class="mt-3 flex flex-wrap items-center gap-2">
                     {% if product.is_bestseller %}<span class="rounded-full bg-butter px-3 py-1 text-xs font-bold text-ink">Best seller</span>{% endif %}
                     {% if product.is_new %}<span class="rounded-full bg-softmint px-3 py-1 text-xs font-bold text-ink">New arrival</span>{% endif %}
                     {% if product.is_featured %}<span class="rounded-full bg-lavender px-3 py-1 text-xs font-bold text-ink">Featured</span>{% endif %}
+
+                    {% if product.stock > 10 %}
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>In Stock ({{ product.stock }} available)</span>
+                    </span>
+                    {% elif product.stock > 0 %}
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        <span>Only {{ product.stock }} left — order soon!</span>
+                    </span>
+                    {% else %}
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span>Currently Out of Stock</span>
+                    </span>
+                    {% endif %}
                 </div>
 
                 <!-- Short Description -->
@@ -137,47 +158,60 @@
                     <!-- Quantity + Actions -->
                     <div class="flex flex-wrap items-center gap-3">
                         <!-- Quantity control -->
-                        <div class="flex items-center gap-0 rounded-2xl border border-ink/15 overflow-hidden bg-white">
+                        <div class="flex items-center gap-0 rounded-2xl border border-ink/15 overflow-hidden bg-white shadow-sm">
                             <button type="button"
                                     @click="qty = Math.max(1, qty - 1)"
-                                    class="h-12 w-11 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-lg"
-                                    aria-label="Decrease quantity">−</button>
+                                    class="h-12 w-11 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-sm"
+                                    aria-label="Decrease quantity"><i class="fa-solid fa-minus"></i></button>
                             <span class="w-10 text-center text-sm font-bold" x-text="qty" aria-live="polite"></span>
                             <button type="button"
                                     @click="qty = qty + 1"
-                                    class="h-12 w-11 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-lg"
-                                    aria-label="Increase quantity">+</button>
+                                    class="h-12 w-11 grid place-items-center text-ink hover:bg-[#f5eee4] transition-colors text-sm"
+                                    aria-label="Increase quantity"><i class="fa-solid fa-plus"></i></button>
                         </div>
 
                         <!-- Add to bag button (AJAX) -->
+                        {% if product.stock > 0 %}
                         <button type="button"
                                 @click="addToCart({{ product.id }}, qty, selectedVariant)"
-                                class="flex-1 min-w-[130px] flex items-center justify-center gap-2 rounded-2xl bg-coral px-5 py-3.5 text-sm font-bold text-white shadow-button hover:bg-coral/90 active:translate-y-0.5 transition-all"
+                                class="flex-1 min-w-[140px] flex items-center justify-center gap-2 rounded-2xl bg-coral px-5 py-3.5 text-sm font-bold text-white shadow-button hover:bg-coral/90 active:translate-y-0.5 transition-all"
                                 aria-label="Add {{ product.title }} to bag">
-                            Add to Bag 🛍️
+                            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                            <span>Add to Bag</span>
                         </button>
 
                         <!-- Buy Now button (Direct to checkout) -->
                         <button type="submit"
                                 onclick="document.getElementById('productNextUrl').value = '{% url 'storefront:checkout' %}';"
-                                class="flex-1 min-w-[130px] flex items-center justify-center gap-2 rounded-2xl bg-ink px-5 py-3.5 text-sm font-bold text-cream hover:bg-[#283b5d] active:translate-y-0.5 transition-all shadow-button"
+                                class="flex-1 min-w-[140px] flex items-center justify-center gap-2 rounded-2xl bg-ink px-5 py-3.5 text-sm font-bold text-cream hover:bg-[#283b5d] active:translate-y-0.5 transition-all shadow-button"
                                 aria-label="Buy {{ product.title }} now">
-                            Buy Now ⚡
+                            <i class="fa-solid fa-bolt-lightning text-butter" aria-hidden="true"></i>
+                            <span>Buy Now</span>
                         </button>
+                        {% else %}
+                        <button type="button" disabled
+                                class="flex-1 min-w-[140px] flex items-center justify-center gap-2 rounded-2xl bg-slate-200 text-slate-500 px-5 py-3.5 text-sm font-bold cursor-not-allowed"
+                                aria-label="Product is out of stock">
+                            <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                            <span>Out of Stock</span>
+                        </button>
+                        {% endif %}
 
                         <!-- Wishlist -->
                         <button type="button"
-                                class="toggle-favorite grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-ink/15 text-xl hover:border-coral hover:text-coral transition-colors"
+                                class="toggle-favorite grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-ink/15 text-lg hover:border-coral hover:text-coral transition-colors shadow-sm"
                                 data-active="false"
-                                aria-label="Save to wishlist">♡</button>
+                                aria-label="Save to wishlist">
+                            <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </form>
 
                 <!-- Delivery note -->
-                <div class="mt-6 rounded-2xl bg-mint/50 px-5 py-4 text-xs text-ink/60 leading-relaxed">
-                    🚚 <strong class="text-ink">Free delivery</strong> on orders over ৳1,000 ·
-                    📦 Usually ships within 1-2 business days ·
-                    ↩ 7-day hassle-free returns
+                <div class="mt-6 rounded-2xl bg-mint/50 px-5 py-4 text-xs text-ink/70 leading-relaxed flex flex-wrap items-center gap-4 divide-x divide-ink/10">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-truck-fast text-softmint text-sm" aria-hidden="true"></i> <span><strong class="text-ink">Free delivery</strong> over ৳1,000</span></span>
+                    <span class="flex items-center gap-1.5 pl-4"><i class="fa-solid fa-box-open text-amber-700 text-sm" aria-hidden="true"></i> <span>Ships in 1-2 days</span></span>
+                    <span class="flex items-center gap-1.5 pl-4"><i class="fa-solid fa-rotate-left text-coral text-sm" aria-hidden="true"></i> <span>7-day easy returns</span></span>
                 </div>
 
                 {% if product.brand %}
@@ -331,6 +365,210 @@
 </section>
 
 <!-- ══════════════════════════════════════════════════
+     CUSTOMER REVIEWS & RATING FORM
+══════════════════════════════════════════════════ -->
+<section id="reviews" class="py-14 sm:py-16 border-t border-ink/10" aria-label="Customer Reviews"
+         x-data="{ showReviewModal: false, formRating: 5, hoveredRating: 0 }">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+        <!-- Section Header -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+            <div>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">Honest feedback</span>
+                <h2 class="mt-1 text-3xl sm:text-4xl font-bold text-ink">
+                    Customer <em class="not-italic text-coral">reviews</em>.
+                </h2>
+                <p class="mt-1.5 text-sm text-ink/60">Real thoughts from real parents and little builders.</p>
+            </div>
+            <button type="button"
+                    @click="showReviewModal = !showReviewModal"
+                    class="self-start sm:self-auto inline-flex items-center gap-2 rounded-2xl bg-coral px-6 py-3.5 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition-all active:translate-y-0.5">
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                <span x-text="showReviewModal ? 'Close Form' : 'Write a Review'">Write a Review</span>
+            </button>
+        </div>
+
+        <!-- Rating Breakdown & Summary -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
+            <!-- Summary card (4 cols) -->
+            <div class="lg:col-span-4 rounded-3xl bg-white p-6 sm:p-8 border border-ink/5 shadow-sm text-center">
+                <div class="text-5xl sm:text-6xl font-extrabold text-ink tracking-tight">{{ product.rating|default:"5.0" }}</div>
+                <div class="flex items-center justify-center gap-1.5 text-amber-400 text-lg mt-3">
+                    {% with r=product.rating|floatformat:0|add:"0" %}
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= r %}
+                            <i class="fa-solid fa-star text-base"></i>
+                        {% else %}
+                            <i class="fa-regular fa-star text-base text-slate-300"></i>
+                        {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </div>
+                <p class="mt-2 text-xs font-semibold text-ink/50">Based on {{ reviews_count }} review{{ reviews_count|pluralize }}</p>
+                <div class="mt-4 pt-4 border-t border-ink/5 text-xs text-ink/60 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-shield-heart text-coral"></i>
+                    <span>100% verified customer ratings</span>
+                </div>
+            </div>
+
+            <!-- Breakdown bars (8 cols) -->
+            <div class="lg:col-span-8 rounded-3xl bg-white p-6 sm:p-8 border border-ink/5 shadow-sm space-y-3">
+                {% for star, data in rating_breakdown.items %}
+                <div class="flex items-center gap-3 text-xs">
+                    <div class="w-12 font-bold text-ink/70 flex items-center gap-1">
+                        <span>{{ star }}</span>
+                        <i class="fa-solid fa-star text-[10px] text-amber-400"></i>
+                    </div>
+                    <div class="flex-1 h-3 rounded-full bg-[#f4ece1] overflow-hidden">
+                        <div class="h-full rounded-full bg-amber-400 transition-all duration-500"
+                             style="width: {{ data.pct }}%;"></div>
+                    </div>
+                    <div class="w-12 text-right font-medium text-ink/50">{{ data.pct }}%</div>
+                    <div class="w-8 text-right text-ink/40 font-mono text-[11px]">({{ data.count }})</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Review Submission Card (collapsible / toggleable) -->
+        <div x-show="showReviewModal" x-cloak
+             x-transition:enter="transition ease-out duration-250"
+             x-transition:enter-start="opacity-0 -translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-4"
+             class="mb-12 rounded-3xl bg-peach/30 border border-coral/20 p-6 sm:p-10 shadow-toy">
+            <h3 class="text-xl sm:text-2xl font-bold text-ink mb-1">Share your experience</h3>
+            <p class="text-xs text-ink/60 mb-6">How did your little one enjoy this toy? Tell other parents!</p>
+
+            <form method="post" action="{% url 'storefront:product_detail' product.slug %}" class="space-y-5">
+                {% csrf_token %}
+                <input type="hidden" name="submit_review" value="1">
+                <input type="hidden" name="rating" :value="formRating">
+
+                <!-- Interactive Star Picker -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-ink/60 mb-2">Your Rating <span class="text-coral">*</span></label>
+                    <div class="flex items-center gap-2">
+                        <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
+                            <button type="button"
+                                    @click="formRating = star"
+                                    @mouseenter="hoveredRating = star"
+                                    @mouseleave="hoveredRating = 0"
+                                    class="text-2xl sm:text-3xl transition-transform hover:scale-110 focus:outline-none"
+                                    :class="(hoveredRating ? star <= hoveredRating : star <= formRating) ? 'text-amber-400' : 'text-slate-300'"
+                                    :aria-label="'Rate ' + star + ' stars'">
+                                <i class="fa-solid fa-star"></i>
+                            </button>
+                        </template>
+                        <span class="ml-2 text-xs font-bold text-ink/70"
+                              x-text="['Poor', 'Fair', 'Good', 'Very Good', 'Excellent!'][formRating - 1]"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="reviewName" class="block text-xs font-bold uppercase tracking-wider text-ink/60 mb-1.5">Your Name <span class="text-coral">*</span></label>
+                        <input type="text" id="reviewName" name="name" required
+                               value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}"
+                               placeholder="e.g. Sarah M."
+                               class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/20">
+                    </div>
+                    <div>
+                        <label for="reviewEmail" class="block text-xs font-bold uppercase tracking-wider text-ink/60 mb-1.5">Email Address (kept private)</label>
+                        <input type="email" id="reviewEmail" name="email"
+                               value="{% if user.is_authenticated %}{{ user.email }}{% endif %}"
+                               placeholder="e.g. sarah@example.com"
+                               class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/20">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="reviewTitle" class="block text-xs font-bold uppercase tracking-wider text-ink/60 mb-1.5">Headline / Title</label>
+                    <input type="text" id="reviewTitle" name="title"
+                           placeholder="e.g. Kept my 4-year-old engaged for hours!"
+                           class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/20">
+                </div>
+
+                <div>
+                    <label for="reviewComment" class="block text-xs font-bold uppercase tracking-wider text-ink/60 mb-1.5">Your Review <span class="text-coral">*</span></label>
+                    <textarea id="reviewComment" name="comment" rows="4" required
+                              placeholder="What did you think of the build quality, safety, and play value?"
+                              class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/20"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" @click="showReviewModal = false"
+                            class="px-5 py-3 rounded-2xl border border-ink/15 text-xs font-bold text-ink/70 hover:bg-white transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 rounded-2xl bg-coral px-7 py-3 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition-all active:translate-y-0.5">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                        <span>Submit Review</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Reviews List -->
+        {% if reviews %}
+        <div class="space-y-4">
+            {% for rev in reviews %}
+            <div class="rounded-3xl bg-white p-6 sm:p-7 border border-ink/5 shadow-sm transition hover:shadow-md">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-butter text-ink font-bold flex items-center justify-center text-sm shadow-sm">
+                            {{ rev.name|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold text-ink">{{ rev.name }}</span>
+                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                                    <i class="fa-solid fa-circle-check text-[9px]"></i> Verified
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-ink/40">{{ rev.created_at|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 text-amber-400 text-xs">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= rev.rating %}
+                                <i class="fa-solid fa-star"></i>
+                            {% else %}
+                                <i class="fa-regular fa-star text-slate-300"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if rev.title %}
+                <h4 class="text-sm font-bold text-ink mb-1.5">{{ rev.title }}</h4>
+                {% endif %}
+                <p class="text-xs sm:text-sm text-ink/70 leading-relaxed">{{ rev.comment }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="rounded-3xl bg-white border border-ink/5 p-12 text-center shadow-sm">
+            <div class="w-16 h-16 rounded-full bg-butter/30 text-amber-600 text-2xl flex items-center justify-center mx-auto mb-4">
+                <i class="fa-regular fa-comments"></i>
+            </div>
+            <h3 class="text-lg font-bold text-ink mb-1">No reviews yet</h3>
+            <p class="text-xs text-ink/50 max-w-sm mx-auto mb-6">Be the very first parent to share how much your child enjoyed this toy!</p>
+            <button type="button" @click="showReviewModal = true"
+                    class="inline-flex items-center gap-2 rounded-2xl bg-coral px-6 py-3 text-xs font-bold text-white shadow-button hover:bg-coral/90 transition-all">
+                <i class="fa-solid fa-star text-[10px]"></i>
+                <span>Write the first review</span>
+            </button>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
      RELATED PRODUCTS
 ══════════════════════════════════════════════════ -->
 {% if related_products %}
@@ -341,8 +579,8 @@
                 More <em class="not-italic text-coral">{{ product.category.name|lower }}</em> toys.
             </h2>
             <a href="{% url 'storefront:category_detail' product.category.slug %}"
-               class="text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
-                View all →
+               class="inline-flex items-center gap-1.5 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                View all <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
             </a>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">

@@ -19,8 +19,8 @@
         </div>
         <a href="{% url 'custom_admin:product_list' %}"
            class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-xl border border-slate-700 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            Back to Products
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            <span>Back to Products</span>
         </a>
     </div>
 
@@ -185,14 +185,16 @@
             <div class="flex items-center gap-2">
                 {% if page_obj.has_previous %}
                 <a href="?page={{ page_obj.previous_page_number }}"
-                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
-                    Previous
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    <span>Previous</span>
                 </a>
                 {% endif %}
                 {% if page_obj.has_next %}
                 <a href="?page={{ page_obj.next_page_number }}"
-                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
-                    Next
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+                    <span>Next</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
                 </a>
                 {% endif %}
             </div>

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -229,6 +230,21 @@ class Product(models.Model):
             return [{'label': str(k).strip(), 'value': str(v).strip()} for k, v in self.specifications.items() if v]
         return []
 
+    @property
+    def review_count(self):
+        return self.reviews.filter(is_approved=True).count()
+
+    def get_rating_breakdown(self):
+        """Returns dict of percentage and count for each rating 1-5."""
+        approved = self.reviews.filter(is_approved=True)
+        total = approved.count()
+        breakdown = {}
+        for star in [5, 4, 3, 2, 1]:
+            cnt = approved.filter(rating=star).count()
+            pct = int(round((cnt / total) * 100)) if total > 0 else 0
+            breakdown[star] = {"count": cnt, "pct": pct}
+        return breakdown
+
 
 # =========================================================
 # Product Option
@@ -449,3 +465,65 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.title} - Image"
+
+
+# =========================================================
+# Product Review
+# =========================================================
+
+class ProductReview(models.Model):
+    product = models.ForeignKey(
+        Product,
+        related_name="reviews",
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="product_reviews",
+    )
+    name = models.CharField(max_length=150)
+    email = models.EmailField(blank=True, default="")
+    rating = models.PositiveSmallIntegerField(
+        default=5,
+        choices=[(i, f"{i} Stars") for i in range(1, 6)],
+    )
+    title = models.CharField(max_length=255, blank=True)
+    comment = models.TextField()
+    is_approved = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Product Review"
+        verbose_name_plural = "Product Reviews"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} - {self.rating}★ for {self.product.title}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.update_product_rating()
+
+    def delete(self, *args, **kwargs):
+        product = self.product
+        super().delete(*args, **kwargs)
+        approved = product.reviews.filter(is_approved=True)
+        if approved.exists():
+            avg = approved.aggregate(models.Avg("rating"))["rating__avg"]
+            product.rating = round(avg, 1)
+        else:
+            product.rating = 0.0
+        product.save(update_fields=["rating"])
+
+    def update_product_rating(self):
+        approved = self.product.reviews.filter(is_approved=True)
+        if approved.exists():
+            avg = approved.aggregate(models.Avg("rating"))["rating__avg"]
+            self.product.rating = round(avg, 1)
+        else:
+            self.product.rating = 5.0
+        self.product.save(update_fields=["rating"])
