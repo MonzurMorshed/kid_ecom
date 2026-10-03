@@ -34,10 +34,12 @@ class HomeView:
             [:4]
         )
 
-        # Site settings announcement fallback
+        # Announcement bar — use site_settings from context processor when available,
+        # fall back to a static string if SiteSettings has no announcement_text field.
         try:
-            site_settings = SiteSettings.get_settings()
-            announcement = site_settings.announcement_text or "Free delivery on orders over ৳1,000 · Designed for curious little humans"
+            site_settings_obj = SiteSettings.get_settings()
+            announcement = getattr(site_settings_obj, 'announcement_text', None) or \
+                           "Free delivery on orders over ৳1,000 · Designed for curious little humans"
         except Exception:
             announcement = "Free delivery on orders over ৳1,000 · Designed for curious little humans"
 

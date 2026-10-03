@@ -62,6 +62,9 @@ class Category(models.Model):
         if not self.slug:
             from django.utils.text import slugify
             self.slug = slugify(self.name, allow_unicode=True)
+        if self.image:
+            from .image_optimizer import compress_and_resize_image
+            compress_and_resize_image(self.image, max_dimensions=(800, 800), quality=82)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -104,6 +107,15 @@ class Brand(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.name)
+        if self.logo:
+            from .image_optimizer import compress_and_resize_image
+            compress_and_resize_image(self.logo, max_dimensions=(400, 400), quality=85)
+        super().save(*args, **kwargs)
 
 
 # =========================================================
@@ -413,6 +425,12 @@ class ProductVariant(models.Model):
     def __str__(self):
         return f"{self.product.title} - {self.sku}"
 
+    def save(self, *args, **kwargs):
+        if self.image:
+            from .image_optimizer import compress_and_resize_image
+            compress_and_resize_image(self.image, max_dimensions=(800, 800), quality=82)
+        super().save(*args, **kwargs)
+
     @property
     def final_price(self):
         """
@@ -442,8 +460,20 @@ class ProductImage(models.Model):
         upload_to="products/gallery/",
     )
 
+    alt_text = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="SEO alt text for this image. Leave blank to auto-generate from product title.",
+    )
+
     is_feature = models.BooleanField(
         default=False,
+    )
+
+    sort_order = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Display order — lower numbers appear first.",
     )
 
     created_at = models.DateTimeField(
@@ -453,7 +483,7 @@ class ProductImage(models.Model):
     class Meta:
         verbose_name = "Product Image"
         verbose_name_plural = "Product Images"
-        ordering = ["created_at"]
+        ordering = ["sort_order", "created_at"]
 
         constraints = [
             models.UniqueConstraint(
@@ -465,6 +495,14 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.title} - Image"
+
+    def save(self, *args, **kwargs):
+        if not self.alt_text and self.product_id:
+            self.alt_text = f"{self.product.title} photo"
+        if self.image:
+            from .image_optimizer import compress_and_resize_image
+            compress_and_resize_image(self.image, max_dimensions=(1200, 1200), quality=82)
+        super().save(*args, **kwargs)
 
 
 # =========================================================

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Order #{{ order.id }} — Kidurabd{% endblock %}
+
+{% block content %}
+<section class="py-10 sm:py-14 px-4">
+<div class="mx-auto max-w-4xl">
+
+    <!-- Back link -->
+    <a href="{% url 'accounts:profile' %}" class="inline-flex items-center gap-2 text-sm text-ink/50 hover:text-coral transition mb-6">
+        <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
+        <span>Back to Profile</span>
+    </a>
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-ink">Order <span class="text-coral">#{{ order.id }}</span></h1>
+            <p class="text-sm text-ink/50 mt-1">Placed on {{ order.created_at|date:"d M Y, h:i A" }}</p>
+        </div>
+        <!-- Status Badge -->
+        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold shadow-sm
+            {% if order.status == 'DELIVERED' %}bg-emerald-100 text-emerald-700
+            {% elif order.status == 'CANCELLED' %}bg-rose-100 text-rose-700
+            {% elif order.status == 'PROCESSING' %}bg-amber-100 text-amber-700
+            {% elif order.status == 'CONFIRMED' %}bg-sky-100 text-sky-700
+            {% else %}bg-violet-100 text-violet-700{% endif %}">
+            {% if order.status == 'DELIVERED' %}<i class="fa-solid fa-circle-check"></i>
+            {% elif order.status == 'CANCELLED' %}<i class="fa-solid fa-circle-xmark"></i>
+            {% elif order.status == 'PROCESSING' %}<span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse inline-block"></span>
+            {% elif order.status == 'CONFIRMED' %}<i class="fa-solid fa-thumbs-up"></i>
+            {% else %}<i class="fa-solid fa-clock"></i>{% endif %}
+            {{ order.get_status_display }}
+        </span>
+    </div>
+
+    <!-- Status Stepper -->
+    <div class="bg-white rounded-3xl shadow-toy border border-ink/5 p-6 sm:p-8 mb-6">
+        <h2 class="text-sm font-bold text-ink/50 uppercase tracking-widest mb-6">Order Progress</h2>
+
+        {% with steps="PENDING,CONFIRMED,PROCESSING,DELIVERED" %}
+        {% with order_steps=steps|split:"," %}
+        <div class="relative">
+            <!-- Connector line -->
+            <div class="absolute top-5 left-5 right-5 h-0.5 bg-ink/8 hidden sm:block"></div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-2 relative">
+
+                <!-- Step: Pending -->
+                <div class="flex flex-col items-center text-center gap-2">
+                    <div class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm
+                        {% if order.status != 'CANCELLED' %}bg-violet-100 text-violet-600 ring-2 ring-violet-200
+                        {% else %}bg-rose-100 text-rose-500{% endif %}">
+                        <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-ink">Pending</p>
+                        <p class="text-[10px] text-ink/40 mt-0.5">Order received</p>
+                    </div>
+                </div>
+
+                <!-- Step: Confirmed -->
+                <div class="flex flex-col items-center text-center gap-2">
+                    <div class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm
+                        {% if order.status == 'CONFIRMED' or order.status == 'PROCESSING' or order.status == 'DELIVERED' %}
+                            bg-sky-100 text-sky-600 ring-2 ring-sky-200
+                        {% else %}bg-ink/5 text-ink/30{% endif %}">
+                        <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold {% if order.status == 'CONFIRMED' or order.status == 'PROCESSING' or order.status == 'DELIVERED' %}text-ink{% else %}text-ink/30{% endif %}">Confirmed</p>
+                        <p class="text-[10px] text-ink/40 mt-0.5">Order verified</p>
+                    </div>
+                </div>
+
+                <!-- Step: Processing -->
+                <div class="flex flex-col items-center text-center gap-2">
+                    <div class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm
+                        {% if order.status == 'PROCESSING' or order.status == 'DELIVERED' %}
+                            bg-amber-100 text-amber-600 ring-2 ring-amber-200
+                        {% else %}bg-ink/5 text-ink/30{% endif %}">
+                        <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold {% if order.status == 'PROCESSING' or order.status == 'DELIVERED' %}text-ink{% else %}text-ink/30{% endif %}">Processing</p>
+                        <p class="text-[10px] text-ink/40 mt-0.5">Being packed</p>
+                    </div>
+                </div>
+
+                <!-- Step: Delivered -->
+                <div class="flex flex-col items-center text-center gap-2">
+                    <div class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm
+                        {% if order.status == 'DELIVERED' %}
+                            bg-emerald-100 text-emerald-600 ring-2 ring-emerald-200
+                        {% else %}bg-ink/5 text-ink/30{% endif %}">
+                        <i class="fa-solid fa-house-circle-check" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold {% if order.status == 'DELIVERED' %}text-ink{% else %}text-ink/30{% endif %}">Delivered</p>
+                        <p class="text-[10px] text-ink/40 mt-0.5">Order complete</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Cancelled notice -->
+            {% if order.status == 'CANCELLED' %}
+            <div class="mt-6 flex items-center gap-3 rounded-2xl bg-rose-50 border border-rose-200 px-4 py-3">
+                <i class="fa-solid fa-circle-xmark text-rose-500" aria-hidden="true"></i>
+                <p class="text-sm font-semibold text-rose-700">This order has been cancelled. Please contact support for assistance.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endwith %}
+        {% endwith %}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+
+        <!-- Order Items (3 cols) -->
+        <div class="md:col-span-3">
+            <div class="bg-white rounded-3xl shadow-toy border border-ink/5 overflow-hidden">
+                <div class="px-6 py-5 border-b border-ink/5 flex items-center justify-between">
+                    <h2 class="font-bold text-ink">Items Ordered</h2>
+                    <span class="text-xs text-ink/40 font-semibold">{{ order.items.count }} item{{ order.items.count|pluralize }}</span>
+                </div>
+
+                <div class="divide-y divide-ink/5">
+                    {% for item in order.items.all %}
+                    <div class="px-6 py-4 flex items-center gap-4">
+                        <!-- Product image -->
+                        <div class="w-16 h-16 shrink-0 rounded-2xl bg-[#faf6ee] border border-ink/8 overflow-hidden flex items-center justify-center">
+                            {% if item.product and item.product.images.first %}
+                                <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.title }}" class="h-full w-full object-cover">
+                            {% else %}
+                                <i class="fa-solid fa-shapes text-2xl text-slate-300" aria-hidden="true"></i>
+                            {% endif %}
+                        </div>
+
+                        <!-- Info -->
+                        <div class="flex-1 min-w-0">
+                            {% if item.product %}
+                            <a href="{% url 'storefront:product_detail' item.product.slug %}" class="text-sm font-bold text-ink hover:text-coral transition line-clamp-1">
+                                {{ item.product.title }}
+                            </a>
+                            {% else %}
+                            <p class="text-sm font-bold text-ink/50 line-clamp-1">Product Unavailable</p>
+                            {% endif %}
+                            {% if item.variant %}
+                            <p class="text-xs text-ink/50 mt-0.5">Variant: {{ item.variant.sku }}</p>
+                            {% endif %}
+                            <p class="text-xs text-ink/60 mt-0.5">Qty {{ item.quantity }} × ৳{{ item.price }}</p>
+                        </div>
+
+                        <!-- Line total -->
+                        <p class="text-sm font-extrabold text-ink shrink-0">৳{{ item.get_global }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Totals -->
+                <div class="px-6 py-4 border-t border-ink/5 bg-cream/30 space-y-1.5 text-sm">
+                    <div class="flex justify-between text-ink/60 text-xs">
+                        <span>Subtotal</span>
+                        <span class="font-semibold text-ink">৳{{ order.total_amount }}</span>
+                    </div>
+                    <div class="flex justify-between text-ink/60 text-xs">
+                        <span>Delivery</span>
+                        <span class="font-semibold text-emerald-600">Free</span>
+                    </div>
+                    <div class="flex justify-between text-sm font-black text-ink pt-1.5 border-t border-ink/8">
+                        <span>Total Paid (COD)</span>
+                        <span class="text-coral">৳{{ order.total_amount }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right panel (2 cols) -->
+        <div class="md:col-span-2 space-y-4">
+
+            <!-- Delivery Info -->
+            <div class="bg-white rounded-3xl shadow-toy border border-ink/5 p-6 space-y-4">
+                <h3 class="font-bold text-ink">Delivery Details</h3>
+
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-ink/40 mb-1">Recipient</p>
+                    <p class="text-sm font-bold text-ink">{{ order.full_name }}</p>
+                    <p class="text-xs text-ink/60">{{ order.phone_number }}</p>
+                    <p class="text-xs text-ink/60">{{ order.email }}</p>
+                </div>
+
+                <div class="border-t border-ink/5 pt-4">
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-ink/40 mb-1">Shipping Address</p>
+                    <p class="text-xs text-ink/80 leading-relaxed whitespace-pre-line">{{ order.shipping_address }}</p>
+                </div>
+
+                <div class="border-t border-ink/5 pt-4 flex items-center gap-2 text-xs text-ink/70">
+                    <i class="fa-solid fa-truck-fast text-softmint" aria-hidden="true"></i>
+                    <span>Estimated 2–4 business days</span>
+                </div>
+            </div>
+
+            <!-- Order meta -->
+            <div class="bg-white rounded-3xl shadow-toy border border-ink/5 p-6 space-y-3">
+                <h3 class="font-bold text-ink">Order Info</h3>
+                <div class="text-xs space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-ink/50">Order ID</span>
+                        <span class="font-bold text-ink font-mono">#{{ order.id }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-ink/50">Date</span>
+                        <span class="font-semibold text-ink">{{ order.created_at|date:"d M Y" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-ink/50">Payment</span>
+                        <span class="font-semibold text-ink">Cash on Delivery</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-ink/50">Status</span>
+                        <span class="font-bold
+                            {% if order.status == 'DELIVERED' %}text-emerald-600
+                            {% elif order.status == 'CANCELLED' %}text-rose-600
+                            {% elif order.status == 'PROCESSING' %}text-amber-600
+                            {% else %}text-sky-600{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col gap-2">
+                <a href="{% url 'storefront:shop' %}"
+                   class="w-full text-center rounded-2xl bg-coral px-5 py-3 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition flex items-center justify-center gap-2">
+                    <span>Continue Shopping</span>
+                    <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+                </a>
+                <a href="{% url 'accounts:profile' %}"
+                   class="w-full text-center rounded-2xl border border-ink/15 bg-white px-5 py-3 text-xs font-bold text-ink/70 hover:bg-cream transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-user text-xs" aria-hidden="true"></i>
+                    <span>Back to Profile</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</section>
+{% endblock %}

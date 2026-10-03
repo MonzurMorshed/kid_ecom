@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Page Not Found (404) — Kidurabd{% endblock %}
+{% block meta_description %}Oops! The toy box you are looking for was moved or doesn't exist. Explore our wonderful collection of toys at Kidurabd.{% endblock %}
+
+{% block content %}
+<section class="py-16 sm:py-24 px-4 min-h-[calc(100vh-120px)] flex items-center justify-center bg-cream/40">
+<div class="mx-auto max-w-2xl text-center">
+
+    <!-- Playful 404 Illustration Badge -->
+    <div class="relative inline-flex items-center justify-center mb-8">
+        <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-coral/15 via-butter/25 to-softmint/20 flex items-center justify-center border-4 border-white shadow-toy animate-bounce-slow">
+            <span class="text-5xl sm:text-6xl font-black font-display text-coral tracking-tight">404</span>
+        </div>
+        <div class="absolute -top-2 -right-2 w-10 h-10 rounded-2xl bg-butter flex items-center justify-center text-ink text-lg shadow-sm rotate-12">
+            <i class="fa-solid fa-shapes" aria-hidden="true"></i>
+        </div>
+        <div class="absolute -bottom-2 -left-2 w-10 h-10 rounded-2xl bg-softmint flex items-center justify-center text-white text-lg shadow-sm -rotate-12">
+            <i class="fa-solid fa-compass text-sm" aria-hidden="true"></i>
+        </div>
+    </div>
+
+    <!-- Error Messaging -->
+    <h1 class="text-3xl sm:text-4xl font-black text-ink tracking-tight mb-3">
+        Oops! We couldn't find that toy box.
+    </h1>
+    <p class="text-base text-ink/60 max-w-md mx-auto mb-8 leading-relaxed">
+        The page you’re looking for might have been packed away, renamed, or is having a little game of hide-and-seek.
+    </p>
+
+    <!-- Quick Search Bar -->
+    <form action="{% url 'storefront:shop' %}" method="get" class="max-w-md mx-auto mb-8">
+        <div class="relative flex items-center">
+            <input type="text"
+                   name="q"
+                   placeholder="Search toys, puzzles, games..."
+                   class="w-full pl-5 pr-28 py-3.5 rounded-2xl bg-white border border-ink/15 text-sm text-ink placeholder:text-ink/40 shadow-sm focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 transition">
+            <button type="submit"
+                    class="absolute right-2 px-4 py-2 rounded-xl bg-coral text-white text-xs font-bold hover:bg-coral/90 transition shadow-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-magnifying-glass text-[10px]" aria-hidden="true"></i>
+                <span>Search</span>
+            </button>
+        </div>
+    </form>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap items-center justify-center gap-3">
+        <a href="{% url 'storefront:index' %}"
+           class="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-button hover:bg-coral/90 transition-all active:translate-y-0.5">
+            <i class="fa-solid fa-house text-xs" aria-hidden="true"></i>
+            <span>Back to Home</span>
+        </a>
+        <a href="{% url 'storefront:shop' %}"
+           class="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl border-2 border-ink/15 bg-white text-ink/80 font-bold text-sm hover:border-coral hover:text-coral transition-all">
+            <i class="fa-solid fa-bag-shopping text-xs" aria-hidden="true"></i>
+            <span>Browse Toy Shop</span>
+        </a>
+    </div>
+
+</div>
+</section>
+{% endblock %}

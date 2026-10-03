@@ -1,4 +1,4 @@
-{% extends 'custom_admin/admin_base.html' %}
+﻿{% extends 'custom_admin/admin_base.html' %}
 
 {% block title %}Category List{% endblock %}
 {% block page_title %}Category Management{% endblock %}
@@ -36,7 +36,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-800/60">
                     {% for category in categories %}
-                    <tr class="hover:bg-slate-800/40 transition">
+                    <tr class="hover:bg-slate-800/40 transition" id="cat-row-{{ category.pk }}">
                         <!-- Category Image Thumbnail -->
                         <td class="px-6 py-3">
                             {% if category.image %}
@@ -57,16 +57,24 @@
                                 {{ category.parent.name }}
                             </span>
                             {% else %}
-                            <span class="text-slate-500 text-xs">— Main —</span>
+                            <span class="text-slate-500 text-xs">â€” Main â€”</span>
                             {% endif %}
                         </td>
+
+                        <!-- AJAX Active/Inactive Toggle -->
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
-                                {% if category.is_active %} bg-emerald-500/10 text-emerald-300 border border-emerald-500/20
-                                {% else %} bg-rose-500/10 text-rose-300 border border-rose-500/20 {% endif %}">
-                                {% if category.is_active %}Active{% else %}Inactive{% endif %}
-                            </span>
+                            <button type="button"
+                                    data-toggle-url="{% url 'custom_admin:category_toggle' category.pk %}"
+                                    data-active="{{ category.is_active|yesno:'true,false' }}"
+                                    onclick="toggleCategory(this)"
+                                    class="cat-toggle-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition cursor-pointer
+                                        {% if category.is_active %}bg-emerald-500/10 text-emerald-300 border border-emerald-500/20
+                                        {% else %}bg-rose-500/10 text-rose-300 border border-rose-500/20{% endif %}">
+                                <span class="w-1.5 h-1.5 rounded-full {% if category.is_active %}bg-emerald-400{% else %}bg-rose-400{% endif %}"></span>
+                                <span>{% if category.is_active %}Active{% else %}Inactive{% endif %}</span>
+                            </button>
                         </td>
+
                         <td class="px-6 py-4 text-slate-400 text-xs">{{ category.created_at|date:"M d, Y" }}</td>
                         <td class="px-6 py-4 text-right">
                             <a href="{% url 'custom_admin:category_update' category.pk %}" 
@@ -88,4 +96,45 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleCategory(btn) {
+    var url = btn.dataset.toggleUrl;
+    var active = btn.dataset.active === 'true';
+    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') 
+                    ? document.querySelector('[name=csrfmiddlewaretoken]').value
+                    : '{{ csrf_token }}';
+
+    btn.style.opacity = '0.5';
+    btn.disabled = true;
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: ''
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.ok) {
+            var nowActive = data.is_active;
+            btn.dataset.active = nowActive ? 'true' : 'false';
+            var dot  = btn.querySelector('span:first-child');
+            var text = btn.querySelector('span:last-child');
+            if (nowActive) {
+                btn.className = btn.className.replace(/bg-rose-\S+/g, '').replace(/text-rose-\S+/g, '').replace(/border-rose-\S+/g, '').trim();
+                btn.classList.add('bg-emerald-500/10', 'text-emerald-300', 'border', 'border-emerald-500/20');
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+                text.textContent = 'Active';
+            } else {
+                btn.className = btn.className.replace(/bg-emerald-\S+/g, '').replace(/text-emerald-\S+/g, '').replace(/border-emerald-\S+/g, '').trim();
+                btn.classList.add('bg-rose-500/10', 'text-rose-300', 'border', 'border-rose-500/20');
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
+                text.textContent = 'Inactive';
+            }
+        }
+    })
+    .catch(function(e) { console.error(e); })
+    .finally(function() { btn.style.opacity = '1'; btn.disabled = false; });
+}
+</script>
 {% endblock %}

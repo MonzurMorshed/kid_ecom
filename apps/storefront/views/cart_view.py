@@ -99,11 +99,12 @@ def checkout(request):
     user = request.user if request.user.is_authenticated else None
     initial = {}
     if user and not user.is_staff:
+        default_addr = user.addresses.filter(is_default=True).first() or user.addresses.first()
         initial = {
-            'full_name':      user.get_full_name() or user.username,
-            'email':          user.email,
-            'phone_number':   user.phone_number or '',
-            'shipping_address': user.address or '',
+            'full_name':        default_addr.full_name if default_addr else (user.get_full_name() or user.username),
+            'email':            user.email,
+            'phone_number':     default_addr.phone_number if default_addr else (user.phone_number or ''),
+            'shipping_address': default_addr.formatted if default_addr else (user.address or ''),
         }
 
     if request.method == 'POST':

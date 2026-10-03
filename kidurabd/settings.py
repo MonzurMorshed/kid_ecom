@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     'accounts',
     'products',
     'orders',
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'storefront.middleware.MaintenanceModeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -68,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'storefront.context_processors.nav_categories',
                 'storefront.context_processors.cart_context',
+                'storefront.context_processors.site_settings',
             ],
         },
     },
@@ -105,13 +108,25 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
-STATIC_URL = 'static/'
+# ── Static & Media Files (Local & CDN) ──────────────────────────────────────────
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Media files
-MEDIA_URL = 'media/'
+# When STATIC_CDN_URL is configured in environment (e.g. 'https://cdn.kidurabd.com/static/'),
+# all {% static '...' %} URLs will automatically route through the high-speed CDN.
+STATIC_CDN_URL = config('STATIC_CDN_URL', default=None)
+if STATIC_CDN_URL:
+    STATIC_URL = STATIC_CDN_URL.rstrip('/') + '/'
+else:
+    STATIC_URL = '/static/'
+
+# Media files & CDN
 MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_CDN_URL = config('MEDIA_CDN_URL', default=None)
+if MEDIA_CDN_URL:
+    MEDIA_URL = MEDIA_CDN_URL.rstrip('/') + '/'
+else:
+    MEDIA_URL = '/media/'
 
 # Email backend (console for development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

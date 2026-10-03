@@ -6,12 +6,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#fffaf2">
+    {% if site_settings and site_settings.site_favicon %}<link rel="icon" href="{{ site_settings.site_favicon.url }}">{% endif %}
     <meta name="description"
-        content="{% block meta_description %}Kidurabd — thoughtful toys for curious minds, creative hands, and every wonderfully messy moment.{% endblock %}">
-    <title>{% block title %}Kidurabd — Big joy for little humans.{% endblock %}</title>
+        content="{% block meta_description %}{{ site_settings.site_tagline|default:'Kidurabd — thoughtful toys for curious minds, creative hands, and every wonderfully messy moment.' }}{% endblock %}">
+    <title>{% block title %}{{ site_settings.site_name|default:'Kidurabd' }} — Big joy for little humans.{% endblock %}</title>
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:site_name" content="{{ site_settings.site_name|default:'Kidurabd' }}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ site_settings.site_name|default:'Kidurabd' }} — Big joy for little humans.{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ site_settings.site_tagline|default:'Kidurabd — thoughtful toys for curious minds, creative hands, and every wonderfully messy moment.' }}{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% if site_settings and site_settings.site_logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.site_logo.url }}{% endif %}{% endblock %}">
+    <meta property="og:image:alt" content="{% block og_image_alt %}{{ site_settings.site_name|default:'Kidurabd' }}{% endblock %}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_settings.site_name|default:'Kidurabd' }} — Big joy for little humans.{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ site_settings.site_tagline|default:'Kidurabd — thoughtful toys for curious minds, creative hands, and every wonderfully messy moment.' }}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{% if site_settings and site_settings.site_logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.site_logo.url }}{% endif %}{% endblock %}">
+
+    <!-- Schema Markup Block -->
+    {% block schema_markup %}
+    <!-- Global Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "{{ site_settings.site_name|default:'Kidurabd'|escapejs }}",
+      "url": "{{ request.scheme }}://{{ request.get_host }}/",
+      {% if site_settings and site_settings.site_logo %}"logo": "{{ request.scheme }}://{{ request.get_host }}{{ site_settings.site_logo.url }}",{% endif %}
+      "description": "{{ site_settings.site_tagline|default:'Thoughtful toys for curious minds and creative hands.'|escapejs }}"
+    }
+    </script>
+    {% endblock %}
+
+    <!-- Tailwind CSS Local Asset -->
+    <script src="{% static 'vendor/tailwindcss/tailwind.js' %}"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -41,16 +75,14 @@
         }
     </script>
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&display=swap" rel="stylesheet">
+    <!-- Local Fonts -->
+    <link rel="stylesheet" href="{% static 'vendor/fonts/storefront-fonts.css' %}">
 
-    <!-- Font Awesome 6 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Font Awesome 6 Local -->
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
 
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Alpine.js Local -->
+    <script defer src="{% static 'vendor/alpinejs/alpine.min.js' %}"></script>
 
     <style>
         html { scroll-behavior: smooth; }
@@ -124,8 +156,12 @@
 
             <!-- Logo / Wordmark -->
             <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2">
-                <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold">K</span>
-                <span class="text-[23px] font-bold tracking-[-.075em]">Kidurabd<span class="text-coral">.</span></span>
+                {% if site_settings and site_settings.site_logo %}
+                <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 w-auto">
+                {% else %}
+                <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                <span class="text-[23px] font-bold tracking-[-.075em]">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                {% endif %}
             </a>
 
             <!-- Desktop category navigation -->
@@ -300,20 +336,35 @@
         <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.7fr]">
             <div>
                 <a href="{% url 'storefront:index' %}" class="flex items-center gap-2">
-                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold">K</span>
-                    <span class="text-[23px] font-bold tracking-[-.075em]">Kidurabd<span class="text-coral">.</span></span>
+                    {% if site_settings and site_settings.site_logo %}
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 w-auto">
+                    {% else %}
+                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                    <span class="text-[23px] font-bold tracking-[-.075em]">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                    {% endif %}
                 </a>
-                <p class="mt-4 text-xs leading-5 text-ink/55">Toys with a little more heart.<br>Made for big little lives.</p>
+                <p class="mt-4 text-xs leading-5 text-ink/55">{{ site_settings.site_tagline|default:'Toys with a little more heart.' }}</p>
                 <div class="mt-5 flex gap-2">
-                    <a href="#" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Instagram">
+                    {% if site_settings and site_settings.instagram_url %}
+                    <a href="{{ site_settings.instagram_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Instagram" target="_blank" rel="noopener">
                         <i class="fa-brands fa-instagram text-sm"></i>
                     </a>
-                    <a href="#" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="TikTok">
-                        <i class="fa-brands fa-tiktok text-sm"></i>
-                    </a>
-                    <a href="#" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Facebook">
+                    {% endif %}
+                    {% if site_settings and site_settings.facebook_url %}
+                    <a href="{{ site_settings.facebook_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Facebook" target="_blank" rel="noopener">
                         <i class="fa-brands fa-facebook-f text-sm"></i>
                     </a>
+                    {% endif %}
+                    {% if site_settings and site_settings.twitter_url %}
+                    <a href="{{ site_settings.twitter_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Twitter / X" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-x-twitter text-sm"></i>
+                    </a>
+                    {% endif %}
+                    {% if site_settings and site_settings.youtube_url %}
+                    <a href="{{ site_settings.youtube_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="YouTube" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-youtube text-sm"></i>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
 
@@ -327,9 +378,16 @@
                 </div>
                 <div>
                     <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Need help?</h4>
-                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral" href="mailto:hello@kidurabd.com">
-                        <i class="fa-regular fa-envelope text-coral text-xs"></i> Contact us
+                    {% if site_settings and site_settings.site_email %}
+                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral" href="mailto:{{ site_settings.site_email }}">
+                        <i class="fa-regular fa-envelope text-coral text-xs"></i> {{ site_settings.site_email }}
                     </a>
+                    {% endif %}
+                    {% if site_settings and site_settings.site_phone %}
+                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral" href="tel:{{ site_settings.site_phone }}">
+                        <i class="fa-solid fa-phone text-coral text-xs"></i> {{ site_settings.site_phone }}
+                    </a>
+                    {% endif %}
                     <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#">Delivery &amp; returns</a>
                     <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#">Payment &amp; safety</a>
                 </div>
@@ -349,7 +407,7 @@
         </div>
 
         <div class="mx-auto mt-12 flex max-w-7xl flex-col justify-between gap-3 border-t border-ink/10 pt-5 text-[10px] text-ink/45 sm:flex-row">
-            <span>© 2025 Kidurabd Bangladesh</span>
+            <span>© {% now 'Y' %} {{ site_settings.site_name|default:'Kidurabd' }}</span>
             <span>Secure checkout ·
                 <strong class="text-ink/70">VISA</strong> ·
                 <strong class="text-ink/70">Mastercard</strong> ·

@@ -145,6 +145,12 @@ class HeroSlide(models.Model):
         status = '✓' if self.is_active else '✗'
         return f'[{status}] {self.title}'
 
+    def save(self, *args, **kwargs):
+        if self.image:
+            from products.image_optimizer import compress_and_resize_image
+            compress_and_resize_image(self.image, max_dimensions=(1920, 1080), quality=85)
+        super().save(*args, **kwargs)
+
 
 # ── Banners ──────────────────────────────────────────────────────────────────
 
@@ -204,6 +210,12 @@ class Banner(models.Model):
     def __str__(self):
         status = '✓' if self.is_active else '✗'
         return f'[{status}] {self.title} ({self.get_position_display()})'
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            from products.image_optimizer import compress_and_resize_image
+            compress_and_resize_image(self.image, max_dimensions=(1400, 800), quality=85)
+        super().save(*args, **kwargs)
 
 
 # ── Admin Profile (roles) ─────────────────────────────────────────────────────

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Saved Addresses — Kidurabd{% endblock %}
+
+{% block content %}
+<section class="py-10 sm:py-14 px-4">
+<div class="mx-auto max-w-5xl">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <a href="{% url 'accounts:profile' %}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-coral transition">
+                    <i class="fa-solid fa-arrow-left text-[10px]" aria-hidden="true"></i>
+                    <span>My Account</span>
+                </a>
+                <span class="text-ink/20">/</span>
+                <span class="text-xs font-semibold text-coral">Address Book</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-ink">Saved Addresses</h1>
+            <p class="text-sm text-ink/50 mt-1">
+                {% if addresses_count %}
+                    Manage your {{ addresses_count }} delivery address{{ addresses_count|pluralize:"es" }} for faster checkout.
+                {% else %}
+                    You haven't saved any delivery addresses yet.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'accounts:address_create' %}"
+           class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-coral text-white font-bold text-sm shadow-button hover:bg-coral/90 transition-all active:translate-y-0.5">
+            <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+            <span>Add New Address</span>
+        </a>
+    </div>
+
+    <!-- Django Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="px-4 py-3 rounded-2xl text-sm font-medium flex items-center justify-between
+            {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200
+            {% elif message.tags == 'error' %}bg-rose-50 text-rose-800 border border-rose-200
+            {% else %}bg-sky-50 text-sky-800 border border-sky-200{% endif %}">
+            <div class="flex items-center gap-2.5">
+                {% if message.tags == 'success' %}
+                    <i class="fa-solid fa-circle-check text-emerald-600" aria-hidden="true"></i>
+                {% elif message.tags == 'error' %}
+                    <i class="fa-solid fa-circle-exclamation text-rose-600" aria-hidden="true"></i>
+                {% else %}
+                    <i class="fa-solid fa-circle-info text-sky-600" aria-hidden="true"></i>
+                {% endif %}
+                <span>{{ message }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if addresses %}
+    <!-- Addresses Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5" x-data="{ deleteModalId: null, deleteName: '' }">
+        {% for addr in addresses %}
+        <div class="bg-white rounded-3xl shadow-toy border {% if addr.is_default %}border-coral/40 ring-2 ring-coral/20{% else %}border-ink/5{% endif %} p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-md relative group">
+
+            <!-- Top Row: Address Type + Default Status -->
+            <div>
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <!-- Type Pill -->
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
+                            {% if addr.address_type == 'home' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                            {% elif addr.address_type == 'work' %}bg-sky-50 text-sky-700 border border-sky-200
+                            {% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
+                            {% if addr.address_type == 'home' %}
+                                <i class="fa-solid fa-house text-[10px]" aria-hidden="true"></i>
+                            {% elif addr.address_type == 'work' %}
+                                <i class="fa-solid fa-briefcase text-[10px]" aria-hidden="true"></i>
+                            {% else %}
+                                <i class="fa-solid fa-location-dot text-[10px]" aria-hidden="true"></i>
+                            {% endif %}
+                            <span>{{ addr.get_address_type_display }}</span>
+                        </span>
+
+                        {% if addr.is_default %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-coral/10 text-coral border border-coral/20">
+                            <i class="fa-solid fa-star text-[9px]" aria-hidden="true"></i>
+                            <span>Default</span>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Make Default Button (if not default) -->
+                    {% if not addr.is_default %}
+                    <form method="post" action="{% url 'accounts:address_set_default' addr.pk %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-ink/40 hover:text-coral hover:bg-coral/5 transition"
+                                title="Set as default shipping address">
+                            <i class="fa-regular fa-star text-[11px]" aria-hidden="true"></i>
+                            <span>Set Default</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <!-- Recipient Info -->
+                <div class="mb-3">
+                    <h3 class="text-base font-bold text-ink flex items-center gap-2">
+                        <span>{{ addr.full_name }}</span>
+                    </h3>
+                    <p class="text-xs text-ink/60 font-medium flex items-center gap-1.5 mt-1">
+                        <i class="fa-solid fa-phone text-[10px] text-ink/40" aria-hidden="true"></i>
+                        <span>{{ addr.phone_number }}</span>
+                    </p>
+                </div>
+
+                <!-- Address Lines -->
+                <div class="text-sm text-ink/70 space-y-0.5 leading-relaxed bg-[#fbf9f4] p-3.5 rounded-2xl border border-ink/5">
+                    <p class="font-medium text-ink/90">{{ addr.address_line1 }}</p>
+                    {% if addr.address_line2 %}
+                    <p class="text-xs text-ink/60">{{ addr.address_line2 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-ink/70">
+                        {{ addr.city }}{% if addr.state %}, {{ addr.state }}{% endif %}{% if addr.postal_code %} - {{ addr.postal_code }}{% endif %}
+                    </p>
+                    <p class="text-xs font-semibold text-ink/60">{{ addr.country }}</p>
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="pt-5 mt-5 border-t border-ink/5 flex items-center justify-between gap-3">
+                <a href="{% url 'accounts:address_edit' addr.pk %}"
+                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-ink/15 text-xs font-semibold text-ink/70 hover:border-coral hover:text-coral transition">
+                    <i class="fa-solid fa-pen-to-square text-[11px]" aria-hidden="true"></i>
+                    <span>Edit</span>
+                </a>
+
+                <button type="button"
+                        @click="deleteModalId = {{ addr.pk }}; deleteName = '{{ addr.address_line1|escapejs }}'"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-ink/10 text-xs font-semibold text-rose-500 hover:bg-rose-50 hover:border-rose-200 transition">
+                    <i class="fa-regular fa-trash-can text-[11px]" aria-hidden="true"></i>
+                    <span>Delete</span>
+                </button>
+            </div>
+
+        </div>
+        {% endfor %}
+
+        <!-- Quick Add Card (Dashed) -->
+        <a href="{% url 'accounts:address_create' %}"
+           class="min-h-[220px] rounded-3xl border-2 border-dashed border-ink/15 bg-white/50 hover:bg-white hover:border-coral/50 transition-all duration-300 p-6 flex flex-col items-center justify-center text-center group">
+            <div class="w-12 h-12 rounded-2xl bg-coral/10 text-coral group-hover:bg-coral group-hover:text-white transition-all duration-300 flex items-center justify-center text-lg mb-3">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            </div>
+            <h3 class="text-sm font-bold text-ink group-hover:text-coral transition">Add Another Address</h3>
+            <p class="text-xs text-ink/40 mt-1 max-w-[200px]">Save home, office or loved ones' addresses for quick delivery.</p>
+        </a>
+
+        <!-- Delete Confirmation Modal (Alpine.js) -->
+        <div x-show="deleteModalId !== null"
+             x-cloak
+             x-transition.opacity
+             class="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl shadow-xl border border-ink/10 max-w-sm w-full p-6 text-center"
+                 @click.away="deleteModalId = null">
+                <div class="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mx-auto mb-4">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-lg font-bold text-ink">Remove Address?</h3>
+                <p class="text-xs text-ink/60 mt-1.5 mb-6">
+                    Are you sure you want to remove <span class="font-bold text-ink" x-text="deleteName"></span> from your address book?
+                </p>
+
+                <div class="flex gap-3">
+                    <button type="button"
+                            @click="deleteModalId = null"
+                            class="flex-1 py-2.5 rounded-xl border border-ink/15 text-xs font-bold text-ink/70 hover:bg-cream transition">
+                        Cancel
+                    </button>
+                    <form :action="'/accounts/addresses/' + deleteModalId + '/delete/'" method="post" class="flex-1">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="w-full py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition">
+                            Yes, Remove
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-3xl shadow-toy border border-ink/5 p-12 text-center max-w-lg mx-auto">
+        <div class="w-20 h-20 rounded-full bg-coral/10 text-coral flex items-center justify-center text-3xl mx-auto mb-5 shadow-sm">
+            <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+        </div>
+        <h2 class="text-xl font-black text-ink mb-2">No Saved Addresses</h2>
+        <p class="text-sm text-ink/50 mb-7 leading-relaxed">
+            You don't have any saved addresses yet. Add your home, work, or frequently used shipping addresses for express checkout!
+        </p>
+        <a href="{% url 'accounts:address_create' %}"
+           class="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-button hover:bg-coral/90 transition-all active:translate-y-0.5">
+            <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+            <span>Add Your First Address</span>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+</section>
+{% endblock %}

@@ -27,17 +27,40 @@ from django.db.models.functions import TruncDate
 
 @admin_required
 def dashboard(request):
+    from orders.models import OrderItem
     total_sales = Order.objects.filter(status='DELIVERED').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     total_orders = Order.objects.count()
     active_customers = User.objects.filter(is_customer=True, is_blocked=False).count()
     low_stock_products = Product.objects.filter(stock__lt=5)
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:10]
+
+    # ── Top Selling Products (by quantity sold) ───────────────────────────────
+    top_selling = (
+        OrderItem.objects
+        .values('product__id', 'product__title', 'product__slug')
+        .annotate(total_sold=Count('id'), total_qty=Sum('quantity'))
+        .order_by('-total_qty')[:5]
+    )
+
+    # ── Order Status Breakdown (for donut chart) ──────────────────────────────
+    status_breakdown = (
+        Order.objects
+        .values('status')
+        .annotate(count=Count('id'))
+        .order_by('status')
+    )
+    status_labels  = [s['status'].capitalize() for s in status_breakdown]
+    status_counts  = [s['count'] for s in status_breakdown]
+
     context = {
         'total_sales': total_sales,
         'total_orders': total_orders,
         'active_customers': active_customers,
         'low_stock_products': low_stock_products,
         'recent_orders': recent_orders,
+        'top_selling': top_selling,
+        'status_labels': status_labels,
+        'status_counts': status_counts,
     }
     return render(request, 'custom_admin/dashboard.html', context)
 

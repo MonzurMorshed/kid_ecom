@@ -1,0 +1,94 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Under Maintenance — {{ site_name|default:'Our Store' }}</title>
+    <link rel="stylesheet" href="{% static 'vendor/fonts/storefront-fonts.css' %}">
+    <script src="{% static 'vendor/tailwindcss/tailwind.js' %}"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink:    '#19253b',
+                        coral:  '#ff6b4d',
+                        butter: '#f6c64d',
+                        cream:  '#fffaf2',
+                    },
+                    fontFamily: {
+                        sans:    ['DM Sans', 'sans-serif'],
+                        display: ['Fraunces', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50%       { transform: translateY(-18px); }
+        }
+        .float { animation: float 4s ease-in-out infinite; }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .spin-slow { animation: spin-slow 18s linear infinite; }
+    </style>
+</head>
+<body class="min-h-screen bg-cream flex items-center justify-center px-4 font-sans">
+
+    <!-- Decorative background blobs -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        <div class="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-butter/30 blur-3xl"></div>
+        <div class="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-coral/10 blur-3xl"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-[#ded8f4]/20 blur-3xl"></div>
+    </div>
+
+    <div class="relative z-10 text-center max-w-lg mx-auto">
+
+        <!-- Animated icon -->
+        <div class="flex justify-center mb-8">
+            <div class="relative">
+                <!-- Outer spinning ring -->
+                <div class="spin-slow absolute inset-0 rounded-full border-4 border-dashed border-butter/60"></div>
+                <!-- Inner floating emoji -->
+                <div class="float relative z-10 grid h-28 w-28 place-items-center rounded-full bg-butter shadow-[0_12px_40px_rgba(246,198,77,.35)] text-5xl">
+                    🔧
+                </div>
+            </div>
+        </div>
+
+        <!-- Wordmark -->
+        <div class="flex items-center justify-center gap-2 mb-6">
+            <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold">
+                {{ site_name|default:'K'|first }}
+            </span>
+            <span class="text-[23px] font-bold tracking-[-.075em] text-ink">{{ site_name|default:'Our Store' }}<span class="text-coral">.</span></span>
+        </div>
+
+        <h1 class="font-display text-4xl sm:text-5xl font-bold text-ink mb-4 leading-tight">
+            We'll be right<br>back!
+        </h1>
+
+        <p class="text-ink/60 text-base leading-7 mb-8">
+            {{ maintenance_msg|default:"We're busy making things even better for you. Please check back soon!" }}
+        </p>
+
+        <!-- Decorative dots -->
+        <div class="flex items-center justify-center gap-2 mt-4">
+            <span class="h-2 w-2 rounded-full bg-coral animate-bounce" style="animation-delay: 0ms"></span>
+            <span class="h-2 w-2 rounded-full bg-butter animate-bounce" style="animation-delay: 150ms"></span>
+            <span class="h-2 w-2 rounded-full bg-coral animate-bounce" style="animation-delay: 300ms"></span>
+        </div>
+
+        <p class="mt-10 text-[11px] text-ink/35 uppercase tracking-widest">
+            © {% now "Y" %} {{ site_name|default:'Our Store' }}. All rights reserved.
+        </p>
+    </div>
+
+</body>
+</html>

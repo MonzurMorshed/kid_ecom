@@ -8,15 +8,19 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_POST
 from functools import wraps
 
-from .models import User
+from .models import User, Wishlist, UserAddress
 from .forms import (
     CustomerRegisterForm, CustomerLoginForm, CustomerProfileForm,
     CustomerChangePasswordForm, CustomerForgotPasswordForm, CustomerResetPasswordForm,
+    UserAddressForm,
 )
+from orders.models import Order
+from products.models import Product, ProductReview
 
 
 # ── Auth decorators ───────────────────────────────────────────────────────────
@@ -92,6 +96,10 @@ def login_view(request):
             login(request, user)
             if not remember:
                 request.session.set_expiry(0)  # Session cookie expires when browser closes
+            # Merge any guest-session cart items into the user's DB cart
+            if not user.is_staff and not user.is_superuser:
+                from apps.storefront.cart import merge_session_cart_to_user
+                merge_session_cart_to_user(request, user)
             if user.is_staff or user.is_superuser:
                 return redirect('custom_admin:dashboard')
             messages.success(request, f'Welcome back, {user.first_name or user.email}!')
@@ -117,13 +125,20 @@ def logout_view(request):
 @customer_required
 def profile_view(request):
     user = request.user
-    orders = user.orders.order_by('-created_at')[:5]
+    orders = user.orders.filter(is_deleted=False).order_by('-created_at')[:5]
     total_spent = user.orders.filter(status='DELIVERED').aggregate(t=Sum('total_amount'))['t'] or 0
+    wishlist_count = Wishlist.objects.filter(user=user).count()
+    addresses = user.addresses.all()
+    default_address = addresses.filter(is_default=True).first() or addresses.first()
     return render(request, 'accounts/profile.html', {
         'customer': user,
         'recent_orders': orders,
         'total_spent': total_spent,
+        'wishlist_count': wishlist_count,
+        'addresses_count': addresses.count(),
+        'default_address': default_address,
     })
+
 
 
 @customer_required
@@ -291,3 +306,211 @@ def customer_block_toggle(request, pk):
         action = 'blocked' if customer.is_blocked else 'unblocked'
         messages.success(request, f'Customer "{customer.username}" has been {action}.')
     return redirect('custom_admin:customer_detail', pk=pk)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Order Detail / Tracking  (accounts:order_detail)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@customer_required
+def order_detail(request, pk):
+    """Dedicated order tracking page for the logged-in customer."""
+    order = get_object_or_404(
+        Order.objects.prefetch_related('items__product__images', 'items__variant'),
+        pk=pk,
+        user=request.user,
+        is_deleted=False,
+    )
+    return render(request, 'accounts/order_detail.html', {'order': order})
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Wishlist Page  (accounts:wishlist)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@customer_required
+def wishlist_page(request):
+    """Display all products in the customer's server-side wishlist."""
+    items = (
+        Wishlist.objects
+        .filter(user=request.user)
+        .select_related('product__category')
+        .prefetch_related('product__images')
+    )
+    # IDs set used in template to mark heart as filled
+    wishlist_ids = set(items.values_list('product_id', flat=True))
+    return render(request, 'accounts/wishlist.html', {
+        'wishlist_items': items,
+        'wishlist_ids': wishlist_ids,
+    })
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Wishlist Toggle  (accounts:wishlist_toggle)  — AJAX POST
+# ──────────────────────────────────────────────────────────────────────────────
+
+@require_POST
+def wishlist_toggle(request):
+    """
+    Toggle a product in/out of the authenticated customer's wishlist.
+    Returns JSON: {wishlisted: bool, count: int}
+    If the user is not authenticated, redirects or returns 401 for AJAX.
+    """
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    if not request.user.is_authenticated or request.user.is_staff or request.user.is_superuser:
+        if is_ajax:
+            return JsonResponse({'error': 'login_required'}, status=401)
+        messages.info(request, 'Please log in to save items to your wishlist.')
+        return redirect('accounts:login')
+
+    product_id = request.POST.get('product_id')
+    product = get_object_or_404(Product, pk=product_id, is_active=True, is_deleted=False)
+
+    obj, created = Wishlist.objects.get_or_create(user=request.user, product=product)
+    if not created:
+        obj.delete()
+        wishlisted = False
+    else:
+        wishlisted = True
+
+    count = Wishlist.objects.filter(user=request.user).count()
+
+    if is_ajax:
+        return JsonResponse({'wishlisted': wishlisted, 'count': count})
+
+    if wishlisted:
+        messages.success(request, f'"{product.title}" added to your wishlist.')
+    else:
+        messages.info(request, f'"{product.title}" removed from your wishlist.')
+    return redirect(request.POST.get('next') or 'accounts:wishlist')
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Review History  (accounts:review_history)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@customer_required
+def review_history(request):
+    """Show all product reviews submitted by the logged-in customer."""
+    reviews = (
+        ProductReview.objects
+        .filter(user=request.user)
+        .select_related('product')
+        .prefetch_related('product__images')
+        .order_by('-created_at')
+    )
+    paginator = Paginator(reviews, 10)
+    page_obj  = paginator.get_page(request.GET.get('page', 1))
+    return render(request, 'accounts/review_history.html', {
+        'page_obj': page_obj,
+        'reviews_count': reviews.count(),
+    })
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Address Book (accounts:address_list, address_create, address_edit, etc.)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@customer_required
+def address_list(request):
+    """Show customer's saved address book."""
+    addresses = request.user.addresses.all()
+    return render(request, 'accounts/address_list.html', {
+        'addresses': addresses,
+        'addresses_count': addresses.count(),
+    })
+
+
+@customer_required
+def address_create(request):
+    """Create a new saved shipping address."""
+    if request.method == 'POST':
+        form = UserAddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            if not request.user.addresses.exists():
+                address.is_default = True
+            address.save()
+            messages.success(request, 'Address saved successfully! 🏡')
+            return redirect('accounts:address_list')
+    else:
+        initial = {
+            'full_name': request.user.get_full_name() or request.user.first_name or '',
+            'phone_number': request.user.phone_number or '',
+            'country': 'Bangladesh',
+            'is_default': not request.user.addresses.exists(),
+        }
+        form = UserAddressForm(initial=initial)
+
+    return render(request, 'accounts/address_form.html', {
+        'form': form,
+        'action_title': 'Add New Address',
+        'is_edit': False,
+    })
+
+
+@customer_required
+def address_edit(request, pk):
+    """Edit an existing saved address."""
+    address = get_object_or_404(UserAddress, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = UserAddressForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Address updated successfully! ✨')
+            return redirect('accounts:address_list')
+    else:
+        form = UserAddressForm(instance=address)
+
+    return render(request, 'accounts/address_form.html', {
+        'form': form,
+        'address': address,
+        'action_title': 'Edit Address',
+        'is_edit': True,
+    })
+
+
+@customer_required
+@require_POST
+def address_delete(request, pk):
+    """Delete a saved address."""
+    address = get_object_or_404(UserAddress, pk=pk, user=request.user)
+    was_default = address.is_default
+    address.delete()
+
+    if was_default:
+        next_default = request.user.addresses.first()
+        if next_default:
+            next_default.is_default = True
+            next_default.save()
+
+    is_ajax = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+        'application/json' in request.headers.get('Accept', '')
+    )
+    if is_ajax:
+        return JsonResponse({'success': True, 'message': 'Address deleted successfully.'})
+
+    messages.success(request, 'Address removed from your address book.')
+    return redirect('accounts:address_list')
+
+
+@customer_required
+@require_POST
+def address_set_default(request, pk):
+    """Set an address as default."""
+    address = get_object_or_404(UserAddress, pk=pk, user=request.user)
+    address.is_default = True
+    address.save()
+
+    is_ajax = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+        'application/json' in request.headers.get('Accept', '')
+    )
+    if is_ajax:
+        return JsonResponse({'success': True, 'message': 'Default address updated.'})
+
+    messages.success(request, f'Default shipping address updated to "{address.address_line1}".')
+    return redirect('accounts:address_list')

@@ -344,11 +344,15 @@
                         class="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 file:cursor-pointer transition border border-slate-800 rounded-xl bg-slate-950 p-2">
                 </div>
 
-                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1.5">
                     <p class="font-semibold text-slate-300">Need the correct column format?</p>
                     <p>Download our sample template before importing:
                         <a href="{% url 'custom_admin:product_sample_csv' %}"
                             class="text-sky-400 underline font-medium">Download Sample CSV</a>
+                    </p>
+                    <p class="text-[11px] text-slate-400">
+                        <i class="fa-solid fa-circle-info text-sky-400 mr-1"></i>
+                        Specifications column accepts <code class="text-sky-300 font-mono">Key:Value|Key2:Value2</code> or JSON array format.
                     </p>
                 </div>
 

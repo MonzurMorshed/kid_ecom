@@ -22,7 +22,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- LEFT: Profile Card -->
+        <!-- LEFT: Profile Card + Quick Links -->
         <div class="space-y-5">
 
             <!-- Avatar & info -->
@@ -61,16 +61,98 @@
                 </div>
             </div>
 
-            <!-- Delivery Address -->
-            {% if customer.address %}
-            <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-5">
-                <h3 class="text-xs font-bold text-ink/50 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <i class="fa-solid fa-location-dot text-coral" aria-hidden="true"></i>
-                    <span>Delivery Address</span>
-                </h3>
-                <p class="text-sm text-ink/70 leading-relaxed">{{ customer.address }}</p>
+            <!-- Quick Navigation Links -->
+            <div class="bg-white rounded-2xl shadow-toy border border-ink/5 overflow-hidden">
+                <p class="text-[10px] font-bold text-ink/40 uppercase tracking-widest px-5 pt-4 pb-2">Quick Links</p>
+                <div class="divide-y divide-ink/5">
+
+                    <a href="{% url 'accounts:wishlist' %}"
+                       class="flex items-center justify-between px-5 py-3 hover:bg-cream/60 transition group">
+                        <span class="flex items-center gap-3 text-sm font-semibold text-ink/70 group-hover:text-coral transition">
+                            <i class="fa-regular fa-heart w-4 text-center" aria-hidden="true"></i>
+                            My Wishlist
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            {% if wishlist_count %}
+                            <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-coral/15 px-1.5 text-[10px] font-bold text-coral">{{ wishlist_count }}</span>
+                            {% endif %}
+                            <i class="fa-solid fa-chevron-right text-[10px] text-ink/30 group-hover:text-coral transition" aria-hidden="true"></i>
+                        </span>
+                    </a>
+
+                    <a href="{% url 'accounts:review_history' %}"
+                       class="flex items-center justify-between px-5 py-3 hover:bg-cream/60 transition group">
+                        <span class="flex items-center gap-3 text-sm font-semibold text-ink/70 group-hover:text-coral transition">
+                            <i class="fa-regular fa-star w-4 text-center" aria-hidden="true"></i>
+                            My Reviews
+                        </span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-ink/30 group-hover:text-coral transition" aria-hidden="true"></i>
+                    </a>
+
+                    <a href="{% url 'accounts:address_list' %}"
+                       class="flex items-center justify-between px-5 py-3 hover:bg-cream/60 transition group">
+                        <span class="flex items-center gap-3 text-sm font-semibold text-ink/70 group-hover:text-coral transition">
+                            <i class="fa-solid fa-map-location-dot w-4 text-center" aria-hidden="true"></i>
+                            Saved Addresses
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            {% if addresses_count %}
+                            <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-emerald-500/15 px-1.5 text-[10px] font-bold text-emerald-600">{{ addresses_count }}</span>
+                            {% endif %}
+                            <i class="fa-solid fa-chevron-right text-[10px] text-ink/30 group-hover:text-coral transition" aria-hidden="true"></i>
+                        </span>
+                    </a>
+
+                    <a href="{% url 'storefront:shop' %}"
+                       class="flex items-center justify-between px-5 py-3 hover:bg-cream/60 transition group">
+                        <span class="flex items-center gap-3 text-sm font-semibold text-ink/70 group-hover:text-coral transition">
+                            <i class="fa-solid fa-store w-4 text-center" aria-hidden="true"></i>
+                            Browse Shop
+                        </span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-ink/30 group-hover:text-coral transition" aria-hidden="true"></i>
+                    </a>
+
+                </div>
             </div>
-            {% endif %}
+
+            <!-- Delivery Address Card -->
+            <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold text-ink/50 uppercase tracking-widest flex items-center gap-1.5">
+                        <i class="fa-solid fa-location-dot text-coral" aria-hidden="true"></i>
+                        <span>Default Address</span>
+                    </h3>
+                    <a href="{% url 'accounts:address_list' %}" class="inline-flex items-center gap-1 text-xs text-coral font-semibold hover:underline">
+                        <span>Manage</span>
+                        <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+                    </a>
+                </div>
+                {% if default_address %}
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-ink">{{ default_address.full_name }}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                {% if default_address.address_type == 'home' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                {% elif default_address.address_type == 'work' %}bg-sky-50 text-sky-700 border border-sky-200
+                                {% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
+                                {{ default_address.get_address_type_display }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-ink/50 font-medium">{{ default_address.phone_number }}</p>
+                        <p class="text-sm text-ink/70 leading-relaxed pt-1">{{ default_address.formatted }}</p>
+                    </div>
+                {% elif customer.address %}
+                    <p class="text-sm text-ink/70 leading-relaxed">{{ customer.address }}</p>
+                    <a href="{% url 'accounts:address_create' %}" class="mt-2 inline-flex items-center gap-1 text-xs text-coral hover:underline">
+                        <i class="fa-solid fa-plus text-[9px]" aria-hidden="true"></i> Save to Address Book
+                    </a>
+                {% else %}
+                    <p class="text-xs text-ink/40 italic">No delivery address saved yet.</p>
+                    <a href="{% url 'accounts:address_create' %}" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-coral/10 text-coral text-xs font-bold hover:bg-coral hover:text-white transition">
+                        <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i> Add Address
+                    </a>
+                {% endif %}
+            </div>
 
         </div>
 
@@ -87,9 +169,10 @@
                 {% if recent_orders %}
                 <div class="divide-y divide-ink/5">
                     {% for order in recent_orders %}
-                    <div class="px-6 py-4 flex items-center justify-between gap-4">
+                    <a href="{% url 'accounts:order_detail' order.id %}"
+                       class="flex items-center justify-between gap-4 px-6 py-4 hover:bg-cream/40 transition group">
                         <div class="min-w-0">
-                            <p class="text-sm font-semibold text-ink truncate">#{{ order.id }}</p>
+                            <p class="text-sm font-semibold text-ink truncate group-hover:text-coral transition">#{{ order.id }}</p>
                             <p class="text-xs text-ink/45 mt-0.5">{{ order.created_at|date:"M d, Y" }}</p>
                         </div>
                         <div class="text-right shrink-0">
@@ -102,7 +185,8 @@
                                 {{ order.get_status_display|default:order.status }}
                             </span>
                         </div>
-                    </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-ink/20 group-hover:text-coral transition shrink-0" aria-hidden="true"></i>
+                    </a>
                     {% endfor %}
                 </div>
                 {% else %}

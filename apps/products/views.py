@@ -420,6 +420,104 @@ def variant_delete(request, variant_pk):
     return redirect('custom_admin:product_update', pk=product_pk)
 
 
+@admin_required
+def variant_update(request, variant_pk):
+    """Inline update of a variant's price_override and stock."""
+    from django.http import JsonResponse
+    variant = get_object_or_404(ProductVariant, pk=variant_pk)
+    product_pk = variant.product_id
+
+    if request.method == 'POST':
+        try:
+            price_raw = request.POST.get('price_override', '').strip()
+            stock_raw = request.POST.get('stock', '').strip()
+            is_active  = request.POST.get('is_active') == 'true'
+
+            if price_raw == '':
+                variant.price_override = None
+            else:
+                variant.price_override = float(price_raw)
+
+            if stock_raw != '':
+                variant.stock = max(0, int(stock_raw))
+
+            variant.is_active = is_active
+            variant.save(update_fields=['price_override', 'stock', 'is_active'])
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True, 'stock': variant.stock,
+                                     'price': str(variant.price_override or '')})
+            messages.success(request, f'Variant "{variant.sku}" updated.')
+        except (ValueError, TypeError) as e:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+            messages.error(request, f'Invalid value: {e}')
+
+    return redirect('custom_admin:product_detail', pk=product_pk)
+
+
+@admin_required
+def variant_image_upload(request, variant_pk):
+    """Upload or replace a variant's image."""
+    variant = get_object_or_404(ProductVariant, pk=variant_pk)
+    product_pk = variant.product_id
+    if request.method == 'POST':
+        img = request.FILES.get('image')
+        if img:
+            variant.image = img
+            variant.save(update_fields=['image'])
+            messages.success(request, f'Image uploaded for variant "{variant.sku}".')
+        else:
+            messages.error(request, 'No image file provided.')
+    return redirect('custom_admin:product_detail', pk=product_pk)
+
+
+@admin_required
+def category_toggle(request, pk):
+    """AJAX toggle is_active for a category."""
+    from django.http import JsonResponse
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        category.is_active = not category.is_active
+        category.save(update_fields=['is_active'])
+        return JsonResponse({'ok': True, 'is_active': category.is_active})
+    return JsonResponse({'ok': False}, status=405)
+
+
+@admin_required
+def image_alt_update(request, image_pk):
+    """Inline update of a ProductImage alt_text."""
+    from django.http import JsonResponse
+    img = get_object_or_404(ProductImage, pk=image_pk)
+    product_pk = img.product_id
+    if request.method == 'POST':
+        alt = request.POST.get('alt_text', '').strip()
+        img.alt_text = alt
+        img.save(update_fields=['alt_text'])
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'alt_text': img.alt_text})
+        messages.success(request, 'Alt text updated.')
+    return redirect('custom_admin:product_detail', pk=product_pk)
+
+
+@admin_required
+def image_reorder(request, pk):
+    """Accept ordered list of image IDs and update sort_order."""
+    from django.http import JsonResponse
+    if request.method == 'POST':
+        try:
+            import json as _json
+            order_data = _json.loads(request.body)   # [{id: X, order: Y}, ...]
+            for item in order_data:
+                ProductImage.objects.filter(pk=item['id'], product_id=pk).update(
+                    sort_order=int(item['order'])
+                )
+            return JsonResponse({'ok': True})
+        except Exception as e:
+            return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+    return JsonResponse({'ok': False}, status=405)
+
+
 
 @admin_required
 def product_soft_delete(request, pk):
@@ -533,6 +631,67 @@ def option_value_delete(request, value_pk):
     return redirect('custom_admin:product_detail', pk=product_pk)
 
 
+# =========================================================
+# PRODUCT EXPORT / IMPORT HELPERS & VIEWS
+# =========================================================
+
+def serialize_specifications(specs):
+    """Serialize specifications to a pipe-delimited Key:Value format or JSON."""
+    if not specs:
+        return ''
+    if isinstance(specs, list):
+        parts = []
+        for item in specs:
+            if isinstance(item, dict):
+                lbl = item.get('label') or item.get('key') or item.get('name')
+                val = item.get('value')
+                if lbl and val:
+                    parts.append(f"{str(lbl).strip()}:{str(val).strip()}")
+        return "|".join(parts)
+    elif isinstance(specs, dict):
+        return "|".join(f"{str(k).strip()}:{str(v).strip()}" for k, v in specs.items() if v)
+    return ''
+
+
+def parse_specifications(raw_value):
+    """Parse specifications from either JSON or pipe-delimited Key:Value format."""
+    if not raw_value:
+        return []
+    raw = str(raw_value).strip()
+    if not raw:
+        return []
+
+    # 1. Try parsing JSON array/object
+    if (raw.startswith('[') and raw.endswith(']')) or (raw.startswith('{') and raw.endswith('}')):
+        try:
+            data = json.loads(raw)
+            if isinstance(data, list):
+                result = []
+                for item in data:
+                    if isinstance(item, dict):
+                        lbl = item.get('label') or item.get('key') or item.get('name')
+                        val = item.get('value')
+                        if lbl and val:
+                            result.append({'label': str(lbl).strip(), 'value': str(val).strip()})
+                return result
+            elif isinstance(data, dict):
+                return [{'label': str(k).strip(), 'value': str(v).strip()} for k, v in data.items() if v]
+        except Exception:
+            pass
+
+    # 2. Parse pipe-delimited pairs e.g. "Material:Beechwood|Pieces:13|Safety:EN71"
+    result = []
+    pairs = raw.split('|')
+    for pair in pairs:
+        if ':' in pair:
+            lbl, val = pair.split(':', 1)
+            lbl = lbl.strip()
+            val = val.strip()
+            if lbl and val:
+                result.append({'label': lbl, 'value': val})
+    return result
+
+
 @admin_required
 def product_export(request):
     response = HttpResponse(content_type='text/csv')
@@ -541,13 +700,15 @@ def product_export(request):
     writer = csv.writer(response)
     writer.writerow([
         'product_id', 'title', 'slug', 'category_id', 'category', 'brand', 
-        'base_price', 'base_stock', 'sku', 'variant_options', 'variant_price', 
-        'variant_stock', 'is_active', 'description', 'long_description'
+        'base_price', 'compare_price', 'base_stock', 'sku', 'variant_options', 'variant_price', 
+        'variant_stock', 'is_active', 'is_featured', 'is_bestseller', 'is_new',
+        'specifications', 'description', 'long_description'
     ])
 
     products = Product.objects.select_related('category', 'brand').prefetch_related('variants__options__option').all()
 
     for product in products:
+        spec_str = serialize_specifications(product.specifications)
         variants = product.variants.all()
         if variants.exists():
             for variant in variants:
@@ -565,12 +726,17 @@ def product_export(request):
                     product.category.name if product.category else '',
                     product.brand.name if product.brand else '',
                     product.price,
+                    product.compare_price if product.compare_price is not None else '',
                     product.stock,
                     variant.sku,
                     variant_options,
                     variant.price_override if variant.price_override is not None else '',
                     variant.stock,
                     variant.is_active,
+                    product.is_featured,
+                    product.is_bestseller,
+                    product.is_new,
+                    spec_str,
                     product.description or '',
                     product.long_description or '',
                 ])
@@ -583,12 +749,17 @@ def product_export(request):
                 product.category.name if product.category else '',
                 product.brand.name if product.brand else '',
                 product.price,
+                product.compare_price if product.compare_price is not None else '',
                 product.stock,
                 '', # sku
                 '', # variant_options
                 '', # variant_price
                 '', # variant_stock
                 product.is_active,
+                product.is_featured,
+                product.is_bestseller,
+                product.is_new,
+                spec_str,
                 product.description or '',
                 product.long_description or '',
             ])
@@ -603,26 +774,39 @@ def product_sample_csv(request):
     writer = csv.writer(response)
     writer.writerow([
         'product_id', 'title', 'slug', 'category_id', 'category', 'brand', 
-        'base_price', 'base_stock', 'sku', 'variant_options', 'variant_price', 
-        'variant_stock', 'is_active', 'description', 'long_description'
+        'base_price', 'compare_price', 'base_stock', 'sku', 'variant_options', 'variant_price', 
+        'variant_stock', 'is_active', 'is_featured', 'is_bestseller', 'is_new',
+        'specifications', 'description', 'long_description'
     ])
     
     # Sample Simple Product
     writer.writerow([
-        '', 'Wooden Building Blocks Set', 'wooden-building-blocks-set', '1', 'Toys', 'Kidurabd', 
-        '1200.00', '15', '', '', '', '', 'True', 'Educational wooden toy set.', 'Detailed description with full product specifications.'
+        '', 'Wooden Building Blocks Set', 'wooden-building-blocks-set', '1', 'Educational', 'Kidurabd', 
+        '1200.00', '1500.00', '25', '', '', '', 
+        '', 'True', 'True', 'True', 'True',
+        'Material:Natural Beechwood|Pieces:50|Recommended Age:2+ Years|Safety:EN71 Certified',
+        'Educational wooden toy set.', 
+        '<p>Detailed description with full product specifications.</p>'
     ])
     
     # Sample Variant Product - Base / Variant 1
     writer.writerow([
-        '', 'Kids Cotton T-Shirt', 'kids-cotton-tshirt', '2', 'Clothing', 'Kidurabd', 
-        '450.00', '50', 'TS-S-BLUE', 'Size:Small|Color:Blue', '450.00', '15', 'True', 'Comfortable cotton t-shirt.', 'Full product details and washing instructions.'
+        '', 'Kids Organic Cotton T-Shirt', 'kids-organic-cotton-tshirt', '2', 'Clothing', 'Kidurabd', 
+        '450.00', '550.00', '50', 'TS-S-BLUE', 'Size:Small|Color:Blue', '450.00', 
+        '15', 'True', 'False', 'True', 'False',
+        'Fabric:100% Organic Cotton|Care:Machine Washable (Gentle)|Country:Bangladesh',
+        'Comfortable cotton t-shirt.', 
+        '<p>Full product details and washing instructions.</p>'
     ])
     
     # Sample Variant Product - Variant 2
     writer.writerow([
-        '', 'Kids Cotton T-Shirt', 'kids-cotton-tshirt', '2', 'Clothing', 'Kidurabd', 
-        '450.00', '50', 'TS-M-RED', 'Size:Medium|Color:Red', '480.00', '20', 'True', 'Comfortable cotton t-shirt.'
+        '', 'Kids Organic Cotton T-Shirt', 'kids-organic-cotton-tshirt', '2', 'Clothing', 'Kidurabd', 
+        '450.00', '550.00', '50', 'TS-M-RED', 'Size:Medium|Color:Red', '480.00', 
+        '20', 'True', 'False', 'True', 'False',
+        'Fabric:100% Organic Cotton|Care:Machine Washable (Gentle)|Country:Bangladesh',
+        'Comfortable cotton t-shirt.',
+        '<p>Full product details and washing instructions.</p>'
     ])
 
     return response
@@ -688,11 +872,24 @@ def product_import(request):
                         )
 
                     base_price = row.get('base_price', '').strip() or row.get('price', '0.00').strip() or '0.00'
+                    compare_price_raw = row.get('compare_price', '').strip() if 'compare_price' in row else ''
+                    compare_price = float(compare_price_raw) if compare_price_raw else None
                     base_stock = row.get('base_stock', '').strip() or row.get('stock', '0').strip() or '0'
                     description = row.get('description', '').strip()
                     long_description = row.get('long_description', '').strip()
                     is_active_raw = str(row.get('is_active', 'True')).strip().lower()
                     is_active = is_active_raw in ['true', '1', 'yes', 'on']
+
+                    is_featured_raw = str(row.get('is_featured', '')).strip().lower() if 'is_featured' in row else ''
+                    is_featured = is_featured_raw in ['true', '1', 'yes', 'on'] if is_featured_raw else None
+
+                    is_bestseller_raw = str(row.get('is_bestseller', '')).strip().lower() if 'is_bestseller' in row else ''
+                    is_bestseller = is_bestseller_raw in ['true', '1', 'yes', 'on'] if is_bestseller_raw else None
+
+                    is_new_raw = str(row.get('is_new', '')).strip().lower() if 'is_new' in row else ''
+                    is_new = is_new_raw in ['true', '1', 'yes', 'on'] if is_new_raw else None
+
+                    specifications_raw = row.get('specifications', '').strip() if 'specifications' in row else None
 
                     # Check for existing product by ID or Slug
                     product = None
@@ -707,11 +904,21 @@ def product_import(request):
                         if brand:
                             product.brand = brand
                         product.price = base_price
+                        if 'compare_price' in row:
+                            product.compare_price = compare_price
                         product.stock = base_stock
                         if description:
                             product.description = description
                         if long_description:
                             product.long_description = long_description
+                        if specifications_raw is not None and specifications_raw != '':
+                            product.specifications = parse_specifications(specifications_raw)
+                        if is_featured is not None:
+                            product.is_featured = is_featured
+                        if is_bestseller is not None:
+                            product.is_bestseller = is_bestseller
+                        if is_new is not None:
+                            product.is_new = is_new
                         product.is_active = is_active
                         product.save()
                         updated_count += 1
@@ -724,15 +931,21 @@ def product_import(request):
                             slug = f"{original_slug}-{counter}"
                             counter += 1
 
+                        specs_parsed = parse_specifications(specifications_raw) if specifications_raw else []
                         current_product = Product.objects.create(
                             title=title or 'Untitled Product',
                             slug=slug,
                             category=category,
                             brand=brand,
                             price=base_price,
+                            compare_price=compare_price,
                             stock=base_stock,
                             description=description,
                             long_description=long_description,
+                            specifications=specs_parsed,
+                            is_featured=is_featured if is_featured is not None else False,
+                            is_bestseller=is_bestseller if is_bestseller is not None else False,
+                            is_new=is_new if is_new is not None else False,
                             is_active=is_active
                         )
                         created_count += 1
@@ -771,18 +984,26 @@ def product_import(request):
                         sku = f"{current_product.slug}-v{ProductVariant.objects.filter(product=current_product).count() + 1}"
 
                     variant = ProductVariant.objects.filter(sku=sku).first()
-                    price_override_val = float(variant_price) if variant_price else None
+                    try:
+                        price_override_val = float(variant_price) if variant_price else None
+                    except (ValueError, TypeError):
+                        price_override_val = None
+
+                    try:
+                        variant_stock_val = int(variant_stock) if variant_stock else 0
+                    except (ValueError, TypeError):
+                        variant_stock_val = 0
 
                     if variant:
                         variant.price_override = price_override_val
-                        variant.stock = int(variant_stock)
+                        variant.stock = variant_stock_val
                         variant.save()
                     else:
                         variant = ProductVariant.objects.create(
                             product=current_product,
                             sku=sku,
                             price_override=price_override_val,
-                            stock=int(variant_stock),
+                            stock=variant_stock_val,
                             is_active=True
                         )
 

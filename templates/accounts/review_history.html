@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Reviews — Kidurabd{% endblock %}
+
+{% block content %}
+<section class="py-10 sm:py-14 px-4">
+<div class="mx-auto max-w-4xl">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-ink">My Reviews</h1>
+            <p class="text-sm text-ink/50 mt-1">
+                {% if reviews_count %}
+                    You've written {{ reviews_count }} review{{ reviews_count|pluralize }}
+                {% else %}
+                    You haven't reviewed any products yet
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'accounts:profile' %}" class="inline-flex items-center gap-2 text-sm text-ink/50 hover:text-coral transition">
+            <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
+            <span>Back to Profile</span>
+        </a>
+    </div>
+
+    {% if page_obj %}
+    <!-- Reviews List -->
+    <div class="space-y-5">
+        {% for review in page_obj %}
+        <div class="bg-white rounded-3xl shadow-toy border border-ink/5 overflow-hidden">
+            <div class="flex flex-col sm:flex-row gap-0">
+
+                <!-- Product Thumbnail -->
+                <a href="{% url 'storefront:product_detail' review.product.slug %}"
+                   class="sm:w-36 shrink-0 bg-[#faf6ee] flex items-center justify-center overflow-hidden border-b sm:border-b-0 sm:border-r border-ink/5 aspect-square sm:aspect-auto">
+                    {% if review.product.images.first %}
+                        <img src="{{ review.product.images.first.image.url }}"
+                             alt="{{ review.product.title }}"
+                             class="w-full h-full object-cover">
+                    {% else %}
+                        <i class="fa-solid fa-shapes text-3xl text-slate-300" aria-hidden="true"></i>
+                    {% endif %}
+                </a>
+
+                <!-- Review Content -->
+                <div class="flex-1 p-5 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                        <div class="min-w-0">
+                            <a href="{% url 'storefront:product_detail' review.product.slug %}"
+                               class="text-sm font-bold text-ink hover:text-coral transition line-clamp-1">
+                                {{ review.product.title }}
+                            </a>
+                            {% if review.product.category %}
+                            <p class="text-[11px] text-ink/40 mt-0.5">{{ review.product.category.name }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="shrink-0 text-right">
+                            <!-- Star Rating -->
+                            <div class="flex items-center gap-0.5 justify-end sm:justify-start">
+                                {% for i in "12345" %}
+                                <i class="fa-solid fa-star text-xs {% if forloop.counter <= review.rating %}text-amber-400{% else %}text-ink/15{% endif %}" aria-hidden="true"></i>
+                                {% endfor %}
+                                <span class="ml-1.5 text-xs font-bold text-ink/60">{{ review.rating }}/5</span>
+                            </div>
+                            <!-- Status badge -->
+                            {% if review.is_approved %}
+                            <span class="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                                <i class="fa-solid fa-circle-check text-[8px]" aria-hidden="true"></i> Published
+                            </span>
+                            {% else %}
+                            <span class="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                                <i class="fa-solid fa-clock text-[8px]" aria-hidden="true"></i> Pending
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Review title & comment -->
+                    {% if review.title %}
+                    <p class="text-sm font-bold text-ink mb-1">{{ review.title }}</p>
+                    {% endif %}
+                    <p class="text-sm text-ink/70 leading-relaxed line-clamp-3">{{ review.comment }}</p>
+
+                    <!-- Date -->
+                    <div class="mt-3 flex items-center justify-between">
+                        <p class="text-[11px] text-ink/35 flex items-center gap-1">
+                            <i class="fa-regular fa-calendar text-[10px]" aria-hidden="true"></i>
+                            Reviewed on {{ review.created_at|date:"d M Y" }}
+                        </p>
+                        <a href="{% url 'storefront:product_detail' review.product.slug %}"
+                           class="text-[11px] font-semibold text-coral hover:underline flex items-center gap-1">
+                            <span>View Product</span>
+                            <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="mt-10 flex items-center justify-center gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}"
+           class="w-9 h-9 rounded-xl border border-ink/15 flex items-center justify-center text-ink/60 hover:border-coral hover:text-coral transition">
+            <i class="fa-solid fa-chevron-left text-xs" aria-hidden="true"></i>
+        </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="w-9 h-9 rounded-xl bg-coral text-white font-bold text-sm flex items-center justify-center shadow-button">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}"
+           class="w-9 h-9 rounded-xl border border-ink/15 flex items-center justify-center text-sm text-ink/60 hover:border-coral hover:text-coral transition">
+            {{ num }}
+        </a>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}"
+           class="w-9 h-9 rounded-xl border border-ink/15 flex items-center justify-center text-ink/60 hover:border-coral hover:text-coral transition">
+            <i class="fa-solid fa-chevron-right text-xs" aria-hidden="true"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="py-24 text-center">
+        <div class="w-24 h-24 rounded-full bg-butter/30 text-amber-400 text-4xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <i class="fa-regular fa-star" aria-hidden="true"></i>
+        </div>
+        <h2 class="text-xl font-bold text-ink mb-2">No reviews yet</h2>
+        <p class="text-sm text-ink/50 max-w-sm mx-auto mb-8">
+            After purchasing a product, share your experience to help other parents find the perfect toy.
+        </p>
+        <a href="{% url 'storefront:shop' %}"
+           class="inline-flex items-center gap-2 rounded-2xl bg-coral px-8 py-3.5 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition">
+            <span>Shop Now</span>
+            <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+</section>
+{% endblock %}

@@ -4,6 +4,60 @@
 {% block title %}{{ product.title }} — Kidurabd{% endblock %}
 {% block meta_description %}{{ product.description|striptags|truncatechars:160 }}{% endblock %}
 
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}{% endblock %}
+
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ product.title }} — Kidurabd{% endblock %}
+{% block og_description %}{{ product.description|striptags|truncatechars:180 }}{% endblock %}
+{% block og_image %}{% if product.images.first %}{{ request.scheme }}://{{ request.get_host }}{{ product.images.first.image.url }}{% endif %}{% endblock %}
+{% block og_image_alt %}{{ product.title }}{% endblock %}
+
+{% block twitter_title %}{{ product.title }} — Kidurabd{% endblock %}
+{% block twitter_description %}{{ product.description|striptags|truncatechars:180 }}{% endblock %}
+{% block twitter_image %}{% if product.images.first %}{{ request.scheme }}://{{ request.get_host }}{{ product.images.first.image.url }}{% endif %}{% endblock %}
+
+{% block schema_markup %}
+<!-- Product Schema JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ product.title|escapejs }}",
+  "description": "{{ product.description|striptags|truncatechars:300|escapejs }}",
+  "image": [
+    {% for img in product.images.all %}
+    "{{ request.scheme }}://{{ request.get_host }}{{ img.image.url }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ],
+  "sku": "{{ product.slug }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ product.brand.name|default:'Kidurabd'|escapejs }}"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{{ product.get_absolute_url }}",
+    "priceCurrency": "BDT",
+    "price": "{{ product.price }}",
+    "priceValidUntil": "2027-12-31",
+    "itemCondition": "https://schema.org/NewCondition",
+    "availability": "{% if product.stock > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "seller": {
+      "@type": "Organization",
+      "name": "Kidurabd"
+    }
+  }{% if product.rating and product.rating > 0 %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ product.rating }}",
+    "reviewCount": "{{ product.reviews.count|default:1 }}",
+    "bestRating": "5",
+    "worstRating": "1"
+  }{% endif %}
+}
+</script>
+{% endblock %}
+
 {% block content %}
 
 <!-- Breadcrumb -->
@@ -25,35 +79,78 @@
      PRODUCT DETAIL
 ══════════════════════════════════════════════════ -->
 <section class="py-10 sm:py-16" aria-label="Product details"
-         x-data="{ qty: 1, activeImage: 0, selectedVariant: null }">
+         x-data="{
+             qty: 1,
+             activeImageIndex: 0,
+             activeImageUrl: '{% if product.images.first %}{{ product.images.first.image.url }}{% endif %}',
+             zoomed: false,
+             zoomOrigin: '50% 50%',
+             lightboxOpen: false,
+             selectedVariant: null,
+             images: [
+                 {% for img in product.images.all %}
+                 '{{ img.image.url }}'{% if not forloop.last %},{% endif %}
+                 {% endfor %}
+             ],
+             handleMouseMove(e) {
+                 const rect = e.currentTarget.getBoundingClientRect();
+                 const x = ((e.clientX - rect.left) / rect.width) * 100;
+                 const y = ((e.clientY - rect.top) / rect.height) * 100;
+                 this.zoomOrigin = `${Math.max(0, Math.min(100, x))}% ${Math.max(0, Math.min(100, y))}%`;
+             },
+             selectThumb(idx, url) {
+                 this.activeImageIndex = idx;
+                 this.activeImageUrl = url;
+             }
+         }">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-2 gap-10 lg:gap-16">
 
             <!-- Left: Images -->
             <div>
-                <!-- Main image -->
-                <div class="rounded-3xl overflow-hidden flex items-center justify-center min-h-[320px] sm:min-h-[420px]"
-                     style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }};">
-                    {% with feat_image=product.images.all|first %}
-                    {% if feat_image %}
-                        <img src="{{ feat_image.image.url }}"
-                             alt="{{ product.title }}"
-                             class="h-64 w-64 sm:h-80 sm:w-80 object-contain">
+                <!-- Main image with Magnifier -->
+                <div class="relative rounded-3xl overflow-hidden flex items-center justify-center min-h-[320px] sm:min-h-[440px] select-none group border border-ink/5"
+                     style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }}; cursor: zoom-in;"
+                     @mouseenter="if (activeImageUrl) zoomed = true"
+                     @mouseleave="zoomed = false"
+                     @mousemove="handleMouseMove($event)">
+
+                    {% if product.images.exists %}
+                    <img :src="activeImageUrl || '{{ product.images.first.image.url }}'"
+                         alt="{{ product.title }}"
+                         class="h-64 w-64 sm:h-80 sm:w-80 object-contain transition-transform duration-150 ease-out will-change-transform"
+                         :style="{ transformOrigin: zoomOrigin, transform: zoomed ? 'scale(2.2)' : 'scale(1)' }">
+
+                    <!-- Magnifier hover indicator -->
+                    <div class="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-ink/75 backdrop-blur-md text-white text-[11px] font-medium rounded-full pointer-events-none transition-opacity duration-200"
+                         :class="zoomed ? 'opacity-0' : 'opacity-90'">
+                        <i class="fa-solid fa-magnifying-glass-plus text-xs text-amber-300"></i>
+                        <span>Hover to zoom</span>
+                    </div>
+
+                    <!-- Fullscreen preview button -->
+                    <button type="button"
+                            @click.stop="lightboxOpen = true"
+                            aria-label="View full image"
+                            class="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-white/85 text-ink/70 hover:text-coral hover:bg-white shadow-sm transition-all"
+                            title="Fullscreen preview">
+                        <i class="fa-solid fa-expand text-xs"></i>
+                    </button>
                     {% else %}
                         <span class="text-[10rem] leading-none">{{ product.category.emoji|default:"🧸" }}</span>
                     {% endif %}
-                    {% endwith %}
                 </div>
 
                 <!-- Thumbnail strip (if multiple images) -->
                 {% if product.images.all|length > 1 %}
-                <div class="mt-4 flex gap-3 overflow-x-auto">
+                <div class="mt-4 flex gap-3 overflow-x-auto pb-1">
                     {% for img in product.images.all %}
-                    <button class="h-16 w-16 shrink-0 rounded-xl overflow-hidden border-2 border-transparent hover:border-coral transition-colors"
-                            @click="activeImage = {{ forloop.counter0 }}"
-                            :class="activeImage === {{ forloop.counter0 }} ? 'border-coral' : 'border-transparent'"
+                    <button type="button"
+                            class="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all p-1 bg-white cursor-pointer"
+                            @click="selectThumb({{ forloop.counter0 }}, '{{ img.image.url }}')"
+                            :class="activeImageUrl === '{{ img.image.url }}' ? 'border-coral shadow-md ring-2 ring-coral/20' : 'border-ink/10 hover:border-coral/50 opacity-70 hover:opacity-100'"
                             aria-label="View image {{ forloop.counter }}">
-                        <img src="{{ img.image.url }}" alt="{{ product.title }} image {{ forloop.counter }}" class="h-full w-full object-cover">
+                        <img src="{{ img.image.url }}" alt="{{ product.title }} image {{ forloop.counter }}" class="h-full w-full object-contain rounded-xl">
                     </button>
                     {% endfor %}
                 </div>
@@ -136,7 +233,17 @@
                         {% for variant in product.variants.all %}
                         {% if variant.is_active %}
                         <button type="button"
-                                @click="selectedVariant = (selectedVariant === {{ variant.id }} ? null : {{ variant.id }})"
+                                @click="
+                                    if (selectedVariant === {{ variant.id }}) {
+                                        selectedVariant = null;
+                                        activeImageUrl = images.length > 0 ? images[activeImageIndex] : '{% if product.images.first %}{{ product.images.first.image.url }}{% endif %}';
+                                    } else {
+                                        selectedVariant = {{ variant.id }};
+                                        {% if variant.image %}
+                                        activeImageUrl = '{{ variant.image.url }}';
+                                        {% endif %}
+                                    }
+                                "
                                 :class="selectedVariant === {{ variant.id }} ? 'border-coral bg-coral/10 text-coral font-bold shadow-sm' : 'border-ink/15 text-ink hover:border-coral'"
                                 class="rounded-xl border-2 px-4 py-2 text-xs font-medium transition-all">
                             {{ variant.sku }}
@@ -194,17 +301,42 @@
                                 aria-label="Product is out of stock">
                             <i class="fa-solid fa-ban" aria-hidden="true"></i>
                             <span>Out of Stock</span>
-                        </button>
                         {% endif %}
 
-                        <!-- Wishlist -->
-                        <button type="button"
-                                class="toggle-favorite grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-ink/15 text-lg hover:border-coral hover:text-coral transition-colors shadow-sm"
-                                data-active="false"
-                                aria-label="Save to wishlist">
-                            <i class="fa-regular fa-heart" aria-hidden="true"></i>
-                        </button>
+                        <!-- Wishlist — server-side toggle -->
+                        <div x-data="{ wishlisted: {{ is_wishlisted|yesno:'true,false' }} }"
+                             class="shrink-0">
+                            <form method="post" action="{% url 'accounts:wishlist_toggle' %}"
+                                  @submit.prevent="
+                                    {% if user.is_authenticated %}
+                                    fetch('{% url 'accounts:wishlist_toggle' %}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': '{{ csrf_token }}',
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        },
+                                        body: new URLSearchParams({ product_id: '{{ product.id }}' })
+                                    }).then(r => r.json()).then(data => {
+                                        wishlisted = data.wishlisted;
+                                    }).catch(() => {});
+                                    {% else %}
+                                    window.location = '{% url 'accounts:login' %}?next={{ request.path }}';
+                                    {% endif %}
+                                  ">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <button type="submit"
+                                        :title="wishlisted ? 'Remove from wishlist' : 'Save to wishlist'"
+                                        :aria-pressed="wishlisted"
+                                        :class="wishlisted
+                                            ? 'h-12 w-12 shrink-0 place-items-center rounded-2xl border border-coral bg-coral/10 text-coral text-lg transition-colors shadow-sm grid'
+                                            : 'h-12 w-12 shrink-0 place-items-center rounded-2xl border border-ink/15 text-lg hover:border-coral hover:text-coral transition-colors shadow-sm grid'">
+                                    <i :class="wishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
+
                 </form>
 
                 <!-- Delivery note -->
@@ -218,6 +350,45 @@
                 <p class="mt-4 text-xs text-ink/40">Brand: <span class="font-semibold text-ink/60">{{ product.brand.name }}</span></p>
                 {% endif %}
             </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Lightbox Modal -->
+    <div x-show="lightboxOpen"
+         x-cloak
+         @keydown.escape.window="lightboxOpen = false"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 backdrop-blur-sm p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95">
+        <div class="relative max-w-4xl w-full bg-white rounded-3xl p-6 shadow-2xl flex flex-col items-center"
+             @click.outside="lightboxOpen = false">
+            <button type="button"
+                    @click="lightboxOpen = false"
+                    aria-label="Close preview"
+                    class="absolute top-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-cream text-ink/70 hover:text-coral transition-colors shadow-sm">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <div class="w-full h-[65vh] flex items-center justify-center p-4">
+                <img :src="activeImageUrl"
+                     alt="{{ product.title }}"
+                     class="max-h-full max-w-full object-contain rounded-2xl">
+            </div>
+            {% if product.images.all|length > 1 %}
+            <div class="mt-4 flex gap-2 overflow-x-auto max-w-full py-2">
+                {% for img in product.images.all %}
+                <button type="button"
+                        @click="selectThumb({{ forloop.counter0 }}, '{{ img.image.url }}')"
+                        class="h-14 w-14 shrink-0 rounded-xl overflow-hidden border-2 transition-all p-0.5 cursor-pointer bg-white"
+                        :class="activeImageUrl === '{{ img.image.url }}' ? 'border-coral ring-2 ring-coral/20' : 'border-ink/10 opacity-60 hover:opacity-100'">
+                    <img src="{{ img.image.url }}" alt="thumb" class="h-full w-full object-contain rounded-lg">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>

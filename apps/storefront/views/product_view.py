@@ -81,6 +81,12 @@ class ProductDetailView:
         reviews_count = reviews.count()
         rating_breakdown = product.get_rating_breakdown()
 
+        # Wishlist state — server-side flag for authenticated customers
+        is_wishlisted = False
+        if request.user.is_authenticated and not request.user.is_staff:
+            from accounts.models import Wishlist
+            is_wishlisted = Wishlist.objects.filter(user=request.user, product=product).exists()
+
         context = {
             "product": product,
             "categories": categories,
@@ -90,5 +96,7 @@ class ProductDetailView:
             "reviews_count": reviews_count,
             "rating_breakdown": rating_breakdown,
             "announcement": "Free delivery on orders over ৳1,000 · Designed for curious little humans",
+            "is_wishlisted": is_wishlisted,
         }
         return render(request, "storefront/product_detail.html", context)
+

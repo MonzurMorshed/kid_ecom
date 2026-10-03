@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
+from .models import UserAddress
+
 User = get_user_model()
 
 # ── Shared input CSS ─────────────────────────────────────────────────────────
@@ -175,3 +177,60 @@ class CustomerResetPasswordForm(forms.Form):
             except forms.ValidationError as e:
                 self.add_error('new_password', e)
         return cleaned
+
+
+class UserAddressForm(forms.ModelForm):
+    class Meta:
+        model = UserAddress
+        fields = [
+            'address_type',
+            'full_name',
+            'phone_number',
+            'address_line1',
+            'address_line2',
+            'city',
+            'state',
+            'postal_code',
+            'country',
+            'is_default',
+        ]
+        widgets = {
+            'address_type': forms.Select(attrs={
+                'class': _INPUT + ' cursor-pointer',
+            }),
+            'full_name': forms.TextInput(attrs={
+                'class': _INPUT,
+                'placeholder': 'Recipient full name',
+            }),
+            'phone_number': forms.TextInput(attrs={
+                'class': _INPUT,
+                'placeholder': 'Phone number (e.g. 017xxxxxxxx)',
+            }),
+            'address_line1': forms.TextInput(attrs={
+                'class': _INPUT,
+                'placeholder': 'Street address, house / flat no., road',
+            }),
+            'address_line2': forms.TextInput(attrs={
+                'class': _INPUT,
+                'placeholder': 'Apartment, unit, landmark, area (optional)',
+            }),
+            'city': forms.TextInput(attrs={
+                'class': _INPUT,
+                'placeholder': 'City / Town',
+            }),
+            'state': forms.TextInput(attrs={
+                'class': _INPUT,
+                'placeholder': 'District / State / Division (optional)',
+            }),
+            'postal_code': forms.TextInput(attrs={
+                'class': _INPUT,
+                'placeholder': 'Postal / ZIP Code (optional)',
+            }),
+            'country': forms.TextInput(attrs={
+                'class': _INPUT,
+                'placeholder': 'Country',
+            }),
+            'is_default': forms.CheckboxInput(attrs={
+                'class': 'w-5 h-5 rounded-lg border-ink/20 text-coral focus:ring-coral/40 cursor-pointer accent-coral',
+            }),
+        }

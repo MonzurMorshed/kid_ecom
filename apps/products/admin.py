@@ -44,7 +44,7 @@ class ProductAdmin(admin.ModelAdmin):
 
     class Media:
         js = (
-            "https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js",
+            "vendor/ckeditor5/ckeditor.js",
             "js/admin_ckeditor.js",
         )
 
