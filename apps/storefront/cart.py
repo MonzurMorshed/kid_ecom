@@ -217,9 +217,10 @@ class Cart:
 
     def __iter__(self):
         for key, item in self.cart.items():
-            item['key']        = key
-            item['line_total'] = Decimal(item['price']) * item['qty']
-            yield item
+            row = dict(item)                          # shallow copy — never mutate the session dict
+            row['key']        = key
+            row['line_total'] = str(Decimal(item['price']) * item['qty'])
+            yield row
 
     def __len__(self):
         return sum(item['qty'] for item in self.cart.values())

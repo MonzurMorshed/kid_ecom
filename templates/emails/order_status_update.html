@@ -1,0 +1,40 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subject %}Order #{{ order.id|stringformat:"05d" }} — {{ status_label }}{% endblock %}
+
+{% block body %}
+<h1>{{ status_emoji }} Order Update</h1>
+<p>Hi <strong>{{ order.full_name }}</strong>, here's an update on your order from <strong>{{ site_name }}</strong>.</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">Order #</span>
+    <span class="info-value">#{{ order.id|stringformat:"05d" }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">New Status</span>
+    <span class="info-value">
+      <span class="status-badge status-{{ order.status }}">{{ status_emoji }} {{ status_label }}</span>
+    </span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Updated</span>
+    <span class="info-value">{{ order.updated_at|date:"d M Y, H:i" }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Total</span>
+    <span class="info-value">BDT {{ order.total_amount }}</span>
+  </div>
+</div>
+
+<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:18px 24px;margin-bottom:20px;">
+  <p style="margin:0;font-size:15px;color:#94a3b8;">{{ status_detail }}</p>
+</div>
+
+<hr class="divider">
+<p>If you have any questions or concerns about your order, please don't hesitate to contact us by replying to this email.</p>
+
+<div style="text-align:center;margin-top:24px;">
+  <a href="{{ site_url }}" class="btn">Visit Store</a>
+</div>
+{% endblock %}

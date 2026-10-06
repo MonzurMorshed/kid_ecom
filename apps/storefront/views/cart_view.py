@@ -173,6 +173,12 @@ def checkout(request):
                 )
 
             cart.clear()
+
+            # ── Transactional emails ──────────────────────────────────────────
+            from orders.emails import send_order_placed, send_admin_new_order
+            send_order_placed(order)
+            send_admin_new_order(order)
+
             messages.success(request, f'🎉 Order #{order.id} placed! Thank you, {full_name}.')
             return redirect('storefront:order_success', pk=order.pk)
 

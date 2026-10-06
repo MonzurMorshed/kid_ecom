@@ -61,6 +61,11 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+
+            # Welcome email (fail-silently — SMTP issues must never block registration)
+            from orders.emails import send_welcome_email
+            send_welcome_email(user)
+
             messages.success(request, f'Welcome to Kidurabd, {user.first_name}! 🎉')
             return redirect(request.GET.get('next') or 'storefront:index')
     else:
@@ -79,15 +84,14 @@ def login_view(request):
         password = form.cleaned_data['password']
         remember = form.cleaned_data.get('remember_me', False)
 
-        # Try authenticate by email (username = email)
-        user = authenticate(request, username=email, password=password)
-        if user is None:
-            # Fallback: look up by email field in case username differs
-            try:
-                u = User.objects.get(email__iexact=email)
-                user = authenticate(request, username=u.username, password=password)
-            except User.DoesNotExist:
-                pass
+        # Resolve username (registered users use email as username, but check DB to be sure)
+        try:
+            u = User.objects.get(email__iexact=email)
+            auth_username = u.username
+        except User.DoesNotExist:
+            auth_username = email
+
+        user = authenticate(request, username=auth_username, password=password)
 
         if user is not None:
             if user.is_blocked:
@@ -96,6 +100,8 @@ def login_view(request):
             login(request, user)
             if not remember:
                 request.session.set_expiry(0)  # Session cookie expires when browser closes
+            else:
+                request.session.set_expiry(getattr(settings, 'SESSION_COOKIE_AGE', 86400))  # 1 day (24 hours)
             # Merge any guest-session cart items into the user's DB cart
             if not user.is_staff and not user.is_superuser:
                 from apps.storefront.cart import merge_session_cart_to_user

@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import openpyxl
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -814,16 +815,41 @@ def product_sample_csv(request):
 @admin_required
 def product_import(request):
     if request.method == 'POST' and request.FILES.get('csv_file'):
-        csv_file = request.FILES['csv_file']
-        
-        if not csv_file.name.endswith('.csv'):
-            messages.error(request, "Please upload a valid .csv file.")
+        uploaded_file = request.FILES['csv_file']
+        filename = uploaded_file.name.lower()
+
+        if not (filename.endswith('.csv') or filename.endswith('.xlsx')):
+            messages.error(request, "Please upload a valid .csv or .xlsx file.")
             return redirect('custom_admin:product_list')
 
         try:
-            decoded_file = csv_file.read().decode('utf-8-sig')
-            io_string = io.StringIO(decoded_file)
-            reader = csv.DictReader(io_string)
+            # ── Parse rows into a list of dicts regardless of file type ──
+            def cell_to_str(cell):
+                """Convert any cell value to a clean string.
+                Excel stores integers as floats (e.g. 3 → 3.0), so we strip
+                the trailing '.0' so that isdigit() checks work correctly."""
+                if cell is None:
+                    return ''
+                if isinstance(cell, float) and cell == int(cell):
+                    return str(int(cell))
+                return str(cell).strip()
+
+            if filename.endswith('.xlsx'):
+                wb = openpyxl.load_workbook(io.BytesIO(uploaded_file.read()), read_only=True, data_only=True)
+                ws = wb.active
+                rows_iter = ws.iter_rows(values_only=True)
+                headers = [cell_to_str(h) for h in next(rows_iter)]
+                raw_rows = [
+                    {headers[i]: cell_to_str(cell) for i, cell in enumerate(row)}
+                    for row in rows_iter
+                    if any(cell is not None for cell in row)   # skip fully-empty rows
+                ]
+            else:
+                decoded_file = uploaded_file.read().decode('utf-8-sig')
+                io_string = io.StringIO(decoded_file)
+                raw_rows = list(csv.DictReader(io_string))
+
+            reader = raw_rows
 
             created_count = 0
             updated_count = 0
@@ -840,8 +866,13 @@ def product_import(request):
                 if title or product_id or slug:
                     if not title and current_product:
                         title = current_product.title
-                    
-                    if not slug and title:
+
+                    # When no product_id is supplied, always generate slug from
+                    # the title so that every row gets its own unique lookup key
+                    # (the file's slug column is only trusted when product_id is present).
+                    if not product_id:
+                        slug = slugify(title, allow_unicode=True) if title else slug
+                    elif not slug and title:
                         slug = slugify(title, allow_unicode=True)
 
                     category_id_val = row.get('category_id', '').strip()
@@ -954,7 +985,7 @@ def product_import(request):
                 sku = row.get('sku', '').strip()
                 variant_options_str = row.get('variant_options', '').strip()
                 variant_price = row.get('variant_price', '').strip()
-                variant_stock = row.get('variant_stock', '0').strip() or '0'
+                variant_stock = row.get('variant_stock', '').strip() or base_stock or '0'
 
                 if current_product and (sku or variant_options_str):
                     option_values_to_link = []
@@ -995,8 +1026,10 @@ def product_import(request):
                         variant_stock_val = 0
 
                     if variant:
+                        variant.product = current_product
                         variant.price_override = price_override_val
                         variant.stock = variant_stock_val
+                        variant.is_active = True
                         variant.save()
                     else:
                         variant = ProductVariant.objects.create(
@@ -1014,6 +1047,6 @@ def product_import(request):
 
             messages.success(request, f"Import complete! {created_count} products created, {updated_count} updated, and {variant_count} variants processed.")
         except Exception as e:
-            messages.error(request, f"Error processing CSV file: {str(e)}")
+            messages.error(request, f"Error processing file: {str(e)}")
 
     return redirect('custom_admin:product_list')

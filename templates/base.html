@@ -155,24 +155,90 @@
             </button>
 
             <!-- Logo / Wordmark -->
-            <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2">
-                {% if site_settings and site_settings.site_logo %}
-                <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 w-auto">
+            <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2.5 group">
+                {% if site_settings and site_settings.site_logo %} 
+                <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                <span class="text-xl sm:text-[23px] font-bold text-ink tracking-[-0.04em] font-display leading-none">
+                    {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                </span>
                 {% else %}
-                <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
-                <span class="text-[23px] font-bold tracking-[-.075em]">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                <span class="text-[23px] font-bold tracking-[-.075em] text-ink font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
                 {% endif %}
             </a>
 
             <!-- Desktop category navigation -->
             <nav id="mainNav" aria-label="Category navigation"
                  class="hidden lg:flex lg:ml-auto lg:items-center lg:gap-7">
-                <a class="text-sm font-semibold text-ink/65 hover:text-coral transition-colors {% if not selected_category %}text-ink{% endif %}"
+                <a class="text-sm font-semibold transition-colors {% if request.resolver_match.url_name == 'index' and not selected_category %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
                    href="{% url 'storefront:index' %}">Home</a>
-                {% for cat in nav_categories %}
-                <a class="text-sm font-semibold transition-colors {% if selected_category.slug == cat.slug %}text-coral border-b-2 border-coral pb-0.5{% else %}text-ink/65 hover:text-coral{% endif %}"
-                   href="{% url 'storefront:category_detail' cat.slug %}">{{ cat.name }}</a>
-                {% endfor %}
+
+                <!-- Categories Dropdown (Hover & Click) -->
+                <div class="relative py-4"
+                     x-data="{ open: false, timeout: null }"
+                     @mouseenter="clearTimeout(timeout); open = true"
+                     @mouseleave="timeout = setTimeout(() => { open = false }, 180)"
+                     @click.away="open = false"
+                     @keydown.escape.window="open = false">
+                    <button type="button"
+                            @click="open = !open"
+                            class="flex items-center gap-1.5 text-sm font-semibold transition-colors focus:outline-none cursor-pointer {% if selected_category %}text-coral font-bold{% else %}text-ink/65 hover:text-coral{% endif %}"
+                            :class="{ 'text-coral': open }"
+                            :aria-expanded="open"
+                            aria-haspopup="true">
+                        <span>Categories</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
+                           :class="{ 'rotate-180': open }"></i>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div x-show="open"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                         class="absolute left-0 top-full pt-1 w-64 z-50">
+                        <div class="rounded-2xl bg-white p-2 shadow-xl border border-ink/10 ring-1 ring-black/5 divide-y divide-ink/5">
+                            <div class="max-h-80 overflow-y-auto space-y-0.5 py-1">
+                                {% for cat in nav_categories %}
+                                <a href="{% url 'storefront:category_detail' cat.slug %}"
+                                   @click="open = false"
+                                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all group {% if selected_category and selected_category.slug == cat.slug %}bg-coral/10 text-coral font-semibold{% else %}text-ink/75 hover:bg-cream hover:text-coral{% endif %}">
+                                    {% if cat.emoji %}
+                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-base group-hover:scale-110 transition-transform">
+                                        {{ cat.emoji }}
+                                    </span>
+                                    {% elif cat.image %}
+                                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="h-7 w-7 shrink-0 rounded-lg object-cover">
+                                    {% else %}
+                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-xs text-ink/40 group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-shapes"></i>
+                                    </span>
+                                    {% endif %}
+                                    <span class="truncate">{{ cat.name }}</span>
+                                    <i class="fa-solid fa-chevron-right ml-auto text-[10px] text-coral opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i>
+                                </a>
+                                {% empty %}
+                                <div class="px-4 py-3 text-xs text-ink/40 text-center">No categories found</div>
+                                {% endfor %}
+                            </div>
+                            <div class="pt-1.5 px-1">
+                                <a href="{% url 'storefront:shop' %}"
+                                   @click="open = false"
+                                   class="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-coral bg-coral/5 hover:bg-coral hover:text-white transition-all group">
+                                    <span>All Toys</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a class="text-sm font-semibold transition-colors {% if request.resolver_match.url_name == 'shop' and not selected_category %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
+                   href="{% url 'storefront:shop' %}">All Toys</a>
             </nav>
 
             <!-- Right controls -->
@@ -278,14 +344,39 @@
                        placeholder="Search all toys..." type="search">
                 <button type="submit" class="text-[11px] font-bold text-coral uppercase tracking-wider">Go</button>
             </form>
-            <a class="block py-2 text-sm font-semibold text-ink/65 hover:text-coral"
+            <a class="block py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'index' and not selected_category %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
                href="{% url 'storefront:index' %}" @click="mobileMenuOpen = false">Home</a>
-            <a class="block py-2 text-sm font-semibold text-ink/65 hover:text-coral"
+
+            <!-- Mobile Categories Accordion -->
+            <div x-data="{ catOpen: {% if selected_category %}true{% else %}false{% endif %} }" class="border-y border-ink/5 py-1">
+                <button type="button"
+                        @click="catOpen = !catOpen"
+                        class="flex w-full items-center justify-between py-2 text-sm font-semibold cursor-pointer {% if selected_category %}text-coral font-bold{% else %}text-ink/65 hover:text-coral{% endif %}">
+                    <span>Categories</span>
+                    <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
+                       :class="{ 'rotate-180': catOpen }"></i>
+                </button>
+                <div x-show="catOpen"
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-1"
+                     class="pl-3 pr-1 py-1 space-y-1">
+                    {% for cat in nav_categories %}
+                    <a class="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg text-sm font-medium transition-colors {% if selected_category and selected_category.slug == cat.slug %}bg-coral/10 text-coral font-bold{% else %}text-ink/70 hover:bg-white hover:text-coral{% endif %}"
+                       href="{% url 'storefront:category_detail' cat.slug %}" @click="mobileMenuOpen = false">
+                        {% if cat.emoji %}<span class="text-sm">{{ cat.emoji }}</span>{% endif %}
+                        <span>{{ cat.name }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <a class="block py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'shop' and not selected_category %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
                href="{% url 'storefront:shop' %}" @click="mobileMenuOpen = false">All Toys</a>
-            {% for cat in nav_categories %}
-            <a class="block py-2 text-sm font-semibold {% if selected_category.slug == cat.slug %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
-               href="{% url 'storefront:category_detail' cat.slug %}" @click="mobileMenuOpen = false">{{ cat.name }}</a>
-            {% endfor %}
         </div>
     </header>
 
@@ -335,12 +426,15 @@
     <footer class="border-t border-ink/10 bg-cream px-4 py-14 sm:px-6 lg:px-8">
         <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.7fr]">
             <div>
-                <a href="{% url 'storefront:index' %}" class="flex items-center gap-2">
+                <a href="{% url 'storefront:index' %}" class="flex items-center gap-2.5 group">
                     {% if site_settings and site_settings.site_logo %}
-                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 w-auto">
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                    <span class="text-xl sm:text-[23px] font-bold text-ink tracking-[-0.04em] font-display leading-none">
+                        {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                    </span>
                     {% else %}
-                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
-                    <span class="text-[23px] font-bold tracking-[-.075em]">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                    <span class="text-[23px] font-bold tracking-[-.075em] text-ink font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
                     {% endif %}
                 </a>
                 <p class="mt-4 text-xs leading-5 text-ink/55">{{ site_settings.site_tagline|default:'Toys with a little more heart.' }}</p>
@@ -379,17 +473,21 @@
                 <div>
                     <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Need help?</h4>
                     {% if site_settings and site_settings.site_email %}
-                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral" href="mailto:{{ site_settings.site_email }}">
+                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral transition-colors" href="mailto:{{ site_settings.site_email }}">
                         <i class="fa-regular fa-envelope text-coral text-xs"></i> {{ site_settings.site_email }}
                     </a>
                     {% endif %}
                     {% if site_settings and site_settings.site_phone %}
-                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral" href="tel:{{ site_settings.site_phone }}">
+                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral transition-colors" href="tel:{{ site_settings.site_phone }}">
                         <i class="fa-solid fa-phone text-coral text-xs"></i> {{ site_settings.site_phone }}
                     </a>
                     {% endif %}
+                    {% for p in footer_pages %}
+                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral transition-colors" href="{{ p.get_absolute_url }}">{{ p.title }}</a>
+                    {% empty %}
                     <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#">Delivery &amp; returns</a>
                     <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#">Payment &amp; safety</a>
+                    {% endfor %}
                 </div>
                 <div class="col-span-2 sm:col-span-1">
                     <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Stay curious</h4>
@@ -406,8 +504,14 @@
             </div>
         </div>
 
-        <div class="mx-auto mt-12 flex max-w-7xl flex-col justify-between gap-3 border-t border-ink/10 pt-5 text-[10px] text-ink/45 sm:flex-row">
-            <span>© {% now 'Y' %} {{ site_settings.site_name|default:'Kidurabd' }}</span>
+        <div class="mx-auto mt-12 flex max-w-7xl flex-col justify-between gap-3 border-t border-ink/10 pt-5 text-[10px] text-ink/45 sm:flex-row sm:items-center">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>© {% now 'Y' %} {{ site_settings.site_name|default:'Kidurabd' }}</span>
+                {% for p in footer_pages %}
+                <span class="text-ink/20">·</span>
+                <a href="{{ p.get_absolute_url }}" class="hover:text-coral transition-colors">{{ p.title }}</a>
+                {% endfor %}
+            </div>
             <span>Secure checkout ·
                 <strong class="text-ink/70">VISA</strong> ·
                 <strong class="text-ink/70">Mastercard</strong> ·

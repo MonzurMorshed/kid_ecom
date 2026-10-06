@@ -55,3 +55,15 @@ def site_settings(request):
         settings_obj = None
     return {"site_settings": settings_obj}
 
+
+def footer_pages(request):
+    """
+    Inject published pages configured to show in footer into every template.
+    """
+    from custom_admin.models import Page
+    try:
+        pages = Page.objects.filter(is_published=True, show_in_footer=True).order_by('sort_order', 'title')
+    except Exception:
+        pages = []
+    return {"footer_pages": pages}
+

@@ -109,8 +109,8 @@
             <!-- Left: Images -->
             <div>
                 <!-- Main image with Magnifier -->
-                <div class="relative rounded-3xl overflow-hidden flex items-center justify-center min-h-[320px] sm:min-h-[440px] select-none group border border-ink/5"
-                     style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }}; cursor: zoom-in;"
+                <div class="relative rounded-3xl overflow-hidden flex items-center justify-center aspect-square w-full select-none group border border-ink/5 bg-slate-50"
+                     style="background-color: {{ product.category.theme_color|default:'#f1f5f9' }}; cursor: zoom-in;"
                      @mouseenter="if (activeImageUrl) zoomed = true"
                      @mouseleave="zoomed = false"
                      @mousemove="handleMouseMove($event)">
@@ -118,8 +118,8 @@
                     {% if product.images.exists %}
                     <img :src="activeImageUrl || '{{ product.images.first.image.url }}'"
                          alt="{{ product.title }}"
-                         class="h-64 w-64 sm:h-80 sm:w-80 object-contain transition-transform duration-150 ease-out will-change-transform"
-                         :style="{ transformOrigin: zoomOrigin, transform: zoomed ? 'scale(2.2)' : 'scale(1)' }">
+                         class="w-full h-full transition-transform duration-150 ease-out will-change-transform"
+                         :style="{ transformOrigin: zoomOrigin, transform: zoomed ? 'scale(1.8)' : 'scale(1)' }">
 
                     <!-- Magnifier hover indicator -->
                     <div class="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-ink/75 backdrop-blur-md text-white text-[11px] font-medium rounded-full pointer-events-none transition-opacity duration-200"
@@ -150,7 +150,7 @@
                             @click="selectThumb({{ forloop.counter0 }}, '{{ img.image.url }}')"
                             :class="activeImageUrl === '{{ img.image.url }}' ? 'border-coral shadow-md ring-2 ring-coral/20' : 'border-ink/10 hover:border-coral/50 opacity-70 hover:opacity-100'"
                             aria-label="View image {{ forloop.counter }}">
-                        <img src="{{ img.image.url }}" alt="{{ product.title }} image {{ forloop.counter }}" class="h-full w-full object-contain rounded-xl">
+                        <img src="{{ img.image.url }}" alt="{{ product.title }} image {{ forloop.counter }}" class="h-full w-full object-cover rounded-xl">
                     </button>
                     {% endfor %}
                 </div>
@@ -476,7 +476,7 @@
                         </h3>
 
                         {% if product.get_specifications_list %}
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div class="grid grid-cols-1 sm:grid-cols-1 gap-2.5">
                             {% for spec in product.get_specifications_list %}
                             <div class="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm border border-slate-100/80">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-500 bg-indigo-50/60 shrink-0">

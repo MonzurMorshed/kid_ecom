@@ -234,9 +234,9 @@ Order Management:
   [x] Order soft delete / trash / restore / permanent delete
   [x] Order invoice / print view  (custom_admin:order_invoice)
   [x] Order filter by status  (PENDING, PROCESSING, CONFIRMED, DELIVERED, CANCELLED)
-  [~] Order search  (name, email, phone search; order ID direct search pending)
-  [ ] Order filter by date range
-  [ ] Order export to CSV  (stub view present)
+  [x] Order search  (name, email, phone, #ID direct search; Q filter with pk lookup)
+  [x] Order filter by date range  (date_from / date_to GET params, date inputs in toolbar)
+  [x] Order export to CSV  (streaming CSV; respects active search/status/date filters)
   [ ] Order import  (stub view present)
 
 Customer Management:
@@ -311,12 +311,12 @@ Coupon / Discount Management:
 
   [x] Admin password reset email  (token link via send_mail)
   [x] Customer password reset email  (token link via send_mail in accounts:forgot_password)
-  [ ] Order placed email to customer
-  [ ] Order status update email
-  [ ] Order confirmation email
-  [ ] Admin notification on new order
-  [ ] Welcome email on registration
-  [ ] HTML branded email templates
+  [x] Order placed email to customer  (send_order_placed; HTML branded template; triggers in checkout after cart.clear())
+  [x] Order status update email  (send_order_status_update; triggers in order_update when status changes, and in order_cancel)
+  [x] Order confirmation email  (covered by order placed email — same trigger)
+  [x] Admin notification on new order  (send_admin_new_order; triggers alongside order placed; ADMIN_NOTIFICATION_EMAIL setting)
+  [x] Welcome email on registration  (send_welcome_email; triggers in register_view after user.save())
+  [x] HTML branded email templates  (dark-mode, gradient header; base_email.html + order_placed/status_update/admin_new_order/welcome.html)
 
 
 --------------------------------------------------------------------------------

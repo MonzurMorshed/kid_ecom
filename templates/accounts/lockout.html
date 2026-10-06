@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Access Temporarily Restricted — Kidurabd{% endblock %}
+
+{% block content %}
+<section class="min-h-[calc(100vh-72px)] flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-md text-center">
+        <div class="bg-white rounded-3xl shadow-toy border border-ink/5 p-8 sm:p-10">
+            <!-- Icon -->
+            <div class="w-20 h-20 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-xs animate-bounce">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+
+            <!-- Title -->
+            <h1 class="text-2xl font-bold text-ink mb-2">Too Many Login Attempts</h1>
+            
+            <!-- Description -->
+            <p class="text-sm text-ink/60 mb-6 leading-relaxed">
+                For security reasons, access has been temporarily restricted due to repeated incorrect password attempts.
+            </p>
+
+            <!-- Info Box -->
+            <div class="rounded-2xl bg-cream/70 border border-ink/8 p-4 mb-7 text-left space-y-2 text-xs text-ink/75">
+                <div class="flex items-start gap-2.5">
+                    <i class="fa-solid fa-clock text-coral mt-0.5"></i>
+                    <span>Please wait <strong>30 minutes</strong> before trying to sign in again.</span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <i class="fa-solid fa-key text-butter text-ink mt-0.5"></i>
+                    <span>Forgotten your password? You can request a reset link below.</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3">
+                <a href="{% url 'accounts:forgot_password' %}"
+                   class="flex w-full items-center justify-center gap-2 rounded-2xl bg-coral px-6 py-3.5 text-sm font-bold text-white shadow-button hover:bg-coral/90 transition-all active:translate-y-1">
+                    <i class="fa-solid fa-rotate-right text-xs"></i>
+                    <span>Reset Your Password</span>
+                </a>
+
+                <a href="{% url 'storefront:index' %}"
+                   class="flex w-full items-center justify-center gap-2 rounded-2xl border border-ink/15 bg-white px-6 py-3 text-sm font-bold text-ink hover:bg-cream transition-colors">
+                    <i class="fa-solid fa-house text-xs"></i>
+                    <span>Back to Home</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

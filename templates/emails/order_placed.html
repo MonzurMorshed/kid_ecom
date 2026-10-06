@@ -1,0 +1,76 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subject %}Order #{{ order.id|stringformat:"05d" }} Confirmed{% endblock %}
+
+{% block body %}
+<h1>🎉 Order Confirmed!</h1>
+<p>Hi <strong>{{ order.full_name }}</strong>, thank you for shopping at <strong>{{ site_name }}</strong>. Your order has been received and is being reviewed.</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">Order #</span>
+    <span class="info-value">#{{ order.id|stringformat:"05d" }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Status</span>
+    <span class="info-value"><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Date</span>
+    <span class="info-value">{{ order.created_at|date:"d M Y, H:i" }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Ship to</span>
+    <span class="info-value">{{ order.shipping_address }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Phone</span>
+    <span class="info-value">{{ order.phone_number }}</span>
+  </div>
+</div>
+
+<hr class="divider">
+<p style="font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Order Items</p>
+
+<table class="items-table">
+  <thead>
+    <tr>
+      <th>Product</th>
+      <th style="text-align:center;">Qty</th>
+      <th style="text-align:right;">Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>
+        <div class="product-name">{{ item.product.title }}</div>
+        {% if item.variant %}
+        <div class="product-meta">{{ item.variant }}</div>
+        {% endif %}
+      </td>
+      <td style="text-align:center;">{{ item.quantity }}</td>
+      <td class="right">BDT {{ item.price }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="totals">
+  <div class="total-row">
+    <span>Subtotal</span>
+    <span>BDT {{ order.total_amount }}</span>
+  </div>
+  <div class="total-row grand">
+    <span>Total</span>
+    <span>BDT {{ order.total_amount }}</span>
+  </div>
+</div>
+
+<hr class="divider">
+<p>We'll send you another email when your order status changes. If you have any questions, simply reply to this email.</p>
+
+<div style="text-align:center;margin-top:24px;">
+  <a href="{{ site_url }}" class="btn">Continue Shopping</a>
+</div>
+{% endblock %}

@@ -1,4 +1,18 @@
+# Core Framework & Database
 Django>=6.1.1
-psycopg[binary]
-Pillow
-python-decouple
+psycopg[binary]>=3.3.5
+python-decouple>=3.8
+
+# Security & Brute-force Protection
+django-axes>=8.3.1
+
+# Image Processing
+Pillow>=12.3.0
+
+# Excel Import / Export
+openpyxl>=3.1.5
+
+# Dependencies & Utilities
+asgiref>=3.12.1
+sqlparse>=0.6.0
+tzdata>=2026.3

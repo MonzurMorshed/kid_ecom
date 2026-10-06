@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block subject %}Email{% endblock %} — {{ site_name }}</title>
+<style>
+  /* Reset */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f172a;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #cbd5e1;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Outer wrapper */
+  .wrapper {
+    background: #0f172a;
+    padding: 40px 16px;
+  }
+
+  /* Card */
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    max-width: 580px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+    padding: 32px 36px;
+    text-align: center;
+  }
+  .header .logo {
+    font-size: 26px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+  }
+  .header .tagline {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    margin-top: 4px;
+  }
+
+  /* Body */
+  .body {
+    padding: 36px 36px 28px;
+  }
+  .body h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+  .body p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #94a3b8;
+    margin-bottom: 16px;
+  }
+  .body p strong {
+    color: #e2e8f0;
+  }
+
+  /* Section divider */
+  .divider {
+    border: none;
+    border-top: 1px solid #334155;
+    margin: 24px 0;
+  }
+
+  /* Info box */
+  .info-box {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .info-box .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 7px 0;
+    border-bottom: 1px solid #1e293b;
+    font-size: 14px;
+  }
+  .info-box .info-row:last-child { border-bottom: none; }
+  .info-box .info-label {
+    color: #64748b;
+    font-size: 13px;
+    min-width: 120px;
+  }
+  .info-box .info-value {
+    color: #e2e8f0;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  /* Order items table */
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .items-table th {
+    text-align: left;
+    color: #64748b;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 0;
+    border-bottom: 1px solid #334155;
+    font-weight: 600;
+  }
+  .items-table td {
+    padding: 12px 0;
+    border-bottom: 1px solid #1e293b;
+    vertical-align: top;
+    color: #cbd5e1;
+  }
+  .items-table td.right { text-align: right; }
+  .items-table .product-name { color: #f1f5f9; font-weight: 500; }
+  .items-table .product-meta { color: #64748b; font-size: 12px; margin-top: 2px; }
+
+  /* Totals */
+  .totals {
+    margin-top: 4px;
+  }
+  .totals .total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 14px;
+    color: #94a3b8;
+  }
+  .totals .total-row.grand {
+    border-top: 1px solid #334155;
+    margin-top: 8px;
+    padding-top: 12px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #34d399;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .status-PENDING    { background: rgba(245,158,11,0.15);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .status-CONFIRMED  { background: rgba(99,102,241,0.15);  color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+  .status-PROCESSING { background: rgba(139,92,246,0.15);  color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+  .status-DELIVERED  { background: rgba(52,211,153,0.15);  color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+  .status-CANCELLED  { background: rgba(239,68,68,0.15);   color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+  /* CTA button */
+  .btn {
+    display: inline-block;
+    padding: 13px 28px;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: #ffffff !important;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-decoration: none;
+    margin-top: 8px;
+  }
+
+  /* Footer */
+  .footer {
+    background: #0f172a;
+    border-top: 1px solid #1e293b;
+    padding: 20px 36px;
+    text-align: center;
+  }
+  .footer p {
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 4px;
+  }
+  .footer a { color: #0ea5e9; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+
+    <!-- Header -->
+    <div class="header">
+      <a href="{{ site_url }}" class="logo">🧸 {{ site_name }}</a>
+      <p class="tagline">Kids' Fashion &amp; Toys</p>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+      {% block body %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>© {{ site_name }} · All rights reserved</p>
+      <p><a href="{{ site_url }}">{{ site_url }}</a></p>
+      <p style="margin-top:8px;">You received this email because you placed an order or registered at {{ site_name }}.</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

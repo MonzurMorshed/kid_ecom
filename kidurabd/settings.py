@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
+    'axes',
     'accounts',
     'products',
     'orders',
@@ -51,6 +52,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.AxesMiddleware',
     'storefront.middleware.MaintenanceModeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -71,6 +73,7 @@ TEMPLATES = [
                 'storefront.context_processors.nav_categories',
                 'storefront.context_processors.cart_context',
                 'storefront.context_processors.site_settings',
+                'storefront.context_processors.footer_pages',
             ],
         },
     },
@@ -128,8 +131,23 @@ if MEDIA_CDN_URL:
 else:
     MEDIA_URL = '/media/'
 
-# Email backend (console for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# ── Email ──────────────────────────────────────────────────────────────────────
+# Set EMAIL_HOST etc. in .env to enable real sending.
+# Falls back to console backend so dev never throws on missing SMTP credentials.
+EMAIL_BACKEND   = config('EMAIL_BACKEND',   default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST      = config('EMAIL_HOST',      default='smtp.gmail.com')
+EMAIL_PORT      = config('EMAIL_PORT',      default=587, cast=int)
+EMAIL_USE_TLS   = config('EMAIL_USE_TLS',   default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL',  default='Kidurabd <noreply@kidurabd.com>')
+
+# Brand / site identity — used in email templates
+SITE_NAME  = config('SITE_NAME',  default='Kidurabd')
+SITE_URL   = config('SITE_URL',   default='http://127.0.0.1:8000')
+
+# Where admin new-order notifications go (defaults to the FROM address)
+ADMIN_NOTIFICATION_EMAIL = config('ADMIN_NOTIFICATION_EMAIL', default=EMAIL_HOST_USER or 'admin@kidurabd.com')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -142,3 +160,20 @@ CACHES = {
     }
 }
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'  # cache-first, then DB
+SESSION_COOKIE_AGE = 86400                                     # 1 day (24 hours) in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True                         # Logout when browser is closed
+
+# ── Authentication Backends ──────────────────────────────────────────────────
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# ── Brute Force Protection (django-axes) ──────────────────────────────────────
+AXES_FAILURE_LIMIT = 5                                          # Lock out after 5 consecutive failed attempts
+AXES_COOLOFF_TIME = 0.5                                         # Lockout duration: 30 minutes (0.5 hours)
+AXES_RESET_ON_SUCCESS = True                                    # Reset failure counter on successful login
+AXES_LOCKOUT_PARAMETERS = [['username', 'ip_address']]          # Lock out specific username+IP (safe for shared WiFi/NAT)
+AXES_LOCKOUT_TEMPLATE = 'accounts/lockout.html'                 # Custom styled lockout page
+AXES_ENABLE_ACCESS_FAILURE_LOG = True                          # Audit log of failed login attempts
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False           # Don't extend cooldown on attempts during lockout

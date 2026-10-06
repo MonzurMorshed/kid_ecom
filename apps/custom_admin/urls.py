@@ -56,6 +56,11 @@ urlpatterns = [
     path('activity-log/', views.activity_log, name='activity_log'),
     path('activity-log/clear/', views.activity_log_clear, name='activity_log_clear'),
 
+    # ── Security & Brute Force Lockouts ────────────────────────────────────────
+    path('security/locked-users/', views.locked_users_list, name='locked_users_list'),
+    path('security/locked-users/<int:pk>/unlock/', views.locked_user_unlock, name='locked_user_unlock'),
+    path('security/locked-users/reset-all/', views.locked_users_reset_all, name='locked_users_reset_all'),
+
     # ── Customers ───────────────────────────────────────────────────────────
     path('customers/', views.customer_list, name='customer_list'),
     path('customers/<int:pk>/', views.customer_detail, name='customer_detail'),
