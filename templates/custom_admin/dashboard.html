@@ -1,31 +1,40 @@
-﻿{% extends 'custom_admin/admin_base.html' %}
+{% extends 'custom_admin/admin_base.html' %}
 
 {% block title %}Dashboard Overview{% endblock %}
 {% block page_title %}Dashboard Overview{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
-    
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        
+
         <!-- Total Sales Card -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Sales</span>
-                <div class="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div
+                    class="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
                 </div>
             </div>
-            <p class="text-3xl font-extrabold text-white mt-4">à§³ {{ total_sales }}</p>
+            <p class="text-3xl font-extrabold text-white mt-4">{{ total_sales }}</p>
         </div>
 
         <!-- Total Orders Card -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Orders</span>
-                <div class="w-10 h-10 bg-sky-500/10 border border-sky-500/20 rounded-xl flex items-center justify-center text-sky-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                <div
+                    class="w-10 h-10 bg-sky-500/10 border border-sky-500/20 rounded-xl flex items-center justify-center text-sky-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
                 </div>
             </div>
             <p class="text-3xl font-extrabold text-white mt-4">{{ total_orders }}</p>
@@ -35,8 +44,13 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Customers</span>
-                <div class="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <div
+                    class="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
                 </div>
             </div>
             <p class="text-3xl font-extrabold text-white mt-4">{{ active_customers }}</p>
@@ -46,11 +60,16 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Low Stock Products</span>
-                <div class="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center text-amber-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <div
+                    class="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center text-amber-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
                 </div>
             </div>
-            <p class="text-3xl font-extrabold text-white mt-4">{{ low_stock_products.count }}</p>
+            <p class="text-3xl font-extrabold text-white mt-4">{{ low_stock_count|default:0 }}</p>
         </div>
 
     </div>
@@ -58,14 +77,15 @@
     <!-- revenue graph component -->
     {% include 'partials/revenue_chart.html' %}
 
-    <!-- â”€â”€ Analytics Row: Top Sellers + Status Donut â”€â”€ -->
+    <!-- Analytics Row: Top Sellers + Status Donut -->
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
         <!-- Top Selling Products Widget (3/5 width) -->
         <div class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                         <i class="fa-solid fa-trophy text-sm"></i>
                     </div>
                     <div>
@@ -73,7 +93,8 @@
                         <p class="text-xs text-slate-400">By total units sold</p>
                     </div>
                 </div>
-                <a href="{% url 'custom_admin:product_list' %}" class="text-xs text-sky-400 hover:text-sky-300 transition font-medium">View all â†’</a>
+                <a href="{% url 'custom_admin:product_list' %}"
+                    class="text-xs text-sky-400 hover:text-sky-300 transition font-medium">View all &rarr;</a>
             </div>
             <div class="divide-y divide-slate-800/60">
                 {% for item in top_selling %}
@@ -103,9 +124,11 @@
         </div>
 
         <!-- Order Status Donut Chart (2/5 width) -->
-        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+        <div
+            class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col">
             <div class="px-6 py-4 border-b border-slate-800 flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                <div
+                    class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
                     <i class="fa-solid fa-chart-pie text-sm"></i>
                 </div>
                 <div>
@@ -168,7 +191,7 @@
                     <tr class="hover:bg-slate-800/40 transition">
                         <td class="px-6 py-4 font-semibold text-white">#{{ order.id }}</td>
                         <td class="px-6 py-4">{{ order.user.username }}</td>
-                        <td class="px-6 py-4 font-medium text-emerald-400">à§³ {{ order.total_amount }}</td>
+                        <td class="px-6 py-4 font-medium text-emerald-400">BDT {{ order.total_amount }}</td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
                                 {% if order.status == 'DELIVERED' %} bg-emerald-500/10 text-emerald-300 border border-emerald-500/20
@@ -196,10 +219,11 @@
 
 {% if status_counts %}
 <script>
-(function () {
-    const labels = {{ status_labels|safe }};
-    const counts = {{ status_counts|safe }};
-    const palette = ['#38bdf8','#34d399','#f59e0b','#f87171','#a78bfa','#fb923c'];
+    (function () {
+        const labels = {{ status_labels| safe
+    }};
+    const counts = {{ status_counts| safe }};
+    const palette = ['#38bdf8', '#34d399', '#f59e0b', '#f87171', '#a78bfa', '#fb923c'];
     const dots = document.querySelectorAll('[class*="status-legend-dot-"]');
     const cnts = document.querySelectorAll('[class*="status-count-"]');
     dots.forEach((el, i) => { el.style.backgroundColor = palette[i] || '#64748b'; });
@@ -221,14 +245,16 @@
             },
             options: {
                 cutout: '72%',
-                plugins: { legend: { display: false }, tooltip: {
-                    callbacks: { label: function(c) { return ` ${c.label}: ${c.raw} orders`; } }
-                }},
+                plugins: {
+                    legend: { display: false }, tooltip: {
+                        callbacks: { label: function (c) { return ` ${c.label}: ${c.raw} orders`; } }
+                    }
+                },
                 animation: { animateScale: true, duration: 700 }
             }
         });
     }
-})();
+}) ();
 </script>
 {% endif %}
 {% endblock %}

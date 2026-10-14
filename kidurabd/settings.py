@@ -21,12 +21,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / 'apps'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!o=#26z@1$oo55)&py*_euh&-$o!v2-!r(x&(mjwe4n6%krdol'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-!o=#26z@1$oo55)&py*_euh&-$o!v2-!r(x&(mjwe4n6%krdol')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+# Allowed hosts parsed from comma-separated string
+ALLOWED_HOSTS = [h.strip() for h in config('ALLOWED_HOSTS', default='*').split(',') if h.strip()]
+
+# CSRF Trusted Origins for HTTPS form submissions (critical for live cPanel/Namecheap domain)
+_csrf_origins = config('CSRF_TRUSTED_ORIGINS', default='')
+if _csrf_origins:
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_origins.split(',') if origin.strip()]
 
 # Application definition
 
@@ -48,6 +54,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -84,14 +91,18 @@ WSGI_APPLICATION = 'kidurabd.wsgi.application'
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
+        'PORT': config('DB_PORT', default='3306'),
         'CONN_MAX_AGE': 60,          # reuse DB connection for 60s (avoids reconnect per request)
         'CONN_HEALTH_CHECKS': True,  # auto-reconnect if connection drops
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 

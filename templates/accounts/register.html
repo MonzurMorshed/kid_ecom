@@ -42,6 +42,16 @@
                 </div>
                 {% endif %}
 
+                {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser %}
+                <div class="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info text-amber-500 text-base mt-0.5 shrink-0"></i>
+                    <div>
+                        <p class="font-bold">You are currently logged in as Admin ({{ user.username }}).</p>
+                        <p class="mt-0.5 text-amber-800">Creating and submitting a new account here will sign you in as that customer, or you can <a href="{% url 'custom_admin:dashboard' %}" class="font-bold underline hover:text-amber-950">return to Admin Dashboard</a>.</p>
+                    </div>
+                </div>
+                {% endif %}
+
                 <form method="post" id="registerForm" novalidate>
                     {% csrf_token %}
 

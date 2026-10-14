@@ -68,18 +68,9 @@ class CartItem(models.Model):
         verbose_name_plural = 'Cart Items'
         # Each (user, product, variant) or (session, product, variant) combo
         # should have at most one row — quantity accumulates on that row.
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'product', 'variant'],
-                condition=models.Q(user__isnull=False),
-                name='unique_user_cart_item',
-            ),
-            models.UniqueConstraint(
-                fields=['session_key', 'product', 'variant'],
-                condition=models.Q(session_key__isnull=False, user__isnull=True),
-                name='unique_session_cart_item',
-            ),
-        ]
+        # Note: Unique cart-item-per-(user/session, product, variant) is
+        # enforced in application logic because MySQL does not support
+        # conditional / partial unique constraints.
         ordering = ['created_at']
 
     def __str__(self):

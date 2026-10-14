@@ -1,0 +1,63 @@
+name: Deploy KiduraBD to Namecheap cPanel
+
+on:
+  push:
+    branches:
+      - main
+      - morshed
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Namecheap Stellar Plus
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Execute deployment via SSH on Namecheap
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USER }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          port: ${{ secrets.CPANEL_SSH_PORT || 21098 }}
+          script: |
+            echo "🚀 Starting Deployment on Namecheap..."
+            
+            # Navigate to project root
+            cd /home/${{ secrets.CPANEL_USER }}/kid_ecom || exit 1
+            
+            # Pull latest changes from git
+            echo "📥 Pulling latest git changes..."
+            git fetch origin
+            git reset --hard origin/${{ github.ref_name }}
+            
+            # Activate Python virtualenv (update path if python version differs)
+            VENV_PATH="/home/${{ secrets.CPANEL_USER }}/virtualenv/kid_ecom/3.11/bin/activate"
+            if [ -f "$VENV_PATH" ]; then
+              source "$VENV_PATH"
+            else
+              # Fallback search for virtualenv
+              source $(find /home/${{ secrets.CPANEL_USER }}/virtualenv/kid_ecom -name activate | head -n 1)
+            fi
+            
+            # Install / update dependencies
+            echo "📦 Installing requirements..."
+            pip install --no-cache-dir -r requirements.txt
+            
+            # Run database migrations
+            echo "🗄️ Running migrations..."
+            python manage.py migrate --noinput
+            
+            # Collect static files
+            echo "🎨 Collecting static files..."
+            python manage.py collectstatic --noinput
+            
+            # Restart CloudLinux Phusion Passenger
+            echo "🔄 Restarting Django Passenger Application..."
+            mkdir -p tmp
+            touch tmp/restart.txt
+            
+            echo "✅ Deployment completed successfully!"

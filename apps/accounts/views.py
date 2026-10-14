@@ -40,13 +40,12 @@ def customer_required(view_func):
     return _wrapped
 
 def guest_only(view_func):
-    """Redirect logged-in customers to their profile."""
+    """Redirect logged-in customers to their profile, but allow admins to access customer login/register."""
     @wraps(view_func)
     def _wrapped(request, *args, **kwargs):
         if request.user.is_authenticated:
-            if request.user.is_staff or request.user.is_superuser:
-                return redirect('custom_admin:dashboard')
-            return redirect('accounts:profile')
+            if not request.user.is_staff and not request.user.is_superuser:
+                return redirect('accounts:profile')
         return view_func(request, *args, **kwargs)
     return _wrapped
 

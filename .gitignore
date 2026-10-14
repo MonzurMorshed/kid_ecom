@@ -5,5 +5,10 @@ __pycache__/
 db.sqlite3
 .env
 media/
+staticfiles/
+.env.local
 landing-page.html
 prompt.txt
+readme.txt
+checklist.txt
+deployment_guide.md

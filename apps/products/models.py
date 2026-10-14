@@ -140,7 +140,7 @@ class Product(models.Model):
     title = models.CharField(max_length=500)
 
     slug = models.SlugField(
-        max_length=500,
+        max_length=255,
         unique=True,
     )
 
@@ -485,13 +485,9 @@ class ProductImage(models.Model):
         verbose_name_plural = "Product Images"
         ordering = ["sort_order", "created_at"]
 
-        constraints = [
-            models.UniqueConstraint(
-                fields=["product"],
-                condition=models.Q(is_feature=True),
-                name="one_featured_image_per_product",
-            )
-        ]
+        # Note: "one featured image per product" is enforced in
+        # application logic (save method) because MySQL does not
+        # support conditional / partial unique constraints.
 
     def __str__(self):
         return f"{self.product.title} - Image"
