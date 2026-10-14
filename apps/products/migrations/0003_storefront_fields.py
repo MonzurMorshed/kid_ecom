@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
             name='emoji',
             field=models.CharField(
                 blank=True,
-                default='🧸',
+                default='',
                 help_text='Single emoji representing this category.',
                 max_length=10,
             ),

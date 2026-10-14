@@ -38,7 +38,7 @@ class Category(models.Model):
     emoji = models.CharField(
         max_length=10,
         blank=True,
-        default="🧸",
+        default="",
         help_text="Single emoji representing this category.",
     )
     display_order = models.PositiveSmallIntegerField(default=0)
