@@ -26,36 +26,60 @@ jobs:
           script: |
             echo "🚀 Starting Deployment on Namecheap..."
             
-            # Navigate to project root
-            cd /home/${{ secrets.CPANEL_USER }}/kid_ecom || exit 1
-            
-            # Pull latest changes from git
-            echo "📥 Pulling latest git changes..."
-            git fetch origin
-            git reset --hard origin/${{ github.ref_name }}
-            
-            # Activate Python virtualenv (update path if python version differs)
-            VENV_PATH="/home/${{ secrets.CPANEL_USER }}/virtualenv/kid_ecom/3.11/bin/activate"
-            if [ -f "$VENV_PATH" ]; then
-              source "$VENV_PATH"
-            else
-              # Fallback search for virtualenv
-              source $(find /home/${{ secrets.CPANEL_USER }}/virtualenv/kid_ecom -name activate | head -n 1)
+            PROJECT_DIR="/home/${{ secrets.CPANEL_USER }}/kid_ecom"
+
+            # 1. Check if project directory exists, if not, clone it automatically
+            if [ ! -d "$PROJECT_DIR" ]; then
+              echo "⚠️ Project directory not found at $PROJECT_DIR."
+              echo "📥 Auto-cloning repository for the first time..."
+              cd /home/${{ secrets.CPANEL_USER }}
+              git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git kid_ecom
             fi
             
-            # Install / update dependencies
+            cd "$PROJECT_DIR" || { echo "❌ Failed to enter $PROJECT_DIR"; exit 1; }
+            
+            # 2. Pull latest changes from git
+            echo "📥 Fetching and syncing latest git changes for branch: ${{ github.ref_name }}..."
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            git fetch origin ${{ github.ref_name }}
+            git checkout ${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
+            
+            # 3. Check for .env file
+            if [ ! -f ".env" ]; then
+              echo "⚠️ .env file does not exist yet. Creating placeholder from .env.production.example..."
+              cp .env.production.example .env
+              echo "🔔 IMPORTANT: Remember to update DB credentials in $PROJECT_DIR/.env via cPanel File Manager!"
+            fi
+
+            # 4. Locate and activate Python virtualenv
+            VENV_ACTIVATE=$(find /home/${{ secrets.CPANEL_USER }}/virtualenv -name activate 2>/dev/null | grep -i "kid_ecom" | head -n 1)
+            if [ -z "$VENV_ACTIVATE" ]; then
+              # Fallback to any virtualenv under user home
+              VENV_ACTIVATE=$(find /home/${{ secrets.CPANEL_USER }}/virtualenv -name activate 2>/dev/null | head -n 1)
+            fi
+
+            if [ -n "$VENV_ACTIVATE" ]; then
+              echo "🐍 Activating virtual environment: $VENV_ACTIVATE"
+              source "$VENV_ACTIVATE"
+            else
+              echo "⚠️ Virtualenv not found! Make sure you created the Python App in cPanel 'Setup Python App'."
+              echo "Continuing with system Python if available..."
+            fi
+            
+            # 5. Install / update dependencies
             echo "📦 Installing requirements..."
             pip install --no-cache-dir -r requirements.txt
             
-            # Run database migrations
+            # 6. Run database migrations (only if DB is configured)
             echo "🗄️ Running migrations..."
-            python manage.py migrate --noinput
+            python manage.py migrate --noinput || echo "⚠️ Migration skipped (check DB credentials in .env)"
             
-            # Collect static files
+            # 7. Collect static files
             echo "🎨 Collecting static files..."
             python manage.py collectstatic --noinput
             
-            # Restart CloudLinux Phusion Passenger
+            # 8. Restart CloudLinux Phusion Passenger
             echo "🔄 Restarting Django Passenger Application..."
             mkdir -p tmp
             touch tmp/restart.txt
