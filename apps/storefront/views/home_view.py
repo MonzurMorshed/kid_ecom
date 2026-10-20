@@ -34,6 +34,15 @@ class HomeView:
             [:4]
         )
 
+        # Recent / New arrivals on homepage
+        recent_products = (
+            Product.objects.filter(is_active=True, is_deleted=False)
+            .select_related("category")
+            .prefetch_related("images")
+            .order_by("-created_at")
+            [:8]
+        )
+
         # Announcement bar — use site_settings from context processor when available,
         # fall back to a static string if SiteSettings has no announcement_text field.
         try:
@@ -47,6 +56,7 @@ class HomeView:
             "categories": categories,
             "featured_products": featured_products,
             "bestsellers": bestsellers,
+            "recent_products": recent_products,
             "hero_slides": hero_slides,
             "home_top_banner": home_top_banner,
             "home_mid_banner": home_mid_banner,

@@ -277,6 +277,68 @@
 {% endif %}
 
 <!-- ══════════════════════════════════════════════════
+     3. BEST SELLERS PRODUCTS SECTION
+══════════════════════════════════════════════════ -->
+{% if bestsellers %}
+<section id="bestsellers" class="py-16 sm:py-20 bg-white" aria-label="Bestseller products">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+            <div>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">
+                    <i class="fa-solid fa-fire text-coral mr-1" aria-hidden="true"></i>Trending Favorites
+                </span>
+                <h2 class="mt-2 text-4xl sm:text-5xl font-bold text-ink font-display">
+                    Loved by kids, <em class="not-italic text-coral">trusted</em> by parents.
+                </h2>
+                <p class="mt-2 text-sm text-ink/60 max-w-lg">The crowd favorites and all-time top picks flying off our shelves.</p>
+            </div>
+            <a href="{% url 'storefront:shop' %}?filter=bestseller"
+               class="shrink-0 inline-flex items-center gap-1.5 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                View all bestsellers <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for product in bestsellers %}
+            {% include "storefront/partials/product_card.html" with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════
+     4. RECENT PRODUCTS SECTION (NEW ARRIVALS)
+══════════════════════════════════════════════════ -->
+{% if recent_products %}
+<section id="recent" class="py-16 sm:py-20 bg-[#fffdf4]" aria-label="Recent products">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+            <div>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-coral">
+                    <i class="fa-solid fa-sparkles text-butter mr-1" aria-hidden="true"></i>Just Landed
+                </span>
+                <h2 class="mt-2 text-4xl sm:text-5xl font-bold text-ink font-display">
+                    Fresh in store, <em class="not-italic text-coral">ready</em> to play.
+                </h2>
+                <p class="mt-2 text-sm text-ink/60 max-w-lg">Discover the newest additions to our collection of joyful toys.</p>
+            </div>
+            <a href="{% url 'storefront:shop' %}?sort=newest"
+               class="shrink-0 inline-flex items-center gap-1.5 text-sm font-bold text-ink/60 hover:text-coral underline underline-offset-4 transition-colors">
+                View all new arrivals <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for product in recent_products %}
+            {% include "storefront/partials/product_card.html" with product=product %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════
      4. VALUE PROPOSITION BAND
 ══════════════════════════════════════════════════ -->
 <section class="py-16 sm:py-20" aria-label="Why Kidurabd">
