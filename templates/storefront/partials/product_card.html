@@ -15,7 +15,7 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
             {% if feat_image %}
                 <img src="{{ feat_image.image.url }}"
                      alt="{{ product.title }}"
-                     class="h-36 w-36 sm:h-44 sm:w-44 object-contain">
+                     class="h-full w-full sm:h-full sm:w-full object-contain">
             {% else %}
                 <span class="product-emoji text-7xl sm:text-8xl leading-none">
                     {{ product.category.emoji|default:"🧸" }}
