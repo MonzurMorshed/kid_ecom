@@ -2,9 +2,9 @@
 URL configuration for kidurabd project.
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
+from django.views.static import serve
 from django.contrib.sitemaps.views import sitemap
 
 from apps.storefront.sitemaps import (
@@ -29,10 +29,10 @@ urlpatterns = [
     path('admin/', include('custom_admin.urls', namespace='custom_admin')),
     path('api/v1/', include('kidurabd.api', namespace='api')),
     path('accounts/', include('accounts.urls', namespace='accounts')),
-]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Media files (served in both dev & cPanel production when not using an external CDN)
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
 
 handler404 = 'apps.storefront.views.seo_views.custom_404'
 handler500 = 'apps.storefront.views.seo_views.custom_500'
