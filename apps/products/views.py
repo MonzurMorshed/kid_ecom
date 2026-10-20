@@ -263,7 +263,13 @@ def product_create(request):
 
 @admin_required
 def product_details(request, pk):
-    product = get_object_or_404(Product, pk=pk, is_deleted=False)
+    product = get_object_or_404(
+        Product.objects.select_related('category', 'brand').prefetch_related(
+            'images', 'variants__options', 'options__values'
+        ),
+        pk=pk,
+        is_deleted=False,
+    )
     context = {
         'product': product,
     }
@@ -272,9 +278,13 @@ def product_details(request, pk):
 
 @admin_required
 def product_update(request, pk):
-    product = get_object_or_404(Product, pk=pk, is_deleted=False)
-    categories = Category.objects.filter(is_active=True)
-    brands = Brand.objects.filter(is_active=True)
+    product = get_object_or_404(
+        Product.objects.select_related('category', 'brand').prefetch_related('images'),
+        pk=pk,
+        is_deleted=False,
+    )
+    categories = Category.objects.filter(is_active=True).order_by('name')
+    brands = Brand.objects.filter(is_active=True).order_by('name')
 
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()

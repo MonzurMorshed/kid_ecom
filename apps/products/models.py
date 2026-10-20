@@ -62,7 +62,7 @@ class Category(models.Model):
         if not self.slug:
             from django.utils.text import slugify
             self.slug = slugify(self.name, allow_unicode=True)
-        if self.image:
+        if self.image and not getattr(self.image, '_committed', True):
             from .image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.image, max_dimensions=(800, 800), quality=82)
         super().save(*args, **kwargs)
@@ -112,7 +112,7 @@ class Brand(models.Model):
         if not self.slug:
             from django.utils.text import slugify
             self.slug = slugify(self.name)
-        if self.logo:
+        if self.logo and not getattr(self.logo, '_committed', True):
             from .image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.logo, max_dimensions=(400, 400), quality=85)
         super().save(*args, **kwargs)
@@ -426,7 +426,7 @@ class ProductVariant(models.Model):
         return f"{self.product.title} - {self.sku}"
 
     def save(self, *args, **kwargs):
-        if self.image:
+        if self.image and not getattr(self.image, '_committed', True):
             from .image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.image, max_dimensions=(800, 800), quality=82)
         super().save(*args, **kwargs)
@@ -495,7 +495,7 @@ class ProductImage(models.Model):
     def save(self, *args, **kwargs):
         if not self.alt_text and self.product_id:
             self.alt_text = f"{self.product.title} photo"
-        if self.image:
+        if self.image and not getattr(self.image, '_committed', True):
             from .image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.image, max_dimensions=(1200, 1200), quality=82)
         super().save(*args, **kwargs)

@@ -309,7 +309,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Cancel
             </a>
-            <button type="submit"
+            <button type="submit" id="createBtn"
                     class="inline-flex items-center gap-2 px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-sky-600/25 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Create Product
@@ -360,10 +360,64 @@ function specificationsBuilder(initialSpecs) {
     };
 }
 
+/* ── Client-side Image Pre-compression (prevents huge uploads & 502 timeouts) ── */
+async function downscaleImageFile(file, maxDimension = 1600, quality = 0.85) {
+    if (!file || !file.type.startsWith('image/')) return file;
+    if (file.size < 500 * 1024) return file;
+
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            let w = img.width;
+            let h = img.height;
+            if (w <= maxDimension && h <= maxDimension && file.size < 1024 * 1024) {
+                resolve(file);
+                return;
+            }
+            if (w > maxDimension || h > maxDimension) {
+                if (w > h) {
+                    h = Math.round((h * maxDimension) / w);
+                    w = maxDimension;
+                } else {
+                    w = Math.round((w * maxDimension) / h);
+                    h = maxDimension;
+                }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            canvas.toBlob((blob) => {
+                if (!blob || blob.size >= file.size) {
+                    resolve(file);
+                } else {
+                    const cleanName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+                    const optimizedFile = new File([blob], cleanName, { type: 'image/jpeg', lastModified: Date.now() });
+                    resolve(optimizedFile);
+                }
+            }, 'image/jpeg', quality);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            resolve(file);
+        };
+        img.src = url;
+    });
+}
+
 /* ── Featured thumbnail preview ── */
-function previewFeatured(input) {
-    const file = input.files[0];
-    if (!file) return;
+async function previewFeatured(input) {
+    const rawFile = input.files[0];
+    if (!rawFile) return;
+    const file = await downscaleImageFile(rawFile);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+
     const reader = new FileReader();
     reader.onload = e => {
         document.getElementById('featuredPreview').src = e.target.result;
@@ -388,9 +442,11 @@ function removeFeatured(e) {
 /* ── Gallery images preview (accumulative) ── */
 let galleryFiles = new DataTransfer();
 
-function addGalleryPreviews(input) {
+async function addGalleryPreviews(input) {
     const grid = document.getElementById('galleryGrid');
-    Array.from(input.files).forEach(file => {
+    const selected = Array.from(input.files);
+    for (const rawFile of selected) {
+        const file = await downscaleImageFile(rawFile);
         galleryFiles.items.add(file);
         const reader = new FileReader();
         reader.onload = e => {
@@ -405,8 +461,7 @@ function addGalleryPreviews(input) {
             grid.appendChild(wrapper);
         };
         reader.readAsDataURL(file);
-    });
-    // Sync the actual file input
+    }
     input.files = galleryFiles.files;
 }
 
@@ -419,5 +474,20 @@ function removeGalleryItem(btn, name) {
     galleryFiles = newDT;
     document.getElementById('gallery_images').files = galleryFiles.files;
 }
+
+// Prevent double-submissions and show loading state
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('form[action*="product_create"]') || document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', () => {
+            const btn = document.getElementById('createBtn');
+            if (btn && !btn.disabled) {
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Creating...';
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
