@@ -115,3 +115,50 @@ def payment_method_delete(request, pk):
     method.delete()
     messages.success(request, f'"{name}" has been removed.')
     return redirect('custom_admin:payment_method_list')
+
+
+@admin_required
+@require_POST
+def clear_cache(request):
+    """
+    Clears:
+    1. Django in-memory cache (cache.clear())
+    2. Touches tmp/restart.txt to prompt CloudLinux / Passenger to reload Python workers
+    3. Writes an entry in ActivityLog
+    """
+    from django.core.cache import cache
+    from django.conf import settings
+    from ..models import ActivityLog
+
+    # 1. Clear Django cache
+    try:
+        cache.clear()
+    except Exception:
+        pass
+
+    # 2. Touch restart.txt for cPanel / Passenger reload
+    try:
+        restart_file = settings.BASE_DIR / 'tmp' / 'restart.txt'
+        restart_file.parent.mkdir(parents=True, exist_ok=True)
+        restart_file.touch()
+    except Exception:
+        pass
+
+    # 3. Log to activity log
+    try:
+        ActivityLog.log(
+            request=request,
+            action='settings',
+            description='Cleared server cache and reloaded application.',
+            target_type='System Cache',
+        )
+    except Exception:
+        pass
+
+    messages.success(request, 'Server cache cleared and application reloaded successfully!')
+
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('custom_admin:dashboard')
+

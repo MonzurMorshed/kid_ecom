@@ -201,6 +201,27 @@
                     {{ form.maintenance_msg }}
                     <p class="text-xs text-slate-500 mt-1">Displayed to visitors when maintenance mode is on</p>
                 </div>
+
+                <!-- Clear Cache Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                            <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-broom text-amber-400"></i>
+                                Server Cache &amp; App Reload
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Flush in-memory application cache and reload Python workers to apply recent changes instantly.</p>
+                        </div>
+                        <button type="submit"
+                                formaction="{% url 'custom_admin:clear_cache' %}"
+                                formmethod="post"
+                                onclick="return confirm('Clear server cache and reload application?')"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold text-xs rounded-xl transition">
+                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                            Clear Cache Now
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 

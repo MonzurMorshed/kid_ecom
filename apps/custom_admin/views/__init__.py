@@ -16,6 +16,7 @@ from .settings import (
     payment_method_edit,
     payment_method_toggle,
     payment_method_delete,
+    clear_cache,
 )
 from .content import (
     slider_list,
@@ -74,6 +75,7 @@ __all__ = [
     'payment_method_edit',
     'payment_method_toggle',
     'payment_method_delete',
+    'clear_cache',
     # Content
     'slider_list',
     'slider_create',

@@ -8,16 +8,18 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
 
     <!-- Image / visual panel -->
     <a href="{{ product.get_absolute_url }}" class="block" tabindex="-1" aria-hidden="true">
-        <div class="product-visual relative flex min-h-[180px] sm:min-h-[220px] items-center justify-center overflow-hidden"
+        <div class="product-visual relative aspect-square w-full flex items-center justify-center overflow-hidden"
              style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }};">
 
-            {% with feat_image=product.images.all|first %}
-            {% if feat_image %}
+            {% with feat_image=product.primary_image|default:product.images.all|first %}
+            {% if feat_image and feat_image.image %}
                 <img src="{{ feat_image.image.url }}"
-                     alt="{{ product.title }}"
-                     class="h-full w-full sm:h-full sm:w-full object-contain">
+                     alt="{{ feat_image.alt_text|default:product.title }}"
+                     loading="lazy"
+                     decoding="async"
+                     class="h-full w-full object-contain p-3 sm:p-4 transition-transform duration-300 ease-out group-hover:scale-105">
             {% else %}
-                <span class="product-emoji text-7xl sm:text-8xl leading-none">
+                <span class="product-emoji text-7xl sm:text-8xl leading-none transition-transform duration-300 ease-out group-hover:scale-110">
                     {{ product.category.emoji|default:"🧸" }}
                 </span>
             {% endif %}

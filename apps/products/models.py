@@ -257,6 +257,25 @@ class Product(models.Model):
             breakdown[star] = {"count": cnt, "pct": pct}
         return breakdown
 
+    @property
+    def primary_image(self):
+        """
+        Returns the featured ProductImage if marked, otherwise the first valid image, or None.
+        Works seamlessly with prefetch_related('images') without firing extra DB queries.
+        """
+        try:
+            images = list(self.images.all())
+            for img in images:
+                if getattr(img, 'is_feature', False) and img.image:
+                    return img
+            for img in images:
+                if img.image:
+                    return img
+        except Exception:
+            pass
+        return None
+
+
 
 # =========================================================
 # Product Option
