@@ -39,8 +39,6 @@
     <div class="bg-white rounded-3xl shadow-toy border border-ink/5 p-6 sm:p-8 mb-6">
         <h2 class="text-sm font-bold text-ink/50 uppercase tracking-widest mb-6">Order Progress</h2>
 
-        {% with steps="PENDING,CONFIRMED,PROCESSING,DELIVERED" %}
-        {% with order_steps=steps|split:"," %}
         <div class="relative">
             <!-- Connector line -->
             <div class="absolute top-5 left-5 right-5 h-0.5 bg-ink/8 hidden sm:block"></div>
@@ -112,8 +110,6 @@
             </div>
             {% endif %}
         </div>
-        {% endwith %}
-        {% endwith %}
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-5 gap-6">

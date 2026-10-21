@@ -8,7 +8,7 @@
 <div class="mx-auto max-w-6xl">
 
     <h1 class="text-3xl sm:text-4xl font-bold text-ink mb-8">Your Bag
-        {% if cart_count > 0 %}<span class="text-coral"> ({{ cart_count }})</span>{% endif %}
+        <span id="cart-header-count" class="text-coral">{% if cart_count > 0 %} ({{ cart_count }}){% endif %}</span>
     </h1>
 
     {% if messages %}
@@ -23,9 +23,8 @@
     </div>
     {% endif %}
 
-    {% if cart_count == 0 %}
-    <!-- Empty Cart -->
-    <div class="text-center py-24">
+    <!-- Empty Cart State -->
+    <div id="cart-empty-state" class="text-center py-24 {% if cart_count > 0 %}hidden{% endif %}">
         <div class="w-24 h-24 rounded-full bg-coral/10 text-coral text-4xl flex items-center justify-center mx-auto mb-6 shadow-sm">
             <i class="fa-solid fa-bag-shopping"></i>
         </div>
@@ -37,14 +36,13 @@
         </a>
     </div>
 
-    {% else %}
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-data="cartManager()">
+    <!-- Active Cart Content -->
+    <div id="cart-active-state" class="grid grid-cols-1 lg:grid-cols-3 gap-8 {% if cart_count == 0 %}hidden{% endif %}">
 
         <!-- Left: Cart Items -->
-        <div class="lg:col-span-2 space-y-4">
+        <div class="lg:col-span-2 space-y-4" id="cart-items-container">
             {% for item in cart %}
-            <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-5 flex gap-4 items-start"
+            <div class="bg-white rounded-2xl shadow-toy border border-ink/5 p-5 flex gap-4 items-start transition-all duration-300"
                  data-key="{{ item.key }}" id="cart-item-{{ item.key }}">
 
                 <!-- Image/Emoji -->
@@ -66,23 +64,24 @@
                     <div class="flex items-center gap-3 mt-3">
                         <div class="flex items-center gap-0 rounded-xl border border-ink/15 overflow-hidden bg-white shadow-sm">
                             <button type="button"
-                                    class="h-9 w-9 grid place-items-center text-ink hover:bg-[#f5eee4] transition text-xs"
-                                    onclick="updateQty('{{ item.key }}', {{ item.qty }} - 1)"
+                                    id="btn-minus-{{ item.key }}"
+                                    class="h-9 w-9 grid place-items-center text-ink hover:bg-[#f5eee4] transition text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                                    onclick="changeItemQty('{{ item.key }}', -1)"
                                     aria-label="Decrease"><i class="fa-solid fa-minus"></i></button>
-                            <span class="w-8 text-center text-sm font-bold" id="qty-{{ item.key }}">{{ item.qty }}</span>
+                            <span class="w-8 text-center text-sm font-bold select-none transition-opacity" id="qty-{{ item.key }}">{{ item.qty }}</span>
                             <button type="button"
-                                    class="h-9 w-9 grid place-items-center text-ink hover:bg-[#f5eee4] transition text-xs"
-                                    onclick="updateQty('{{ item.key }}', {{ item.qty }} + 1)"
+                                    id="btn-plus-{{ item.key }}"
+                                    class="h-9 w-9 grid place-items-center text-ink hover:bg-[#f5eee4] transition text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                                    onclick="changeItemQty('{{ item.key }}', 1)"
                                     aria-label="Increase"><i class="fa-solid fa-plus"></i></button>
                         </div>
 
-                        <form method="post" action="{% url 'storefront:cart_remove' %}" class="inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="key" value="{{ item.key }}">
-                            <button type="submit" class="inline-flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-700 transition font-medium">
-                                <i class="fa-solid fa-trash-can text-[11px]"></i> Remove
-                            </button>
-                        </form>
+                        <button type="button"
+                                id="btn-remove-{{ item.key }}"
+                                onclick="removeCartItem('{{ item.key }}')"
+                                class="inline-flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-700 transition font-medium">
+                            <i class="fa-solid fa-trash-can text-[11px]"></i> Remove
+                        </button>
                     </div>
                 </div>
 
@@ -101,12 +100,12 @@
 
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between text-ink/60">
-                        <span>Subtotal ({{ cart_count }} item{{ cart_count|pluralize }})</span>
+                        <span id="summary-subtotal-label">Subtotal ({{ cart_count }} item{{ cart_count|pluralize }})</span>
                         <span id="summary-subtotal">৳{{ cart_total }}</span>
                     </div>
                     <div class="flex justify-between text-ink/60">
                         <span>Delivery</span>
-                        <span class="font-medium {% if cart_delivery_fee == 0 %}text-emerald-600{% else %}text-ink{% endif %}">
+                        <span id="summary-delivery" class="font-medium {% if cart_delivery_fee == 0 %}text-emerald-600{% else %}text-ink{% endif %}">
                             {% if cart_delivery_fee == 0 %}Free{% else %}৳{{ cart_delivery_fee }}{% endif %}
                         </span>
                     </div>
@@ -134,7 +133,6 @@
             </div>
         </div>
     </div>
-    {% endif %}
 
 </div>
 </section>
@@ -142,34 +140,219 @@
 
 {% block extra_scripts %}
 <script>
-function updateQty(key, qty) {
-    if (qty <= 0) {
-        if (!confirm('Remove this item from your bag?')) return;
+const CART_UPDATE_URL = '{% url "storefront:cart_update" %}';
+const CART_REMOVE_URL = '{% url "storefront:cart_remove" %}';
+const CSRF_TOKEN = '{{ csrf_token }}';
+
+const inFlightKeys = new Set();
+
+function getCsrfToken() {
+    if (typeof getCookie === 'function') {
+        const c = getCookie('csrftoken');
+        if (c) return c;
     }
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{% url "storefront:cart_update" %}';
+    return CSRF_TOKEN;
+}
 
-    const csrf = document.createElement('input');
-    csrf.type  = 'hidden';
-    csrf.name  = 'csrfmiddlewaretoken';
-    csrf.value = '{{ csrf_token }}';
-    form.appendChild(csrf);
+function setLoadingState(key, isLoading) {
+    const btnMinus = document.getElementById(`btn-minus-${key}`);
+    const btnPlus = document.getElementById(`btn-plus-${key}`);
+    const btnRemove = document.getElementById(`btn-remove-${key}`);
+    const qtySpan = document.getElementById(`qty-${key}`);
 
-    const keyInput = document.createElement('input');
-    keyInput.type  = 'hidden';
-    keyInput.name  = 'key';
-    keyInput.value = key;
-    form.appendChild(keyInput);
+    if (btnMinus) btnMinus.disabled = isLoading;
+    if (btnPlus) btnPlus.disabled = isLoading;
+    if (btnRemove) btnRemove.disabled = isLoading;
+    if (qtySpan) {
+        qtySpan.classList.toggle('opacity-40', isLoading);
+    }
+}
 
-    const qtyInput = document.createElement('input');
-    qtyInput.type  = 'hidden';
-    qtyInput.name  = 'qty';
-    qtyInput.value = qty;
-    form.appendChild(qtyInput);
+function renderCartState(data) {
+    if (!data) return;
+    const count = data.item_count ?? data.count ?? 0;
 
-    document.body.appendChild(form);
-    form.submit();
+    // 1. Update all navbar cart badges
+    document.querySelectorAll('#cartCount, [id="cartCount"]').forEach(badge => {
+        badge.textContent = count;
+        badge.classList.add('scale-125');
+        setTimeout(() => badge.classList.remove('scale-125'), 200);
+    });
+
+    // 2. Update page header count
+    const headerCount = document.getElementById('cart-header-count');
+    if (headerCount) {
+        headerCount.textContent = count > 0 ? ` (${count})` : '';
+    }
+
+    // 3. Handle empty cart state
+    if (count === 0 || !data.items || data.items.length === 0) {
+        const activeContainer = document.getElementById('cart-active-state');
+        const emptyContainer = document.getElementById('cart-empty-state');
+        if (activeContainer) activeContainer.classList.add('hidden');
+        if (emptyContainer) emptyContainer.classList.remove('hidden');
+        return;
+    }
+
+    // 4. Update each item
+    const existingKeys = new Set();
+    data.items.forEach(item => {
+        const itemKey = String(item.key);
+        existingKeys.add(itemKey);
+
+        const qtyEl = document.getElementById(`qty-${itemKey}`);
+        if (qtyEl) qtyEl.textContent = item.qty;
+
+        const totalEl = document.getElementById(`total-${itemKey}`);
+        if (totalEl) totalEl.textContent = `৳${item.line_total}`;
+    });
+
+    // Remove any leftover items from DOM if they were removed
+    document.querySelectorAll('#cart-items-container [data-key]').forEach(el => {
+        const k = el.getAttribute('data-key');
+        if (k && !existingKeys.has(k)) {
+            el.remove();
+        }
+    });
+
+    // 5. Update summary section
+    const summaryCount = document.getElementById('summary-subtotal-label');
+    if (summaryCount) {
+        summaryCount.textContent = `Subtotal (${count} item${count === 1 ? '' : 's'})`;
+    }
+
+    const summarySubtotal = document.getElementById('summary-subtotal');
+    if (summarySubtotal) {
+        summarySubtotal.textContent = `৳${data.total}`;
+    }
+
+    const summaryDelivery = document.getElementById('summary-delivery');
+    if (summaryDelivery) {
+        const fee = parseFloat(data.delivery_fee || 0);
+        if (fee === 0) {
+            summaryDelivery.textContent = 'Free';
+            summaryDelivery.className = 'font-medium text-emerald-600';
+        } else {
+            summaryDelivery.textContent = `৳${data.delivery_fee}`;
+            summaryDelivery.className = 'font-medium text-ink';
+        }
+    }
+
+    const summaryTotal = document.getElementById('summary-total');
+    if (summaryTotal) {
+        summaryTotal.textContent = `৳${data.grand_total}`;
+    }
+}
+
+async function changeItemQty(key, delta) {
+    if (inFlightKeys.has(key)) return;
+
+    const qtySpan = document.getElementById(`qty-${key}`);
+    const currentQty = qtySpan ? parseInt(qtySpan.textContent.trim(), 10) || 1 : 1;
+    const newQty = currentQty + delta;
+
+    if (newQty <= 0) {
+        return removeCartItem(key);
+    }
+
+    inFlightKeys.add(key);
+    setLoadingState(key, true);
+
+    try {
+        const formData = new FormData();
+        formData.append('key', key);
+        formData.append('qty', newQty);
+        formData.append('csrfmiddlewaretoken', getCsrfToken());
+
+        const res = await fetch(CART_UPDATE_URL, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        renderCartState(data);
+    } catch (err) {
+        console.error('Failed to update cart qty:', err);
+        if (typeof toast === 'function') {
+            toast('Could not update quantity. Please try again.');
+        }
+    } finally {
+        inFlightKeys.delete(key);
+        setLoadingState(key, false);
+    }
+}
+
+async function removeCartItem(key) {
+    if (inFlightKeys.has(key)) return;
+
+    if (!confirm('Remove this item from your bag?')) {
+        return;
+    }
+
+    inFlightKeys.add(key);
+    const itemRow = document.getElementById(`cart-item-${key}`);
+    if (itemRow) {
+        itemRow.style.opacity = '0.5';
+        itemRow.style.pointerEvents = 'none';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('key', key);
+        formData.append('csrfmiddlewaretoken', getCsrfToken());
+
+        const res = await fetch(CART_REMOVE_URL, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+
+        if (itemRow) {
+            itemRow.style.transition = 'all 0.3s ease';
+            itemRow.style.opacity = '0';
+            itemRow.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                itemRow.remove();
+                renderCartState(data);
+            }, 300);
+        } else {
+            renderCartState(data);
+        }
+
+        if (typeof toast === 'function') {
+            toast('Item removed from your bag');
+        }
+    } catch (err) {
+        console.error('Failed to remove item:', err);
+        if (itemRow) {
+            itemRow.style.opacity = '1';
+            itemRow.style.pointerEvents = 'auto';
+        }
+        if (typeof toast === 'function') {
+            toast('Could not remove item. Please try again.');
+        }
+    } finally {
+        inFlightKeys.delete(key);
+    }
+}
+
+// Backwards-compatible alias
+function updateQty(key, qty) {
+    if (qty <= 0) return removeCartItem(key);
+    const qtySpan = document.getElementById(`qty-${key}`);
+    const currentQty = qtySpan ? parseInt(qtySpan.textContent.trim(), 10) || 1 : 1;
+    return changeItemQty(key, qty - currentQty);
 }
 </script>
 {% endblock %}

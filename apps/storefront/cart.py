@@ -195,6 +195,21 @@ class Cart:
             if qty <= 0:
                 self.remove(key)
             else:
+                # Clamp to stock if available
+                item_info = self.cart[key]
+                try:
+                    from products.models import Product, ProductVariant
+                    if item_info.get('variant_id'):
+                        v = ProductVariant.objects.filter(pk=item_info['variant_id']).first()
+                        max_stock = (v.stock if v else 0) or 0
+                    else:
+                        p = Product.objects.filter(pk=item_info.get('product_id')).first()
+                        max_stock = (p.stock if p else 0) or 0
+                    if max_stock > 0 and qty > max_stock:
+                        qty = max_stock
+                except Exception:
+                    pass
+
                 self.cart[key]['qty'] = qty
                 item = self.cart[key]
                 # Update DB

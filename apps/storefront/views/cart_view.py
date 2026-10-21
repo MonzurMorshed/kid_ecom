@@ -52,9 +52,16 @@ def cart_add(request):
 
 @require_POST
 def cart_remove(request):
-    cart   = Cart(request)
-    key    = request.POST.get('key', '')
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    cart = Cart(request)
+    key = request.POST.get('key', '')
+    if not key and request.content_type == 'application/json':
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            key = payload.get('key', '')
+        except Exception:
+            pass
+
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
 
     cart.remove(key)
 
@@ -67,10 +74,18 @@ def cart_remove(request):
 
 @require_POST
 def cart_update(request):
-    cart    = Cart(request)
-    key     = request.POST.get('key', '')
-    qty     = request.POST.get('qty', 1)
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    cart = Cart(request)
+    key = request.POST.get('key', '')
+    qty = request.POST.get('qty', 1)
+    if not key and request.content_type == 'application/json':
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            key = payload.get('key', '')
+            qty = payload.get('qty', 1)
+        except Exception:
+            pass
+
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
 
     cart.update_qty(key, qty)
 
