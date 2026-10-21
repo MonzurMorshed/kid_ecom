@@ -1,0 +1,41 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subject %}New Contact Inquiry from {{ contact.name }}{% endblock %}
+
+{% block body %}
+<h1>📬 New Contact Message Received</h1>
+<p>A customer has submitted a new inquiry through the <strong>{{ site_name }}</strong> contact form.</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">Name</span>
+    <span class="info-value"><strong>{{ contact.name }}</strong></span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Email</span>
+    <span class="info-value"><a href="mailto:{{ contact.email }}" style="color:#0ea5e9;">{{ contact.email }}</a></span>
+  </div>
+  {% if contact.phone %}
+  <div class="info-row">
+    <span class="info-label">Phone</span>
+    <span class="info-value">{{ contact.phone }}</span>
+  </div>
+  {% endif %}
+  <div class="info-row">
+    <span class="info-label">Subject</span>
+    <span class="info-value">{{ contact.subject }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Date</span>
+    <span class="info-value">{{ contact.created_at|date:"d M Y, H:i" }}</span>
+  </div>
+</div>
+
+<hr class="divider">
+<p style="font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Customer Message</p>
+<div style="background:#0f172a;border-left:3px solid #0ea5e9;padding:16px;border-radius:0 8px 8px 0;color:#e2e8f0;font-size:14px;line-height:1.6;white-space:pre-wrap;">{{ contact.message }}</div>
+
+<div style="text-align:center;margin-top:28px;">
+  <a href="mailto:{{ contact.email }}?subject=Re: {{ contact.subject|urlencode }}" class="btn">Reply to Customer</a>
+</div>
+{% endblock %}

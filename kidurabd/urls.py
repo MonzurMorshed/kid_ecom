@@ -7,10 +7,10 @@ from django.conf import settings
 from django.views.static import serve
 from django.contrib.sitemaps.views import sitemap
 
-from apps.storefront.sitemaps import (
+from storefront.sitemaps import (
     StaticViewSitemap, CategorySitemap, ProductSitemap, PageSitemap
 )
-from apps.storefront.views.seo_views import robots_txt
+from storefront.views.seo_views import robots_txt
 
 sitemaps = {
     'static': StaticViewSitemap,
@@ -34,5 +34,5 @@ urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 
-handler404 = 'apps.storefront.views.seo_views.custom_404'
-handler500 = 'apps.storefront.views.seo_views.custom_500'
+handler404 = 'storefront.views.seo_views.custom_404'
+handler500 = 'storefront.views.seo_views.custom_500'

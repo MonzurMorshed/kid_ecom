@@ -554,6 +554,7 @@
                         <i class="fa-solid fa-phone text-coral text-xs"></i> {{ site_settings.site_phone }}
                     </a>
                     {% endif %}
+                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral transition-colors" href="{% url 'storefront:contact' %}">Contact Us</a>
                     {% for p in footer_pages %}
                     <a class="mb-2 block text-xs text-ink/55 hover:text-coral transition-colors" href="{{ p.get_absolute_url }}">{{ p.title }}</a>
                     {% empty %}
@@ -564,11 +565,11 @@
                 <div class="col-span-2 sm:col-span-1">
                     <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Stay curious</h4>
                     <p class="mb-4 text-xs leading-5 text-ink/55">Play ideas, new toys,<br>zero boring emails.</p>
-                    <form id="newsletterForm" class="flex border-b border-ink/30 pb-2">
+                    <form id="newsletterForm" action="{% url 'storefront:newsletter_subscribe' %}" method="post" class="flex border-b border-ink/30 pb-2">
                         {% csrf_token %}
-                        <input class="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-ink/40"
+                        <input name="email" class="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-ink/40 text-ink"
                                 placeholder="Your email address" type="email" required>
-                        <button type="submit" class="text-coral hover:text-coral/80 transition-colors" aria-label="Subscribe">
+                        <button type="submit" class="text-coral hover:text-coral/80 transition-colors cursor-pointer" aria-label="Subscribe">
                             <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </form>
@@ -707,10 +708,32 @@
 
         const newsletterForm = document.getElementById('newsletterForm');
         if (newsletterForm) {
-            newsletterForm.addEventListener('submit', (e) => {
+            newsletterForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                toast("You're on the list — welcome to the playful side 🎉");
-                e.target.reset();
+                const form = e.target;
+                const emailInput = form.querySelector('input[name="email"]');
+                const email = emailInput ? emailInput.value.trim() : '';
+                if (!email) return;
+
+                const csrftoken = getCookie('csrftoken') || form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                const formData = new FormData();
+                formData.append('email', email);
+
+                try {
+                    const res = await fetch("{% url 'storefront:newsletter_subscribe' %}", {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': csrftoken,
+                        }
+                    });
+                    const data = await res.json();
+                    toast(data.message || "You're on the list — welcome to the playful side 🎉");
+                    if (res.ok) form.reset();
+                } catch (err) {
+                    toast('Something went wrong, please try again.');
+                }
             });
         }
     </script>

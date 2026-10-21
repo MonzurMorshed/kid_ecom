@@ -153,22 +153,39 @@ STORAGES = {
 }
 
 # ── Email ──────────────────────────────────────────────────────────────────────
-# Set EMAIL_HOST etc. in .env to enable real sending.
-# Falls back to console backend so dev never throws on missing SMTP credentials.
-EMAIL_BACKEND   = config('EMAIL_BACKEND',   default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST      = config('EMAIL_HOST',      default='smtp.gmail.com')
-EMAIL_PORT      = config('EMAIL_PORT',      default=587, cast=int)
-EMAIL_USE_TLS   = config('EMAIL_USE_TLS',   default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_BACKEND   = config('EMAIL_BACKEND',   default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST      = config('EMAIL_HOST',      default='premium365-2.web-hosting.com')
+EMAIL_PORT      = config('EMAIL_PORT',      default=465, cast=int)
+EMAIL_USE_TLS   = config('EMAIL_USE_TLS',   default=False, cast=bool)
+EMAIL_USE_SSL   = config('EMAIL_USE_SSL',   default=True, cast=bool)
+EMAIL_TIMEOUT   = config('EMAIL_TIMEOUT',   default=10, cast=int)
+
+# Default / Notification Channel (Password reset, security, system notices)
+EMAIL_HOST_USER     = config('EMAIL_HOST_USER',     default='notification@kidurabd.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL',  default='Kidurabd <noreply@kidurabd.com>')
+DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL',  default='Kidurabd <notification@kidurabd.com>')
+
+# Billing Channel (Order confirmation, invoices, receipts)
+BILLING_EMAIL_USER     = config('BILLING_EMAIL_USER',     default='billing@kidurabd.com')
+BILLING_EMAIL_PASSWORD = config('BILLING_EMAIL_PASSWORD', default='')
+BILLING_FROM_EMAIL     = config('BILLING_FROM_EMAIL',     default='Kidurabd Billing <billing@kidurabd.com>')
+
+# Contact Channel (Customer inquiries & contact form acknowledgments)
+CONTACT_EMAIL_USER     = config('CONTACT_EMAIL_USER',     default='contact@kidurabd.com')
+CONTACT_EMAIL_PASSWORD = config('CONTACT_EMAIL_PASSWORD', default='')
+CONTACT_FROM_EMAIL     = config('CONTACT_FROM_EMAIL',     default='Kidurabd Contact <contact@kidurabd.com>')
+
+# Care Channel (Customer care, newsletter subscriptions & welcome)
+CARE_EMAIL_USER        = config('CARE_EMAIL_USER',        default='care@kidurabd.com')
+CARE_EMAIL_PASSWORD    = config('CARE_EMAIL_PASSWORD',    default='')
+CARE_FROM_EMAIL        = config('CARE_FROM_EMAIL',        default='Kidurabd Care <care@kidurabd.com>')
 
 # Brand / site identity — used in email templates
 SITE_NAME  = config('SITE_NAME',  default='Kidurabd')
-SITE_URL   = config('SITE_URL',   default='http://127.0.0.1:8000')
+SITE_URL   = config('SITE_URL',   default='https://kidurabd.com')
 
-# Where admin new-order notifications go (defaults to the FROM address)
-ADMIN_NOTIFICATION_EMAIL = config('ADMIN_NOTIFICATION_EMAIL', default=EMAIL_HOST_USER or 'admin@kidurabd.com')
+# Where admin new-order notifications go
+ADMIN_NOTIFICATION_EMAIL = config('ADMIN_NOTIFICATION_EMAIL', default='notification@kidurabd.com')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

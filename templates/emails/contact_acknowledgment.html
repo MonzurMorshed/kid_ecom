@@ -1,0 +1,28 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subject %}We received your message! — {{ site_name }}{% endblock %}
+
+{% block body %}
+<h1>👋 We Got Your Message!</h1>
+<p>Hi <strong>{{ contact.name }}</strong>,</p>
+<p>Thank you for reaching out to <strong>{{ site_name }}</strong>. We have received your inquiry regarding <em>"{{ contact.subject }}"</em> and our customer team is on it!</p>
+
+<p>One of our friendly team members will review your message and get back to you shortly (usually within 24 hours).</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">Subject</span>
+    <span class="info-value">{{ contact.subject }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Your message</span>
+    <span class="info-value" style="font-weight:400;text-align:left;color:#94a3b8;">{{ contact.message|truncatewords:40 }}</span>
+  </div>
+</div>
+
+<p>In the meantime, feel free to explore our wonderful collection of toys and play essentials!</p>
+
+<div style="text-align:center;margin-top:24px;">
+  <a href="{{ site_url }}" class="btn">Visit Kidurabd Shop</a>
+</div>
+{% endblock %}

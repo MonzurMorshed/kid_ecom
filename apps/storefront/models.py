@@ -80,3 +80,50 @@ class CartItem(models.Model):
     @property
     def line_total(self):
         return self.unit_price * self.quantity
+
+
+# =========================================================
+# ContactMessage  —  Customer contact inquiries
+# =========================================================
+
+class ContactMessage(models.Model):
+    """Stores inquiries submitted through the storefront Contact Us form."""
+
+    name        = models.CharField(max_length=150)
+    email       = models.EmailField()
+    phone       = models.CharField(max_length=30, blank=True)
+    subject     = models.CharField(max_length=200, default='General Inquiry')
+    message     = models.TextField()
+    is_read     = models.BooleanField(default=False)
+    admin_notes = models.TextField(blank=True, help_text='Internal notes for staff')
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Contact Message'
+        verbose_name_plural = 'Contact Messages'
+
+    def __str__(self):
+        return f'{self.name} — {self.subject} ({self.created_at:%d %b %Y})'
+
+
+# =========================================================
+# NewsletterSubscriber  —  Storefront email subscribers
+# =========================================================
+
+class NewsletterSubscriber(models.Model):
+    """Stores newsletter email subscribers from storefront."""
+
+    email      = models.EmailField(unique=True)
+    is_active  = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Newsletter Subscriber'
+        verbose_name_plural = 'Newsletter Subscribers'
+
+    def __str__(self):
+        return self.email
+

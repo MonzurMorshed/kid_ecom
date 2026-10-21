@@ -103,7 +103,7 @@ def login_view(request):
                 request.session.set_expiry(getattr(settings, 'SESSION_COOKIE_AGE', 86400))  # 1 day (24 hours)
             # Merge any guest-session cart items into the user's DB cart
             if not user.is_staff and not user.is_superuser:
-                from apps.storefront.cart import merge_session_cart_to_user
+                from storefront.cart import merge_session_cart_to_user
                 merge_session_cart_to_user(request, user)
             if user.is_staff or user.is_superuser:
                 return redirect('custom_admin:dashboard')
@@ -202,12 +202,17 @@ def forgot_password_view(request):
                 reset_url = request.build_absolute_uri(
                     f'/accounts/reset-password/{uid}/{token}/'
                 )
-                # Send email (prints to console in dev)
-                send_mail(
-                    subject='Reset your Kidurabd password',
-                    message=f'Hello {user.first_name},\n\nClick this link to reset your password:\n{reset_url}\n\nThis link expires in 1 hour.\n\n— Kidurabd',
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@kidurabd.com'),
-                    recipient_list=[email],
+                from kidurabd.email_service import send_templated_email
+                send_templated_email(
+                    channel='notification',
+                    subject=f'[{getattr(settings, "SITE_NAME", "Kidurabd")}] Reset your password',
+                    template_name='emails/password_reset.html',
+                    context={
+                        'user_display': user.first_name or user.username,
+                        'email': email,
+                        'reset_url': reset_url,
+                    },
+                    to=email,
                     fail_silently=True,
                 )
             except User.DoesNotExist:

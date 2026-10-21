@@ -94,19 +94,17 @@ def admin_forgot_password(request):
             host      = request.get_host()
             reset_url = f'{scheme}://{host}/admin/reset-password/{uid}/{token}/'
 
-            subject = 'Kidurabd Admin — Password Reset Request'
-            body    = (
-                f'Hi {user.username},\n\n'
-                f'A password reset was requested for your admin account.\n\n'
-                f'Click the link below to set a new password (valid for 1 hour):\n'
-                f'{reset_url}\n\n'
-                f'If you did not request this, you can safely ignore this email.\n\n'
-                f'— Kidurabd Admin'
-            )
-            send_mail(
-                subject, body,
-                getattr(django_settings, 'DEFAULT_FROM_EMAIL', 'admin@kidurabd.com'),
-                [user.email],
+            from kidurabd.email_service import send_templated_email
+            send_templated_email(
+                channel='notification',
+                subject='Kidurabd Admin — Password Reset Request',
+                template_name='emails/password_reset.html',
+                context={
+                    'user_display': user.username,
+                    'email': user.email,
+                    'reset_url': reset_url,
+                },
+                to=user.email,
                 fail_silently=True,
             )
             ActivityLog.log(

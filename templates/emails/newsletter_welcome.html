@@ -1,0 +1,31 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subject %}Welcome to the Kidurabd Family! 🎈{% endblock %}
+
+{% block body %}
+<h1>🎉 You're on the list!</h1>
+<p>Hello friend,</p>
+<p>Thank you for subscribing to the <strong>{{ site_name }}</strong> newsletter! We're thrilled to welcome you to our growing community of parents, educators, and play lovers.</p>
+
+<p>Here is what you can look forward to:</p>
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">✨ Early Access</span>
+    <span class="info-value" style="font-weight:400;color:#94a3b8;text-align:left;">Be the first to discover exciting new toys and learning sets.</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">🎁 Exclusive Perks</span>
+    <span class="info-value" style="font-weight:400;color:#94a3b8;text-align:left;">Subscriber-only discount codes and holiday deals.</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">💡 Play Ideas</span>
+    <span class="info-value" style="font-weight:400;color:#94a3b8;text-align:left;">Creative play guides and screen-free developmental activities.</span>
+  </div>
+</div>
+
+<p>We promise zero spam and only thoughtful, fun updates for you and your little ones.</p>
+
+<div style="text-align:center;margin-top:28px;">
+  <a href="{{ site_url }}/shop/" class="btn">Explore Our Toys 🧸</a>
+</div>
+{% endblock %}
