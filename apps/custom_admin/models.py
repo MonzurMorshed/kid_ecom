@@ -56,8 +56,28 @@ class SiteSettings(models.Model):
 
     @classmethod
     def get_settings(cls):
-        obj, _ = cls.objects.get_or_create(pk=1)
+        obj = cls.objects.first()
+        if not obj:
+            obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+    @property
+    def logo_url(self):
+        try:
+            if self.site_logo and hasattr(self.site_logo, 'url'):
+                return self.site_logo.url
+        except Exception:
+            pass
+        return None
+
+    @property
+    def favicon_url(self):
+        try:
+            if self.site_favicon and hasattr(self.site_favicon, 'url'):
+                return self.site_favicon.url
+        except Exception:
+            pass
+        return None
 
 
 class PaymentMethod(models.Model):
@@ -298,16 +318,19 @@ class ActivityLog(models.Model):
     @classmethod
     def log(cls, request, action, description, target_type='', target_id=None):
         """Convenience method to write a log entry."""
-        actor = request.user if request and request.user.is_authenticated else None
-        ip    = cls._get_ip(request)
-        cls.objects.create(
-            actor=actor,
-            action=action,
-            description=description,
-            target_type=target_type,
-            target_id=target_id,
-            ip_address=ip,
-        )
+        try:
+            actor = request.user if request and getattr(request.user, 'is_authenticated', False) and getattr(request.user, 'pk', None) else None
+            ip    = cls._get_ip(request)
+            return cls.objects.create(
+                actor=actor,
+                action=action,
+                description=description,
+                target_type=target_type,
+                target_id=target_id,
+                ip_address=ip,
+            )
+        except Exception:
+            return None
 
     @staticmethod
     def _get_ip(request):

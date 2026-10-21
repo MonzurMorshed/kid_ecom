@@ -11,7 +11,7 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
         <div class="product-visual relative aspect-square w-full flex items-center justify-center overflow-hidden"
              style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }};">
 
-            {% with feat_image=product.primary_image|default:product.images.all|first %}
+            {% with feat_image=product.primary_image %}
             {% if feat_image and feat_image.image %}
                 <img src="{{ feat_image.image.url }}"
                      alt="{{ feat_image.alt_text|default:product.title }}"

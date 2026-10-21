@@ -22,6 +22,8 @@ urlpatterns = [
     # ── Site Settings ──────────────────────────────────────────────────────────
     path('settings/', views.site_settings, name='site_settings'),
     path('clear-cache/', views.clear_cache, name='clear_cache'),
+    path('developer-settings/', views.developer_settings, name='developer_settings'),
+    path('developer-settings/clear-log/', views.clear_error_log, name='clear_error_log'),
 
     # ── Payment Methods ────────────────────────────────────────────────────────
     path('settings/payment-methods/', views.payment_method_list, name='payment_method_list'),

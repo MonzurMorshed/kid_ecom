@@ -71,7 +71,7 @@ class AdminRegisterForm(forms.ModelForm):
 class SiteSettingsForm(forms.ModelForm):
     class Meta:
         model  = SiteSettings
-        exclude = ['updated_at']
+        exclude = ['updated_at', 'maintenance_mode', 'maintenance_msg']
         widgets = {
             'site_name':     _input('e.g. Kidurabd'),
             'site_tagline':  _input('Short tagline for your store'),
@@ -83,6 +83,18 @@ class SiteSettingsForm(forms.ModelForm):
             }),
             'site_phone':    _input('+880 1XXX-XXXXXX'),
             'site_address':  _textarea('Full store address', rows=2),
+            'site_logo':     forms.FileInput(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg '
+                         'text-slate-300 text-sm focus:outline-none focus:ring-2 '
+                         'focus:ring-sky-500 focus:border-transparent transition',
+                'accept': 'image/*',
+            }),
+            'site_favicon':  forms.FileInput(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg '
+                         'text-slate-300 text-sm focus:outline-none focus:ring-2 '
+                         'focus:ring-sky-500 focus:border-transparent transition',
+                'accept': 'image/*',
+            }),
             'currency':      _select(),
             'currency_symbol': _input('৳'),
             'free_shipping_threshold': forms.NumberInput(attrs={
@@ -127,7 +139,6 @@ class SiteSettingsForm(forms.ModelForm):
                          'focus:ring-sky-500 focus:border-transparent transition text-sm',
                 'placeholder': 'https://youtube.com/yourchannel',
             }),
-            'maintenance_msg': _textarea('Maintenance message shown to visitors', rows=3),
         }
 
 

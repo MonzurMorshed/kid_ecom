@@ -1,0 +1,359 @@
+{% extends 'custom_admin/admin_base.html' %}
+{% block title %}Developer Settings &amp; Logs{% endblock %}
+{% block page_title %}Developer Settings{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-white flex items-center gap-2.5">
+                <i class="fa-solid fa-code text-amber-400"></i>
+                Developer Settings &amp; Diagnostics
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">Manage server cache, reload application workers, and monitor error logs.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <!-- Clear Cache Button -->
+            <form method="POST" action="{% url 'custom_admin:clear_cache' %}" class="inline"
+                  onsubmit="return confirm('Clear server cache and reload application workers?')">
+                {% csrf_token %}
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold text-xs rounded-xl transition shadow-sm">
+                    <i class="fa-solid fa-broom text-xs"></i>
+                    Clear Cache &amp; Reload
+                </button>
+            </form>
+
+            <!-- Clear Error Log Button -->
+            <form method="POST" action="{% url 'custom_admin:clear_error_log' %}" class="inline"
+                  onsubmit="return confirm('Clear and truncate the error log file? This cannot be undone.')">
+                {% csrf_token %}
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold text-xs rounded-xl transition shadow-sm">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                    Clear Error Log
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- System Stats Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Runtime Info -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                <i class="fa-brands fa-python text-xl"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-xs font-medium text-slate-400">Runtime</p>
+                <p class="text-sm font-semibold text-white truncate">Python {{ python_version }}</p>
+                <p class="text-[11px] text-slate-500">Django {{ django_version }}</p>
+            </div>
+        </div>
+
+        <!-- Debug Mode & Env -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl {% if debug_mode %}bg-amber-500/10 border border-amber-500/20 text-amber-400{% else %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% endif %} flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-shield-halved text-xl"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-xs font-medium text-slate-400">Environment</p>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-sm font-semibold text-white">DEBUG</span>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {% if debug_mode %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% else %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% endif %}">
+                        {{ debug_mode|yesno:"Enabled,Disabled" }}
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-500">{% if debug_mode %}Development mode{% else %}Production mode{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- Database Engine -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+                <i class="fa-solid fa-database text-xl"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-xs font-medium text-slate-400">Database</p>
+                <p class="text-sm font-semibold text-white truncate">{{ db_name|default:'kidurabd_db' }}</p>
+                <p class="text-[11px] text-slate-500 truncate">{{ db_engine }} • {{ db_host }}:{{ db_port }}</p>
+            </div>
+        </div>
+
+        <!-- Log Size & Status -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl {% if log_size_bytes > 0 %}bg-rose-500/10 border border-rose-500/20 text-rose-400{% else %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% endif %} flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-file-lines text-xl"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-xs font-medium text-slate-400">Error Log</p>
+                <p class="text-sm font-semibold text-white">{{ log_size_formatted }}</p>
+                <p class="text-[11px] text-slate-500">{{ log_line_count }} lines logged</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Mode Alert Banner if active -->
+    {% if maintenance_mode %}
+    <div class="flex items-center justify-between p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-triangle-exclamation text-base"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-amber-300">Storefront is currently in Maintenance Mode</h3>
+                <p class="text-xs text-amber-400/80 mt-0.5">Visitors to the storefront are seeing a 503 Service Unavailable page. Logged-in admin staff can still browse.</p>
+            </div>
+        </div>
+        <a href="/" target="_blank" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-semibold rounded-lg transition shrink-0">
+            Preview Storefront
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Storefront Maintenance Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <form method="POST" action="{% url 'custom_admin:developer_settings' %}">
+            {% csrf_token %}
+            <input type="hidden" name="update_maintenance" value="1">
+            <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+                <div class="space-y-4 flex-1">
+                    <div class="flex items-center justify-between flex-wrap gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg {% if maintenance_mode %}bg-amber-500/10 border border-amber-500/20 text-amber-400{% else %}bg-slate-800 border border-slate-700 text-slate-400{% endif %} flex items-center justify-center">
+                                <i class="fa-solid fa-screwdriver-wrench text-xs"></i>
+                            </div>
+                            <h2 class="text-base font-semibold text-white">Storefront Maintenance Mode</h2>
+                            <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full {% if maintenance_mode %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% else %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% endif %}">
+                                {% if maintenance_mode %}ACTIVE — STORE OFFLINE{% else %}INACTIVE — STORE LIVE{% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Toggle Switch -->
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="maintenance_mode" {% if maintenance_mode %}checked{% endif %} class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                            <span class="ml-3 text-xs font-semibold {% if maintenance_mode %}text-amber-400{% else %}text-slate-400{% endif %}">
+                                {% if maintenance_mode %}Enabled{% else %}Disabled{% endif %}
+                            </span>
+                        </label>
+                    </div>
+
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        When enabled, all regular storefront visitors are served a styled maintenance page (503 Service Unavailable) with your custom message. Admin users with staff permissions can still browse the storefront normally.
+                    </p>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Maintenance Notice Message</label>
+                        <textarea name="maintenance_msg" rows="2"
+                                  placeholder="Message displayed to visitors when store is in maintenance mode..."
+                                  class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition resize-none">{{ maintenance_msg }}</textarea>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between self-stretch shrink-0 gap-4 pt-1">
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-semibold text-xs rounded-xl transition shadow-lg shadow-sky-500/10">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                        Save Maintenance Settings
+                    </button>
+                    {% if maintenance_mode %}
+                    <span class="text-[11px] text-amber-400 font-medium flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                        Storefront offline for visitors
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Cache Management Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="space-y-2 max-w-2xl">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                        <i class="fa-solid fa-broom text-xs"></i>
+                    </div>
+                    <h2 class="text-base font-semibold text-white">Application Cache &amp; Worker Reload</h2>
+                    <span class="px-2 py-0.5 text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700 rounded-md">
+                        {{ cache_backend|slice:"-14:" }}
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Flushes Django's in-memory cache and touches <code class="text-amber-300 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">tmp/restart.txt</code>. This signals CloudLinux, cPanel, and Phusion Passenger Python workers to reload without restarting the web server.
+                </p>
+                {% if restart_time %}
+                <p class="text-[11px] text-slate-500 flex items-center gap-1.5 pt-1">
+                    <i class="fa-regular fa-clock text-slate-400"></i>
+                    Last reload trigger: <span class="text-slate-300 font-medium">{{ restart_time|date:"M d, Y - H:i:s" }}</span>
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center gap-3">
+                <form method="POST" action="{% url 'custom_admin:clear_cache' %}"
+                      onsubmit="return confirm('Clear server cache and reload application workers?')">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20">
+                        <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                        Clear Cache &amp; Reload Workers
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Log Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <!-- Log Card Header -->
+        <div class="p-5 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                        <i class="fa-solid fa-bug text-xs"></i>
+                    </div>
+                    <h2 class="text-base font-semibold text-white">System Error Log</h2>
+                    <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-slate-800 border border-slate-700 text-slate-300">
+                        {{ log_file_path }}
+                    </span>
+                </div>
+                <div class="flex items-center gap-4 mt-1 text-xs text-slate-400">
+                    <span>Size: <strong class="text-slate-200">{{ log_size_formatted }}</strong></span>
+                    <span>Total lines: <strong class="text-slate-200">{{ log_line_count }}</strong></span>
+                    {% if last_modified %}
+                    <span>Last updated: <strong class="text-slate-200">{{ last_modified|date:"M d, Y H:i:s" }}</strong></span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center flex-wrap gap-2.5">
+                <!-- Real-time Filter -->
+                <div class="relative min-w-[200px]">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+                    <input type="text" id="log-search" placeholder="Search error lines..."
+                           class="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500 transition">
+                </div>
+
+                <!-- Refresh Button -->
+                <a href="{% url 'custom_admin:developer_settings' %}"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-medium rounded-lg transition"
+                   title="Refresh Log View">
+                    <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
+                    Refresh
+                </a>
+
+                <!-- Copy Logs -->
+                <button type="button" id="copy-log-btn"
+                        onclick="copyLogText()"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-medium rounded-lg transition"
+                        title="Copy log to clipboard">
+                    <i class="fa-regular fa-copy text-[11px]"></i>
+                    <span id="copy-btn-text">Copy</span>
+                </button>
+
+                <!-- Clear Error Log Button -->
+                <form method="POST" action="{% url 'custom_admin:clear_error_log' %}" class="inline"
+                      onsubmit="return confirm('Are you sure you want to completely erase the error log file?')">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold rounded-lg transition">
+                        <i class="fa-solid fa-trash-can text-[11px]"></i>
+                        Clear Log
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Terminal Viewer Window -->
+        <div class="bg-slate-950 border-t border-slate-800">
+            <!-- Terminal Title Bar -->
+            <div class="px-4 py-2 bg-slate-900/60 border-b border-slate-800/80 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+                    <span class="text-[11px] font-mono text-slate-400 ml-2">logs/error.log (showing latest {% if log_line_count > 500 %}500 of {{ log_line_count }}{% else %}{{ log_line_count }}{% endif %} lines)</span>
+                </div>
+                <div class="text-[11px] font-mono text-slate-500">
+                    UTF-8 • UNIX/DOS
+                </div>
+            </div>
+
+            <!-- Terminal Content -->
+            {% if log_lines and log_size_bytes > 0 %}
+            <div id="log-container" class="p-4 font-mono text-xs overflow-x-auto overflow-y-auto max-h-[550px] space-y-0.5 select-text">
+                {% for line in log_lines %}
+                <div class="log-line flex items-start gap-3 hover:bg-slate-900/50 py-0.5 px-1 rounded transition-colors group" data-content="{{ line|lower }}">
+                    <span class="text-slate-600 select-none text-[11px] font-mono w-10 text-right shrink-0 group-hover:text-slate-400">{{ forloop.counter }}</span>
+                    <pre class="flex-1 whitespace-pre-wrap break-all {% if 'ERROR' in line or 'CRITICAL' in line or 'Traceback' in line or 'Exception' in line %}text-rose-400 font-semibold{% elif 'WARNING' in line %}text-amber-400{% elif 'INFO' in line %}text-sky-300{% else %}text-slate-300{% endif %}">{{ line }}</pre>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Clean / Empty State -->
+            <div class="py-16 px-4 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3.5">
+                    <i class="fa-solid fa-circle-check text-2xl"></i>
+                </div>
+                <h3 class="text-sm font-semibold text-white">Error Log is Clear</h3>
+                <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    No error records found in <code class="text-slate-300 font-mono">logs/error.log</code>. All application requests and processes are running smoothly.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- Hidden textarea for easy copy -->
+<textarea id="raw-log-content" class="sr-only">{{ log_text }}</textarea>
+
+<script>
+    // Realtime search / filter within error logs
+    document.getElementById('log-search')?.addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase().trim();
+        const lines = document.querySelectorAll('.log-line');
+        lines.forEach(line => {
+            const content = line.getAttribute('data-content') || '';
+            if (!query || content.includes(query)) {
+                line.style.display = 'flex';
+            } else {
+                line.style.display = 'none';
+            }
+        });
+    });
+
+    // Copy log text to clipboard
+    function copyLogText() {
+        const rawContent = document.getElementById('raw-log-content')?.value || '';
+        if (!rawContent) {
+            alert('Error log is empty.');
+            return;
+        }
+        navigator.clipboard.writeText(rawContent).then(() => {
+            const btnText = document.getElementById('copy-btn-text');
+            if (btnText) {
+                btnText.textContent = 'Copied!';
+                setTimeout(() => { btnText.textContent = 'Copy'; }, 2000);
+            }
+        }).catch(err => {
+            console.error('Failed to copy logs:', err);
+        });
+    }
+
+    // Auto scroll to bottom of log container on load
+    window.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('log-container');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}

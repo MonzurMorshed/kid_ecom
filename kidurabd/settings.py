@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / 'apps'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-!o=#26z@1$oo55)&py*_euh&-$o!v2-!r(x&(mjwe4n6%krdol')
+SECRET_KEY = config('SECRET_KEY', default='') or 'django-insecure-!o=#26z@1$oo55)&py*_euh&-$o!v2-!r(x&(mjwe4n6%krdol'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
@@ -142,6 +142,16 @@ if MEDIA_CDN_URL:
 else:
     MEDIA_URL = '/media/'
 
+# ── Static Files Storage Optimization (WhiteNoise) ───────────────────────────
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage" if not DEBUG else "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 # ── Email ──────────────────────────────────────────────────────────────────────
 # Set EMAIL_HOST etc. in .env to enable real sending.
 # Falls back to console backend so dev never throws on missing SMTP credentials.
@@ -188,3 +198,95 @@ AXES_LOCKOUT_PARAMETERS = [['username', 'ip_address']]          # Lock out speci
 AXES_LOCKOUT_TEMPLATE = 'accounts/lockout.html'                 # Custom styled lockout page
 AXES_ENABLE_ACCESS_FAILURE_LOG = True                          # Audit log of failed login attempts
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False           # Don't extend cooldown on attempts during lockout
+AXES_IPWARE_PROXY_COUNT = config('AXES_IPWARE_PROXY_COUNT', default=1, cast=int)
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
+    'HTTP_CF_CONNECTING_IP',  # Cloudflare visitor IP
+    'HTTP_X_FORWARDED_FOR',   # Standard reverse proxy visitor IP
+    'REMOTE_ADDR',
+]
+
+# ── HTTPS & Cookie Security (Production vs Development) ──────────────────────
+if not DEBUG:
+    # Reverse proxy header (cPanel, Nginx, CloudLinux Passenger, Cloudflare)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # Cookies only sent over encrypted HTTPS connections
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Prevent client JavaScript from accessing session cookie (XSS protection)
+    SESSION_COOKIE_HTTPONLY = True
+
+    # SameSite policy to prevent cross-site request forgery
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
+
+    # Browser security headers
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+
+    # HTTP Strict Transport Security (HSTS)
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Optional HTTPS redirect (can be toggled in .env if cPanel handles redirect via .htaccess)
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+else:
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
+
+
+# ── Logging Configuration ───────────────────────────────────────────────────
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+ERROR_LOG_FILE = LOGS_DIR / 'error.log'
+if not ERROR_LOG_FILE.exists():
+    try:
+        ERROR_LOG_FILE.touch()
+    except Exception:
+        pass
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '[%(asctime)s] [%(levelname)s] [%(name)s:%(lineno)d] %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(ERROR_LOG_FILE),
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'backupCount': 3,
+            'formatter': 'standard',
+            'encoding': 'utf-8',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['error_file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
+
