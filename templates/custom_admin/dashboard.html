@@ -150,7 +150,7 @@
                     {% for label in status_labels %}
                     <div class="flex items-center justify-between text-xs">
                         <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full status-legend-dot-{{ forloop.counter }}"></span>
+                            <span class="w-2.5 h-2.5 rounded-full inline-block shrink-0 status-legend-dot-{{ forloop.counter }}"></span>
                             <span class="text-slate-300 font-medium">{{ label }}</span>
                         </div>
                         <span class="text-slate-400 font-semibold status-count-{{ forloop.counter }}"></span>
@@ -218,43 +218,72 @@
 </div>
 
 {% if status_counts %}
+{{ status_labels|json_script:"status-labels-data" }}
+{{ status_counts|json_script:"status-counts-data" }}
 <script>
     (function () {
-        const labels = {{ status_labels| safe
-    }};
-    const counts = {{ status_counts| safe }};
-    const palette = ['#38bdf8', '#34d399', '#f59e0b', '#f87171', '#a78bfa', '#fb923c'];
-    const dots = document.querySelectorAll('[class*="status-legend-dot-"]');
-    const cnts = document.querySelectorAll('[class*="status-count-"]');
-    dots.forEach((el, i) => { el.style.backgroundColor = palette[i] || '#64748b'; });
-    cnts.forEach((el, i) => { el.textContent = counts[i] || 0; });
+        function initDonutChart() {
+            const labelsEl = document.getElementById('status-labels-data');
+            const countsEl = document.getElementById('status-counts-data');
+            const labels = labelsEl ? JSON.parse(labelsEl.textContent) : [];
+            const counts = countsEl ? JSON.parse(countsEl.textContent) : [];
 
-    const ctx = document.getElementById('statusDonutChart');
-    if (ctx && typeof Chart !== 'undefined') {
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: counts,
-                    backgroundColor: palette.slice(0, labels.length),
-                    borderColor: '#0f172a',
-                    borderWidth: 3,
-                    hoverOffset: 6,
-                }]
-            },
-            options: {
-                cutout: '72%',
-                plugins: {
-                    legend: { display: false }, tooltip: {
-                        callbacks: { label: function (c) { return ` ${c.label}: ${c.raw} orders`; } }
+            const palette = ['#38bdf8', '#34d399', '#f59e0b', '#f87171', '#a78bfa', '#fb923c'];
+            const dots = document.querySelectorAll('[class*="status-legend-dot-"]');
+            const cnts = document.querySelectorAll('[class*="status-count-"]');
+
+            dots.forEach((el, i) => {
+                el.style.backgroundColor = palette[i] || '#64748b';
+            });
+            cnts.forEach((el, i) => {
+                el.textContent = counts[i] ?? 0;
+            });
+
+            const canvas = document.getElementById('statusDonutChart');
+            if (canvas && typeof Chart !== 'undefined') {
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: palette.slice(0, labels.length),
+                            borderColor: '#0f172a',
+                            borderWidth: 3,
+                            hoverOffset: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '72%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#0f172a',
+                                titleColor: '#f8fafc',
+                                bodyColor: '#c7d2fe',
+                                borderColor: '#334155',
+                                borderWidth: 1,
+                                padding: 8,
+                                callbacks: {
+                                    label: function (c) { return ` ${c.label}: ${c.raw} orders`; }
+                                }
+                            }
+                        },
+                        animation: { animateScale: true, duration: 600 }
                     }
-                },
-                animation: { animateScale: true, duration: 700 }
+                });
             }
-        });
-    }
-}) ();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDonutChart);
+        } else {
+            initDonutChart();
+        }
+    })();
 </script>
 {% endif %}
 {% endblock %}
