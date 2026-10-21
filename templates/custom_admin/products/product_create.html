@@ -361,9 +361,11 @@ function specificationsBuilder(initialSpecs) {
 }
 
 /* ── Client-side Image Pre-compression (prevents huge uploads & 502 timeouts) ── */
-async function downscaleImageFile(file, maxDimension = 1600, quality = 0.85) {
+let isProcessingImages = false;
+
+async function downscaleImageFile(file, maxDimension = 1200, quality = 0.82) {
     if (!file || !file.type.startsWith('image/')) return file;
-    if (file.size < 500 * 1024) return file;
+    if (file.size < 300 * 1024) return file; // Already under 300KB, skip
 
     return new Promise((resolve) => {
         const img = new Image();
@@ -372,7 +374,7 @@ async function downscaleImageFile(file, maxDimension = 1600, quality = 0.85) {
             URL.revokeObjectURL(url);
             let w = img.width;
             let h = img.height;
-            if (w <= maxDimension && h <= maxDimension && file.size < 1024 * 1024) {
+            if (w <= maxDimension && h <= maxDimension && file.size < 500 * 1024) {
                 resolve(file);
                 return;
             }
@@ -413,19 +415,28 @@ async function downscaleImageFile(file, maxDimension = 1600, quality = 0.85) {
 async function previewFeatured(input) {
     const rawFile = input.files[0];
     if (!rawFile) return;
-    const file = await downscaleImageFile(rawFile);
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    input.files = dt.files;
+    isProcessingImages = true;
+    const createBtn = document.getElementById('createBtn');
+    if (createBtn) createBtn.classList.add('pointer-events-none', 'opacity-60');
 
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById('featuredPreview').src = e.target.result;
-        document.getElementById('featuredPreview').classList.remove('hidden');
-        document.getElementById('featuredPlaceholder').classList.add('hidden');
-        document.getElementById('featuredRemoveBtn').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
+    try {
+        const file = await downscaleImageFile(rawFile);
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('featuredPreview').src = e.target.result;
+            document.getElementById('featuredPreview').classList.remove('hidden');
+            document.getElementById('featuredPlaceholder').classList.add('hidden');
+            document.getElementById('featuredRemoveBtn').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    } finally {
+        isProcessingImages = false;
+        if (createBtn) createBtn.classList.remove('pointer-events-none', 'opacity-60');
+    }
 }
 
 function removeFeatured(e) {
@@ -445,24 +456,35 @@ let galleryFiles = new DataTransfer();
 async function addGalleryPreviews(input) {
     const grid = document.getElementById('galleryGrid');
     const selected = Array.from(input.files);
-    for (const rawFile of selected) {
-        const file = await downscaleImageFile(rawFile);
-        galleryFiles.items.add(file);
-        const reader = new FileReader();
-        reader.onload = e => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'relative group aspect-square rounded-xl overflow-hidden border border-slate-700 bg-slate-800';
-            wrapper.innerHTML = `
-                <img src="${e.target.result}" class="w-full h-full object-cover">
-                <button type="button" onclick="removeGalleryItem(this,'${file.name}')"
-                        class="absolute top-1 right-1 p-1 bg-rose-600 hover:bg-rose-500 rounded-md text-white opacity-0 group-hover:opacity-100 transition shadow-lg">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>`;
-            grid.appendChild(wrapper);
-        };
-        reader.readAsDataURL(file);
+    if (!selected.length) return;
+
+    isProcessingImages = true;
+    const createBtn = document.getElementById('createBtn');
+    if (createBtn) createBtn.classList.add('pointer-events-none', 'opacity-60');
+
+    try {
+        for (const rawFile of selected) {
+            const file = await downscaleImageFile(rawFile);
+            galleryFiles.items.add(file);
+            const reader = new FileReader();
+            reader.onload = e => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative group aspect-square rounded-xl overflow-hidden border border-slate-700 bg-slate-800';
+                wrapper.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-full object-cover">
+                    <button type="button" onclick="removeGalleryItem(this,'${file.name}')"
+                            class="absolute top-1 right-1 p-1 bg-rose-600 hover:bg-rose-500 rounded-md text-white opacity-0 group-hover:opacity-100 transition shadow-lg">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>`;
+                grid.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        }
+        input.files = galleryFiles.files;
+    } finally {
+        isProcessingImages = false;
+        if (createBtn) createBtn.classList.remove('pointer-events-none', 'opacity-60');
     }
-    input.files = galleryFiles.files;
 }
 
 function removeGalleryItem(btn, name) {
@@ -479,7 +501,12 @@ function removeGalleryItem(btn, name) {
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('form[action*="product_create"]') || document.querySelector('form');
     if (form) {
-        form.addEventListener('submit', () => {
+        form.addEventListener('submit', (e) => {
+            if (isProcessingImages) {
+                e.preventDefault();
+                alert('Please wait a moment while images are being optimized for upload.');
+                return;
+            }
             const btn = document.getElementById('createBtn');
             if (btn && !btn.disabled) {
                 btn.disabled = true;

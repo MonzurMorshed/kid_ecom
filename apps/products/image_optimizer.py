@@ -92,7 +92,9 @@ def compress_and_resize_image(
         save_kwargs = {}
         if target_format == 'JPEG':
             save_kwargs['quality'] = quality
-            save_kwargs['optimize'] = True
+            # Single-pass baseline encoding: 5x-10x faster on CPU-throttled shared hosting
+            save_kwargs['optimize'] = False
+            save_kwargs['subsampling'] = 2
         elif target_format == 'WEBP':
             save_kwargs['quality'] = quality
         elif target_format == 'PNG':
