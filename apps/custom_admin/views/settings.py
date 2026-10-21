@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
 from ..decorators import admin_required
-from ..forms import SiteSettingsForm, PaymentMethodForm
+from ..forms import SiteSettingsForm, PaymentMethodForm, ThemeSettingsForm
 from ..models import SiteSettings, PaymentMethod
 
 
@@ -52,6 +52,50 @@ def site_settings(request):
         'form':     form,
         'settings': settings_obj,
         'tabs':     tabs,
+    })
+
+
+# ── Theme Settings ────────────────────────────────────────────────────────────
+
+@admin_required
+def theme_settings(request):
+    """
+    Dedicated visual theme customizer:
+    - Store background & text colors
+    - Primary & secondary brand accent colors
+    - Header layout (Classic, Centered, Compact) & colors
+    - Header sticky & border toggles
+    - Announcement bar message, visibility & colors
+    - Footer layout (Classic 4-col, Centered Modern, Minimal) & colors
+    - Card & component roundness
+    """
+    import logging
+    logger = logging.getLogger('django.request')
+
+    try:
+        settings_obj = SiteSettings.get_settings()
+    except Exception as e:
+        logger.error(f'Error getting SiteSettings in theme_settings: {e}', exc_info=True)
+        settings_obj = SiteSettings(pk=1, site_name='Kidurabd')
+
+    if request.method == 'POST':
+        form = ThemeSettingsForm(request.POST, instance=settings_obj)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Theme settings updated successfully! Storefront has been styled.')
+                return redirect('custom_admin:theme_settings')
+            except Exception as e:
+                logger.error(f'Error saving theme settings: {e}', exc_info=True)
+                messages.error(request, f'Failed to save theme settings: {e}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ThemeSettingsForm(instance=settings_obj)
+
+    return render(request, 'custom_admin/settings/theme_settings.html', {
+        'form': form,
+        'settings': settings_obj,
     })
 
 

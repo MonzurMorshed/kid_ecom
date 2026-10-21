@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#fffaf2">
+    <meta name="theme-color" content="{{ site_settings.primary_color|default:'#fffaf2' }}">
     {% if site_settings and site_settings.site_favicon %}<link rel="icon" href="{{ site_settings.site_favicon.url }}">{% endif %}
     <meta name="description"
         content="{% block meta_description %}{{ site_settings.site_tagline|default:'Kidurabd — thoughtful toys for curious minds, creative hands, and every wonderfully messy moment.' }}{% endblock %}">
@@ -51,10 +51,10 @@
             theme: {
                 extend: {
                     colors: {
-                        ink:      '#19253b',
-                        coral:    '#ff6b4d',
-                        butter:   '#f6c64d',
-                        cream:    '#fffaf2',
+                        ink:      '{{ site_settings.text_color|default:"#19253b" }}',
+                        coral:    '{{ site_settings.primary_color|default:"#ff6b4d" }}',
+                        butter:   '{{ site_settings.secondary_color|default:"#f6c64d" }}',
+                        cream:    '{{ site_settings.store_bg_color|default:"#fffaf2" }}',
                         mint:     '#e6f0e8',
                         softmint: '#7ac9b3',
                         peach:    '#f7c9bd',
@@ -68,7 +68,7 @@
                     },
                     boxShadow: {
                         toy:    '0 10px 25px rgba(25,37,59,.11)',
-                        button: '0 7px 0 #df543d, 0 11px 18px rgba(223,84,61,.16)',
+                        button: '0 7px 0 {{ site_settings.primary_color|default:"#df543d" }}, 0 11px 18px rgba(0,0,0,.16)',
                     },
                 }
             }
@@ -85,15 +85,34 @@
     <script defer src="{% static 'vendor/alpinejs/alpine.min.js' %}"></script>
 
     <style>
+        :root {
+            --store-bg: {{ site_settings.store_bg_color|default:"#fffaf2" }};
+            --primary-color: {{ site_settings.primary_color|default:"#ff6b4d" }};
+            --secondary-color: {{ site_settings.secondary_color|default:"#f6c64d" }};
+            --text-color: {{ site_settings.text_color|default:"#19253b" }};
+            --header-bg: {{ site_settings.header_bg_color|default:"#fffaf2" }};
+            --header-text: {{ site_settings.header_text_color|default:"#19253b" }};
+            --footer-bg: {{ site_settings.footer_bg_color|default:"#fffaf2" }};
+            --footer-text: {{ site_settings.footer_text_color|default:"#19253b" }};
+            --card-radius: {{ site_settings.card_border_radius_css|default:"16px" }};
+        }
         html { scroll-behavior: smooth; }
-        body { font-family: 'DM Sans', sans-serif; background-color: #fffaf2; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--store-bg);
+            color: var(--text-color);
+        }
         h1, h2, h3, .display { font-family: 'Fraunces', serif; }
 
+        .product-card {
+            border-radius: var(--card-radius);
+        }
         .product-card:hover .product-visual { transform: translateY(-5px); }
         .product-card:hover .product-emoji  { transform: scale(1.08) rotate(-4deg); }
         .product-visual, .product-emoji     { transition: transform .25s cubic-bezier(.23,1,.32,1); }
 
         .category-card {
+            border-radius: var(--card-radius);
             transition: transform .25s cubic-bezier(.23,1,.32,1), box-shadow .25s ease;
         }
         .category-card:hover {
@@ -102,7 +121,7 @@
         }
 
         .search-field { width: 38px; transition: width .2s ease, background .2s ease; }
-        .search-field:focus-within { width: 205px; background: #f5eee4; }
+        .search-field:focus-within { width: 205px; background: rgba(0,0,0,0.05); }
         .search-field input { width: 0; transition: width .2s ease; }
         .search-field:focus-within input { width: 155px; }
 
@@ -127,157 +146,152 @@
 <body class="bg-cream text-ink antialiased">
 
     <!-- ── Announcement strip ────────────────────────────── -->
+    {% if site_settings.announcement_enabled %}
     <div x-data="{ show: true }" x-show="show" x-cloak
-         class="bg-ink text-cream text-[10px] sm:text-[11px] uppercase tracking-[.12em] relative">
+         style="background-color: {{ site_settings.announcement_bg_color|default:'#19253b' }}; color: {{ site_settings.announcement_text_color|default:'#fffaf2' }};"
+         class="text-[10px] sm:text-[11px] uppercase tracking-[.12em] relative transition-all">
         <div class="mx-auto flex min-h-[34px] max-w-7xl items-center justify-center gap-3 px-4 text-center">
             <i class="fa-solid fa-sparkles text-butter text-xs" aria-hidden="true"></i>
-            <span>{{ announcement|default:"Free delivery on orders over ৳1,000 · Designed for curious little humans" }}</span>
+            <span>{{ site_settings.announcement_text|default:"Free delivery on orders over ৳1,000 · Designed for curious little humans" }}</span>
             <i class="fa-solid fa-sparkles text-butter text-xs" aria-hidden="true"></i>
         </div>
         <button @click="show = false"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-cream/60 hover:text-cream text-xs leading-none transition-colors"
+                class="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 text-xs leading-none transition-opacity"
                 aria-label="Dismiss announcement"><i class="fa-solid fa-xmark"></i></button>
     </div>
+    {% endif %}
 
     <!-- ── Header / Navigation ──────────────────────────── -->
-    <header class="relative z-30 h-[72px] border-b border-ink/10 bg-cream">
-        <div class="mx-auto flex h-full max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+    <header class="{% if site_settings.header_sticky %}sticky top-0{% else %}relative{% endif %} z-30 h-[72px] {% if site_settings.header_border %}border-b border-ink/10{% endif %} transition-colors"
+            style="background-color: {{ site_settings.header_bg_color|default:'#fffaf2' }}; color: {{ site_settings.header_text_color|default:'#19253b' }};">
 
-            <!-- Mobile menu button -->
-            <button id="menuButton"
-                    @click="mobileMenuOpen = !mobileMenuOpen"
-                    :aria-expanded="mobileMenuOpen"
-                    aria-controls="mainNav"
-                    class="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-[#f5eee4] lg:hidden transition-colors"
-                    aria-label="Open menu">
-                <span x-show="!mobileMenuOpen" aria-hidden="true"><i class="fa-solid fa-bars text-base"></i></span>
-                <span x-show="mobileMenuOpen"  aria-hidden="true"><i class="fa-solid fa-xmark text-base"></i></span>
-            </button>
+        {% if site_settings.header_layout == 'centered' %}
+        <!-- ── Centered Header Layout ── -->
+        <div class="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <!-- Left: Mobile Menu Button & Desktop Nav Links -->
+            <div class="flex items-center gap-3 lg:gap-6">
+                <button id="menuButton"
+                        @click="mobileMenuOpen = !mobileMenuOpen"
+                        :aria-expanded="mobileMenuOpen"
+                        aria-controls="mainNav"
+                        class="grid h-10 w-10 place-items-center rounded-xl hover:bg-black/5 lg:hidden transition-colors"
+                        aria-label="Open menu">
+                    <span x-show="!mobileMenuOpen" aria-hidden="true"><i class="fa-solid fa-bars text-base"></i></span>
+                    <span x-show="mobileMenuOpen"  aria-hidden="true"><i class="fa-solid fa-xmark text-base"></i></span>
+                </button>
 
-            <!-- Logo / Wordmark -->
-            <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2.5 group">
-                {% if site_settings and site_settings.site_logo %} 
-                <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
-                <span class="text-xl sm:text-[23px] font-bold text-ink tracking-[-0.04em] font-display leading-none">
-                    {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
-                </span>
-                {% else %}
-                <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
-                <span class="text-[23px] font-bold tracking-[-.075em] text-ink font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
-                {% endif %}
-            </a>
+                <nav id="mainNav" aria-label="Category navigation" class="hidden lg:flex items-center gap-6">
+                    <a class="text-sm font-semibold transition-colors {% if request.resolver_match.url_name == 'index' and not selected_category %}text-coral{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
+                       href="{% url 'storefront:index' %}">Home</a>
 
-            <!-- Desktop category navigation -->
-            <nav id="mainNav" aria-label="Category navigation"
-                 class="hidden lg:flex lg:ml-auto lg:items-center lg:gap-7">
-                <a class="text-sm font-semibold transition-colors {% if request.resolver_match.url_name == 'index' and not selected_category %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
-                   href="{% url 'storefront:index' %}">Home</a>
-
-                <!-- Categories Dropdown (Hover & Click) -->
-                <div class="relative py-4"
-                     x-data="{ open: false, timeout: null }"
-                     @mouseenter="clearTimeout(timeout); open = true"
-                     @mouseleave="timeout = setTimeout(() => { open = false }, 180)"
-                     @click.away="open = false"
-                     @keydown.escape.window="open = false">
-                    <button type="button"
-                            @click="open = !open"
-                            class="flex items-center gap-1.5 text-sm font-semibold transition-colors focus:outline-none cursor-pointer {% if selected_category %}text-coral font-bold{% else %}text-ink/65 hover:text-coral{% endif %}"
-                            :class="{ 'text-coral': open }"
-                            :aria-expanded="open"
-                            aria-haspopup="true">
-                        <span>Categories</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
-                           :class="{ 'rotate-180': open }"></i>
-                    </button>
-
-                    <!-- Dropdown Menu -->
-                    <div x-show="open"
-                         x-cloak
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 translate-y-1 scale-95"
-                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave-end="opacity-0 translate-y-1 scale-95"
-                         class="absolute left-0 top-full pt-1 w-64 z-50">
-                        <div class="rounded-2xl bg-white p-2 shadow-xl border border-ink/10 ring-1 ring-black/5 divide-y divide-ink/5">
-                            <div class="max-h-80 overflow-y-auto space-y-0.5 py-1">
-                                {% for cat in nav_categories %}
-                                <a href="{% url 'storefront:category_detail' cat.slug %}"
-                                   @click="open = false"
-                                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all group {% if selected_category and selected_category.slug == cat.slug %}bg-coral/10 text-coral font-semibold{% else %}text-ink/75 hover:bg-cream hover:text-coral{% endif %}">
-                                    {% if cat.emoji %}
-                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-base group-hover:scale-110 transition-transform">
-                                        {{ cat.emoji }}
-                                    </span>
-                                    {% elif cat.image %}
-                                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="h-7 w-7 shrink-0 rounded-lg object-cover">
-                                    {% else %}
-                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-xs text-ink/40 group-hover:scale-110 transition-transform">
-                                        <i class="fa-solid fa-shapes"></i>
-                                    </span>
-                                    {% endif %}
-                                    <span class="truncate">{{ cat.name }}</span>
-                                    <i class="fa-solid fa-chevron-right ml-auto text-[10px] text-coral opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i>
-                                </a>
-                                {% empty %}
-                                <div class="px-4 py-3 text-xs text-ink/40 text-center">No categories found</div>
-                                {% endfor %}
-                            </div>
-                            <div class="pt-1.5 px-1">
-                                <a href="{% url 'storefront:shop' %}"
-                                   @click="open = false"
-                                   class="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-coral bg-coral/5 hover:bg-coral hover:text-white transition-all group">
-                                    <span>All Toys</span>
-                                    <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform"></i>
-                                </a>
+                    <!-- Categories Dropdown -->
+                    <div class="relative py-4"
+                         x-data="{ open: false, timeout: null }"
+                         @mouseenter="clearTimeout(timeout); open = true"
+                         @mouseleave="timeout = setTimeout(() => { open = false }, 180)"
+                         @click.away="open = false"
+                         @keydown.escape.window="open = false">
+                        <button type="button"
+                                @click="open = !open"
+                                class="flex items-center gap-1.5 text-sm font-semibold transition-colors focus:outline-none cursor-pointer {% if selected_category %}text-coral font-bold{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
+                                :class="{ 'text-coral': open }"
+                                :aria-expanded="open"
+                                aria-haspopup="true">
+                            <span>Categories</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                        </button>
+                        <div x-show="open" x-cloak
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute left-0 top-full pt-1 w-64 z-50 text-ink">
+                            <div class="rounded-2xl bg-white p-2 shadow-xl border border-ink/10 ring-1 ring-black/5 divide-y divide-ink/5">
+                                <div class="max-h-80 overflow-y-auto space-y-0.5 py-1">
+                                    {% for cat in nav_categories %}
+                                    <a href="{% url 'storefront:category_detail' cat.slug %}"
+                                       @click="open = false"
+                                       class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all group {% if selected_category and selected_category.slug == cat.slug %}bg-coral/10 text-coral font-semibold{% else %}text-ink/75 hover:bg-cream hover:text-coral{% endif %}">
+                                        {% if cat.emoji %}
+                                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-base group-hover:scale-110 transition-transform">{{ cat.emoji }}</span>
+                                        {% elif cat.image %}
+                                        <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="h-7 w-7 shrink-0 rounded-lg object-cover">
+                                        {% else %}
+                                        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-xs text-ink/40 group-hover:scale-110 transition-transform"><i class="fa-solid fa-shapes"></i></span>
+                                        {% endif %}
+                                        <span class="truncate">{{ cat.name }}</span>
+                                        <i class="fa-solid fa-chevron-right ml-auto text-[10px] text-coral opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i>
+                                    </a>
+                                    {% empty %}
+                                    <div class="px-4 py-3 text-xs text-ink/40 text-center">No categories found</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="pt-1.5 px-1">
+                                    <a href="{% url 'storefront:shop' %}" @click="open = false"
+                                       class="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-coral bg-coral/5 hover:bg-coral hover:text-white transition-all group">
+                                        <span>All Toys</span>
+                                        <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <a class="text-sm font-semibold transition-colors {% if request.resolver_match.url_name == 'shop' and not selected_category %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
-                   href="{% url 'storefront:shop' %}">All Toys</a>
-            </nav>
+                    <a class="text-sm font-semibold transition-colors {% if request.resolver_match.url_name == 'shop' and not selected_category %}text-coral{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
+                       href="{% url 'storefront:shop' %}">All Toys</a>
+                </nav>
+            </div>
 
-            <!-- Right controls -->
-            <div class="ml-auto lg:ml-0 flex items-center gap-1 sm:gap-2">
-                <!-- Search -->
+            <!-- Center: Logo -->
+            <div class="flex shrink-0 items-center justify-center">
+                <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2.5 group">
+                    {% if site_settings and site_settings.site_logo %}
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                    <span class="text-xl sm:text-[23px] font-bold tracking-[-0.04em] font-display leading-none">
+                        {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                    </span>
+                    {% else %}
+                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200 text-ink">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                    <span class="text-[23px] font-bold tracking-[-.075em] font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                    {% endif %}
+                </a>
+            </div>
+
+            <!-- Right: Search, Wishlist, Cart, Account -->
+            <div class="flex items-center gap-1 sm:gap-2">
+                {% if site_settings.show_search_in_header %}
                 <form action="{% url 'storefront:shop' %}" method="get"
-                      class="search-field hidden h-10 items-center gap-2 overflow-hidden rounded-xl px-3 text-ink/60 sm:flex border border-transparent focus-within:border-coral transition-all"
+                      class="search-field hidden h-10 items-center gap-2 overflow-hidden rounded-xl px-3 sm:flex border border-transparent focus-within:border-coral transition-all"
                       aria-label="Search toys">
-                    <button type="submit" aria-label="Search button" class="text-ink/50 hover:text-coral transition-colors">
+                    <button type="submit" aria-label="Search button" class="opacity-60 hover:opacity-100 hover:text-coral transition-colors">
                         <i class="fa-solid fa-magnifying-glass text-xs" aria-hidden="true"></i>
                     </button>
-                    <input id="searchInput"
-                           name="q"
-                           value="{{ search_query|default:'' }}"
-                           class="min-w-0 border-0 bg-transparent text-xs text-ink outline-none placeholder:text-ink/40 w-32 lg:w-44 focus:w-56 transition-all duration-200"
+                    <input name="q" value="{{ search_query|default:'' }}"
+                           class="min-w-0 border-0 bg-transparent text-xs outline-none placeholder:opacity-50 w-32 lg:w-44 focus:w-56 transition-all duration-200"
                            placeholder="Find a new favorite..." type="search">
                 </form>
+                {% endif %}
 
-                <!-- Wishlist -->
+                {% if site_settings.show_wishlist_in_header %}
                 <button id="wishlistButton"
-                        class="relative grid h-10 w-10 place-items-center rounded-xl text-coral hover:bg-[#f5eee4] transition-colors"
+                        class="relative grid h-10 w-10 place-items-center rounded-xl text-coral hover:bg-black/5 transition-colors"
                         aria-label="Wishlist">
                     <i class="fa-regular fa-heart text-base"></i>
                     <span id="wishlistCount"
-                          class="absolute right-0 top-0 hidden h-4 min-w-4 rounded-full border-2 border-cream bg-coral px-1 text-[9px] font-bold leading-3 text-white">0</span>
+                          class="absolute right-0 top-0 hidden h-4 min-w-4 rounded-full border-2 border-white bg-coral px-1 text-[9px] font-bold leading-3 text-white">0</span>
                 </button>
+                {% endif %}
 
-                <!-- Cart -->
-                <a href="{% url 'storefront:cart' %}"
-                   id="cartButton"
-                   class="flex h-10 items-center gap-2 rounded-xl bg-ink px-3 text-cream hover:bg-[#283b5d] transition-colors"
+                <a href="{% url 'storefront:cart' %}" id="cartButton"
+                   class="flex h-10 items-center gap-2 rounded-xl bg-ink px-3 text-cream hover:opacity-90 transition-opacity"
                    aria-label="Shopping bag">
                     <i class="fa-solid fa-bag-shopping text-sm" aria-hidden="true"></i>
                     <span class="hidden text-xs font-bold sm:inline">Bag</span>
-                    <span id="cartCount"
-                          class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">{{ cart_count|default:"0" }}</span>
+                    <span id="cartCount" class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">{{ cart_count|default:"0" }}</span>
                 </a>
 
-                <!-- Account -->
                 {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open" @keydown.escape="open = false"
@@ -289,7 +303,7 @@
                          x-transition:enter="transition ease-out duration-150"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
-                         class="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-ink/8 py-2 z-50">
+                         class="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-ink/8 py-2 z-50 text-ink">
                         <div class="px-4 py-2 border-b border-ink/8 mb-1">
                             <p class="text-xs font-bold text-ink truncate">{{ user.get_full_name|default:user.email }}</p>
                             <p class="text-[10px] text-ink/45 truncate">{{ user.email }}</p>
@@ -326,7 +340,366 @@
                          x-transition:enter="transition ease-out duration-150"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
-                         class="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-ink/8 py-2 z-50">
+                         class="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-ink/8 py-2 z-50 text-ink">
+                        <div class="px-4 py-2 border-b border-ink/8 mb-1">
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-600 uppercase tracking-wide">Admin Logged In</span>
+                            <p class="text-xs font-bold text-ink truncate mt-1">{{ user.get_full_name|default:user.username }}</p>
+                            <p class="text-[10px] text-ink/45 truncate">{{ user.email }}</p>
+                        </div>
+                        <a href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
+                            <i class="fa-solid fa-gauge-high text-xs text-sky-500"></i> Admin Dashboard
+                        </a>
+                        <a href="{% url 'accounts:login' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
+                            <i class="fa-solid fa-user text-xs text-coral"></i> Customer Sign In
+                        </a>
+                        <div class="border-t border-ink/8 mt-1 pt-1">
+                            <a href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                Admin Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <a href="{% url 'accounts:login' %}"
+                   class="hidden sm:flex h-10 items-center gap-1.5 rounded-xl border border-current/20 px-3.5 text-sm font-semibold opacity-80 hover:opacity-100 hover:border-coral hover:text-coral transition-all">
+                    Sign In
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% elif site_settings.header_layout == 'compact' %}
+        <!-- ── Compact Header Layout ── -->
+        <div class="mx-auto flex h-full max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+            <!-- Left: Mobile Button & Logo -->
+            <div class="flex items-center gap-3 shrink-0">
+                <button id="menuButton"
+                        @click="mobileMenuOpen = !mobileMenuOpen"
+                        :aria-expanded="mobileMenuOpen"
+                        aria-controls="mainNav"
+                        class="grid h-10 w-10 place-items-center rounded-xl hover:bg-black/5 lg:hidden transition-colors"
+                        aria-label="Open menu">
+                    <span x-show="!mobileMenuOpen" aria-hidden="true"><i class="fa-solid fa-bars text-base"></i></span>
+                    <span x-show="mobileMenuOpen"  aria-hidden="true"><i class="fa-solid fa-xmark text-base"></i></span>
+                </button>
+
+                <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2.5 group">
+                    {% if site_settings and site_settings.site_logo %}
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                    <span class="text-xl sm:text-[23px] font-bold tracking-[-0.04em] font-display leading-none">
+                        {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                    </span>
+                    {% else %}
+                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200 text-ink">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                    <span class="text-[23px] font-bold tracking-[-.075em] font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                    {% endif %}
+                </a>
+            </div>
+
+            <!-- Center: Search Input Bar -->
+            {% if site_settings.show_search_in_header %}
+            <div class="hidden md:flex flex-1 max-w-md mx-auto">
+                <form action="{% url 'storefront:shop' %}" method="get" class="w-full flex items-center gap-2.5 bg-black/5 hover:bg-black/10 focus-within:bg-white focus-within:ring-2 focus-within:ring-coral rounded-xl px-3.5 py-2 transition-all">
+                    <i class="fa-solid fa-magnifying-glass text-xs opacity-50"></i>
+                    <input name="q" value="{{ search_query|default:'' }}" class="w-full bg-transparent text-xs border-0 outline-none placeholder:opacity-50 text-ink" placeholder="Search toys...">
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Right: Quick links + Actions -->
+            <div class="ml-auto flex items-center gap-2 sm:gap-3">
+                <nav class="hidden lg:flex items-center gap-5 mr-1">
+                    <a class="text-xs font-bold uppercase tracking-wider opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:shop' %}">Shop All</a>
+                    <a class="text-xs font-bold uppercase tracking-wider opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:contact' %}">Contact</a>
+                </nav>
+
+                {% if site_settings.show_wishlist_in_header %}
+                <button id="wishlistButton"
+                        class="relative grid h-10 w-10 place-items-center rounded-xl text-coral hover:bg-black/5 transition-colors"
+                        aria-label="Wishlist">
+                    <i class="fa-regular fa-heart text-base"></i>
+                    <span id="wishlistCount"
+                          class="absolute right-0 top-0 hidden h-4 min-w-4 rounded-full border-2 border-white bg-coral px-1 text-[9px] font-bold leading-3 text-white">0</span>
+                </button>
+                {% endif %}
+
+                <a href="{% url 'storefront:cart' %}" id="cartButton"
+                   class="flex h-10 items-center gap-2 rounded-xl bg-ink px-3 text-cream hover:opacity-90 transition-opacity"
+                   aria-label="Shopping bag">
+                    <i class="fa-solid fa-bag-shopping text-sm" aria-hidden="true"></i>
+                    <span class="hidden text-xs font-bold sm:inline">Bag</span>
+                    <span id="cartCount" class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">{{ cart_count|default:"0" }}</span>
+                </a>
+
+                {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" @keydown.escape="open = false"
+                            class="flex h-10 w-10 items-center justify-center rounded-xl bg-coral/10 text-coral font-bold text-sm hover:bg-coral/20 transition"
+                            aria-label="My account">
+                        {{ user.first_name|slice:":1"|upper|default:user.email|slice:":1"|upper }}
+                    </button>
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         class="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-ink/8 py-2 z-50 text-ink">
+                        <div class="px-4 py-2 border-b border-ink/8 mb-1">
+                            <p class="text-xs font-bold text-ink truncate">{{ user.get_full_name|default:user.email }}</p>
+                            <p class="text-[10px] text-ink/45 truncate">{{ user.email }}</p>
+                        </div>
+                        <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            My Profile
+                        </a>
+                        <a href="{% url 'accounts:profile_edit' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Edit Profile
+                        </a>
+                        <a href="{% url 'accounts:change_password' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            Change Password
+                        </a>
+                        <div class="border-t border-ink/8 mt-1 pt-1">
+                            <a href="{% url 'accounts:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% elif user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser %}
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" @keydown.escape="open = false"
+                            class="flex h-10 items-center gap-2 rounded-xl bg-slate-900 text-white px-3 text-xs font-semibold hover:bg-slate-800 transition shadow-xs"
+                            aria-label="Admin menu">
+                        <i class="fa-solid fa-shield-halved text-sky-400"></i>
+                        <span class="hidden sm:inline">Admin</span>
+                    </button>
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         class="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-ink/8 py-2 z-50 text-ink">
+                        <div class="px-4 py-2 border-b border-ink/8 mb-1">
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-600 uppercase tracking-wide">Admin Logged In</span>
+                            <p class="text-xs font-bold text-ink truncate mt-1">{{ user.get_full_name|default:user.username }}</p>
+                            <p class="text-[10px] text-ink/45 truncate">{{ user.email }}</p>
+                        </div>
+                        <a href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
+                            <i class="fa-solid fa-gauge-high text-xs text-sky-500"></i> Admin Dashboard
+                        </a>
+                        <a href="{% url 'accounts:login' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
+                            <i class="fa-solid fa-user text-xs text-coral"></i> Customer Sign In
+                        </a>
+                        <div class="border-t border-ink/8 mt-1 pt-1">
+                            <a href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                Admin Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <a href="{% url 'accounts:login' %}"
+                   class="hidden sm:flex h-10 items-center gap-1.5 rounded-xl border border-current/20 px-3.5 text-sm font-semibold opacity-80 hover:opacity-100 hover:border-coral hover:text-coral transition-all">
+                    Sign In
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% else %}
+        <!-- ── Classic Header Layout (Default) ── -->
+        <div class="mx-auto flex h-full max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+            <!-- Mobile menu button -->
+            <button id="menuButton"
+                    @click="mobileMenuOpen = !mobileMenuOpen"
+                    :aria-expanded="mobileMenuOpen"
+                    aria-controls="mainNav"
+                    class="grid h-10 w-10 place-items-center rounded-xl hover:bg-black/5 lg:hidden transition-colors"
+                    aria-label="Open menu">
+                <span x-show="!mobileMenuOpen" aria-hidden="true"><i class="fa-solid fa-bars text-base"></i></span>
+                <span x-show="mobileMenuOpen"  aria-hidden="true"><i class="fa-solid fa-xmark text-base"></i></span>
+            </button>
+
+            <!-- Logo / Wordmark -->
+            <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2.5 group">
+                {% if site_settings and site_settings.site_logo %}
+                <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                <span class="text-xl sm:text-[23px] font-bold tracking-[-0.04em] font-display leading-none">
+                    {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                </span>
+                {% else %}
+                <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200 text-ink">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                <span class="text-[23px] font-bold tracking-[-.075em] font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                {% endif %}
+            </a>
+
+            <!-- Desktop category navigation -->
+            <nav id="mainNav" aria-label="Category navigation"
+                 class="hidden lg:flex lg:ml-auto lg:items-center lg:gap-7">
+                <a class="text-sm font-semibold transition-colors {% if request.resolver_match.url_name == 'index' and not selected_category %}text-coral{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
+                   href="{% url 'storefront:index' %}">Home</a>
+
+                <!-- Categories Dropdown (Hover & Click) -->
+                <div class="relative py-4"
+                     x-data="{ open: false, timeout: null }"
+                     @mouseenter="clearTimeout(timeout); open = true"
+                     @mouseleave="timeout = setTimeout(() => { open = false }, 180)"
+                     @click.away="open = false"
+                     @keydown.escape.window="open = false">
+                    <button type="button"
+                            @click="open = !open"
+                            class="flex items-center gap-1.5 text-sm font-semibold transition-colors focus:outline-none cursor-pointer {% if selected_category %}text-coral font-bold{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
+                            :class="{ 'text-coral': open }"
+                            :aria-expanded="open"
+                            aria-haspopup="true">
+                        <span>Categories</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
+                           :class="{ 'rotate-180': open }"></i>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div x-show="open"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                         class="absolute left-0 top-full pt-1 w-64 z-50 text-ink">
+                        <div class="rounded-2xl bg-white p-2 shadow-xl border border-ink/10 ring-1 ring-black/5 divide-y divide-ink/5">
+                            <div class="max-h-80 overflow-y-auto space-y-0.5 py-1">
+                                {% for cat in nav_categories %}
+                                <a href="{% url 'storefront:category_detail' cat.slug %}"
+                                   @click="open = false"
+                                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all group {% if selected_category and selected_category.slug == cat.slug %}bg-coral/10 text-coral font-semibold{% else %}text-ink/75 hover:bg-cream hover:text-coral{% endif %}">
+                                    {% if cat.emoji %}
+                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-base group-hover:scale-110 transition-transform">
+                                        {{ cat.emoji }}
+                                    </span>
+                                    {% elif cat.image %}
+                                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="h-7 w-7 shrink-0 rounded-lg object-cover">
+                                    {% else %}
+                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-xs text-ink/40 group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-shapes"></i>
+                                    </span>
+                                    {% endif %}
+                                    <span class="truncate">{{ cat.name }}</span>
+                                    <i class="fa-solid fa-chevron-right ml-auto text-[10px] text-coral opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i>
+                                </a>
+                                {% empty %}
+                                <div class="px-4 py-3 text-xs text-ink/40 text-center">No categories found</div>
+                                {% endfor %}
+                            </div>
+                            <div class="pt-1.5 px-1">
+                                <a href="{% url 'storefront:shop' %}"
+                                   @click="open = false"
+                                   class="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-coral bg-coral/5 hover:bg-coral hover:text-white transition-all group">
+                                    <span>All Toys</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a class="text-sm font-semibold transition-colors {% if request.resolver_match.url_name == 'shop' and not selected_category %}text-coral{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
+                   href="{% url 'storefront:shop' %}">All Toys</a>
+            </nav>
+
+            <!-- Right controls -->
+            <div class="ml-auto lg:ml-0 flex items-center gap-1 sm:gap-2">
+                {% if site_settings.show_search_in_header %}
+                <!-- Search -->
+                <form action="{% url 'storefront:shop' %}" method="get"
+                      class="search-field hidden h-10 items-center gap-2 overflow-hidden rounded-xl px-3 sm:flex border border-transparent focus-within:border-coral transition-all"
+                      aria-label="Search toys">
+                    <button type="submit" aria-label="Search button" class="opacity-60 hover:opacity-100 hover:text-coral transition-colors">
+                        <i class="fa-solid fa-magnifying-glass text-xs" aria-hidden="true"></i>
+                    </button>
+                    <input id="searchInput"
+                           name="q"
+                           value="{{ search_query|default:'' }}"
+                           class="min-w-0 border-0 bg-transparent text-xs outline-none placeholder:opacity-50 w-32 lg:w-44 focus:w-56 transition-all duration-200"
+                           placeholder="Find a new favorite..." type="search">
+                </form>
+                {% endif %}
+
+                {% if site_settings.show_wishlist_in_header %}
+                <!-- Wishlist -->
+                <button id="wishlistButton"
+                        class="relative grid h-10 w-10 place-items-center rounded-xl text-coral hover:bg-black/5 transition-colors"
+                        aria-label="Wishlist">
+                    <i class="fa-regular fa-heart text-base"></i>
+                    <span id="wishlistCount"
+                          class="absolute right-0 top-0 hidden h-4 min-w-4 rounded-full border-2 border-white bg-coral px-1 text-[9px] font-bold leading-3 text-white">0</span>
+                </button>
+                {% endif %}
+
+                <!-- Cart -->
+                <a href="{% url 'storefront:cart' %}"
+                   id="cartButton"
+                   class="flex h-10 items-center gap-2 rounded-xl bg-ink px-3 text-cream hover:opacity-90 transition-opacity"
+                   aria-label="Shopping bag">
+                    <i class="fa-solid fa-bag-shopping text-sm" aria-hidden="true"></i>
+                    <span class="hidden text-xs font-bold sm:inline">Bag</span>
+                    <span id="cartCount"
+                          class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">{{ cart_count|default:"0" }}</span>
+                </a>
+
+                <!-- Account -->
+                {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" @keydown.escape="open = false"
+                            class="flex h-10 w-10 items-center justify-center rounded-xl bg-coral/10 text-coral font-bold text-sm hover:bg-coral/20 transition"
+                            aria-label="My account">
+                        {{ user.first_name|slice:":1"|upper|default:user.email|slice:":1"|upper }}
+                    </button>
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         class="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-ink/8 py-2 z-50 text-ink">
+                        <div class="px-4 py-2 border-b border-ink/8 mb-1">
+                            <p class="text-xs font-bold text-ink truncate">{{ user.get_full_name|default:user.email }}</p>
+                            <p class="text-[10px] text-ink/45 truncate">{{ user.email }}</p>
+                        </div>
+                        <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            My Profile
+                        </a>
+                        <a href="{% url 'accounts:profile_edit' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Edit Profile
+                        </a>
+                        <a href="{% url 'accounts:change_password' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            Change Password
+                        </a>
+                        <div class="border-t border-ink/8 mt-1 pt-1">
+                            <a href="{% url 'accounts:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% elif user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser %}
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" @keydown.escape="open = false"
+                            class="flex h-10 items-center gap-2 rounded-xl bg-slate-900 text-white px-3 text-xs font-semibold hover:bg-slate-800 transition shadow-xs"
+                            aria-label="Admin menu">
+                        <i class="fa-solid fa-shield-halved text-sky-400"></i>
+                        <span class="hidden sm:inline">Admin</span>
+                    </button>
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         class="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-ink/8 py-2 z-50 text-ink">
                         <div class="px-4 py-2 border-b border-ink/8 mb-1">
                             <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-600 uppercase tracking-wide">Admin Logged In</span>
                             <p class="text-xs font-bold text-ink truncate mt-1">{{ user.get_full_name|default:user.username }}</p>
@@ -350,13 +723,14 @@
                 </div>
                 {% else %}
                 <a href="{% url 'accounts:login' %}"
-                   class="hidden sm:flex h-10 items-center gap-1.5 rounded-xl border border-ink/15 px-3.5 text-sm font-semibold text-ink/70 hover:border-coral hover:text-coral transition-all">
+                   class="hidden sm:flex h-10 items-center gap-1.5 rounded-xl border border-current/20 px-3.5 text-sm font-semibold opacity-80 hover:opacity-100 hover:border-coral hover:text-coral transition-all">
                     Sign In
                 </a>
                 {% endif %}
 
             </div>
         </div>
+        {% endif %}
 
         <!-- Mobile nav drawer -->
         <div x-show="mobileMenuOpen"
@@ -367,10 +741,12 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
-             class="absolute left-0 right-0 top-[72px] flex flex-col gap-1 border-b border-ink/10 bg-cream px-6 py-5 shadow-xl lg:hidden"
+             style="background-color: {{ site_settings.header_bg_color|default:'#fffaf2' }}; color: {{ site_settings.header_text_color|default:'#19253b' }};"
+             class="absolute left-0 right-0 top-[72px] flex flex-col gap-1 border-b border-ink/10 px-6 py-5 shadow-xl lg:hidden"
              role="menu">
+            {% if site_settings.show_search_in_header %}
             <!-- Mobile Search -->
-            <form action="{% url 'storefront:shop' %}" method="get" class="mb-3 flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 border border-ink/10 shadow-xs focus-within:border-coral">
+            <form action="{% url 'storefront:shop' %}" method="get" class="mb-3 flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 border border-ink/10 shadow-xs focus-within:border-coral text-ink">
                 <i class="fa-solid fa-magnifying-glass text-xs text-ink/40" aria-hidden="true"></i>
                 <input name="q"
                        value="{{ search_query|default:'' }}"
@@ -378,14 +754,15 @@
                        placeholder="Search all toys..." type="search">
                 <button type="submit" class="text-[11px] font-bold text-coral uppercase tracking-wider">Go</button>
             </form>
-            <a class="block py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'index' and not selected_category %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
+            {% endif %}
+            <a class="block py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'index' and not selected_category %}text-coral{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
                href="{% url 'storefront:index' %}" @click="mobileMenuOpen = false">Home</a>
 
             <!-- Mobile Categories Accordion -->
-            <div x-data="{ catOpen: {% if selected_category %}true{% else %}false{% endif %} }" class="border-y border-ink/5 py-1">
+            <div x-data="{ catOpen: {% if selected_category %}true{% else %}false{% endif %} }" class="border-y border-current/10 py-1">
                 <button type="button"
                         @click="catOpen = !catOpen"
-                        class="flex w-full items-center justify-between py-2 text-sm font-semibold cursor-pointer {% if selected_category %}text-coral font-bold{% else %}text-ink/65 hover:text-coral{% endif %}">
+                        class="flex w-full items-center justify-between py-2 text-sm font-semibold cursor-pointer {% if selected_category %}text-coral font-bold{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}">
                     <span>Categories</span>
                     <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200"
                        :class="{ 'rotate-180': catOpen }"></i>
@@ -400,7 +777,7 @@
                      x-transition:leave-end="opacity-0 -translate-y-1"
                      class="pl-3 pr-1 py-1 space-y-1">
                     {% for cat in nav_categories %}
-                    <a class="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg text-sm font-medium transition-colors {% if selected_category and selected_category.slug == cat.slug %}bg-coral/10 text-coral font-bold{% else %}text-ink/70 hover:bg-white hover:text-coral{% endif %}"
+                    <a class="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg text-sm font-medium transition-colors {% if selected_category and selected_category.slug == cat.slug %}bg-coral/10 text-coral font-bold{% else %}opacity-80 hover:bg-black/5 hover:text-coral{% endif %}"
                        href="{% url 'storefront:category_detail' cat.slug %}" @click="mobileMenuOpen = false">
                         {% if cat.emoji %}<span class="text-sm">{{ cat.emoji }}</span>{% endif %}
                         <span>{{ cat.name }}</span>
@@ -409,13 +786,13 @@
                 </div>
             </div>
 
-            <a class="block py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'shop' and not selected_category %}text-coral{% else %}text-ink/65 hover:text-coral{% endif %}"
+            <a class="block py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'shop' and not selected_category %}text-coral{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
                href="{% url 'storefront:shop' %}" @click="mobileMenuOpen = false">All Toys</a>
 
             <!-- Mobile Auth/Account links -->
-            <div class="border-t border-ink/10 pt-3 mt-2 flex flex-col gap-1">
+            <div class="border-t border-current/10 pt-3 mt-2 flex flex-col gap-1">
                 {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
-                <a class="flex items-center gap-2 py-2 text-sm font-semibold text-ink/75 hover:text-coral"
+                <a class="flex items-center gap-2 py-2 text-sm font-semibold opacity-85 hover:text-coral"
                    href="{% url 'accounts:profile' %}" @click="mobileMenuOpen = false">
                     <i class="fa-solid fa-user text-xs"></i>
                     <span>My Profile ({{ user.first_name|default:user.username }})</span>
@@ -431,7 +808,7 @@
                     <i class="fa-solid fa-shield-halved text-xs"></i>
                     <span>Admin Dashboard ({{ user.username }})</span>
                 </a>
-                <a class="flex items-center gap-2 py-2 text-sm font-semibold text-ink/75 hover:text-coral"
+                <a class="flex items-center gap-2 py-2 text-sm font-semibold opacity-85 hover:text-coral"
                    href="{% url 'accounts:login' %}" @click="mobileMenuOpen = false">
                     <i class="fa-solid fa-user text-xs"></i>
                     <span>Customer Sign In</span>
@@ -495,39 +872,173 @@
     </div>
 
     <!-- ── Footer ────────────────────────────────────────── -->
-    <footer class="border-t border-ink/10 bg-cream px-4 py-14 sm:px-6 lg:px-8">
+    <footer style="background-color: {{ site_settings.footer_bg_color|default:'#fffaf2' }}; color: {{ site_settings.footer_text_color|default:'#19253b' }};"
+            class="border-t border-current/10 px-4 py-14 sm:px-6 lg:px-8 transition-colors">
+
+        {% if site_settings.footer_layout == 'centered' %}
+        <!-- ── Centered Footer Layout ── -->
+        <div class="mx-auto max-w-4xl text-center space-y-8">
+            <!-- Brand logo & tagline -->
+            <div class="flex flex-col items-center justify-center">
+                <a href="{% url 'storefront:index' %}" class="flex items-center gap-2.5 group">
+                    {% if site_settings and site_settings.site_logo %}
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                    <span class="text-2xl font-bold tracking-[-0.04em] font-display leading-none">
+                        {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                    </span>
+                    {% else %}
+                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200 text-ink">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                    <span class="text-2xl font-bold tracking-[-.075em] font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                    {% endif %}
+                </a>
+                <p class="mt-3 text-xs leading-5 opacity-70 max-w-md">{{ site_settings.site_tagline|default:'Toys with a little more heart.' }}</p>
+            </div>
+
+            <!-- Social links -->
+            <div class="flex justify-center gap-2.5">
+                {% if site_settings and site_settings.instagram_url %}
+                <a href="{{ site_settings.instagram_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-all" aria-label="Instagram" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-instagram text-sm"></i>
+                </a>
+                {% endif %}
+                {% if site_settings and site_settings.facebook_url %}
+                <a href="{{ site_settings.facebook_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-all" aria-label="Facebook" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-facebook-f text-sm"></i>
+                </a>
+                {% endif %}
+                {% if site_settings and site_settings.twitter_url %}
+                <a href="{{ site_settings.twitter_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-all" aria-label="Twitter / X" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-x-twitter text-sm"></i>
+                </a>
+                {% endif %}
+                {% if site_settings and site_settings.youtube_url %}
+                <a href="{{ site_settings.youtube_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-all" aria-label="YouTube" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-youtube text-sm"></i>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Horizontal Links Bar -->
+            <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold">
+                <a class="opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:index' %}">Home</a>
+                <a class="opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:shop' %}">All toys</a>
+                {% for cat in nav_categories|slice:":4" %}
+                <a class="opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:category_detail' cat.slug %}">{{ cat.name }}</a>
+                {% endfor %}
+                <a class="opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:contact' %}">Contact Us</a>
+                {% for p in footer_pages %}
+                <a class="opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{{ p.get_absolute_url }}">{{ p.title }}</a>
+                {% endfor %}
+            </div>
+
+            <!-- Centered Newsletter Subscription Box -->
+            <div class="max-w-md mx-auto pt-2">
+                <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest opacity-90">Stay curious</h4>
+                <p class="mb-3 text-xs opacity-65">Play ideas, new toys, zero boring emails.</p>
+                <form id="newsletterForm" action="{% url 'storefront:newsletter_subscribe' %}" method="post" class="flex border-b border-current/30 pb-2">
+                    {% csrf_token %}
+                    <input name="email" class="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:opacity-40 text-current"
+                           placeholder="Your email address" type="email" required>
+                    <button type="submit" class="text-coral hover:opacity-80 transition-opacity cursor-pointer" aria-label="Subscribe">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="pt-6 border-t border-current/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] opacity-60">
+                <span>© {% now 'Y' %} {{ site_settings.site_name|default:'Kidurabd' }}</span>
+                <span>Secure checkout ·
+                    <strong class="font-bold opacity-90">VISA</strong> ·
+                    <strong class="font-bold opacity-90">Mastercard</strong> ·
+                    <strong class="font-bold text-[#e90070]">bKash</strong>
+                </span>
+            </div>
+        </div>
+
+        {% elif site_settings.footer_layout == 'minimal' %}
+        <!-- ── Minimal Footer Layout ── -->
+        <div class="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'storefront:index' %}" class="flex items-center gap-2 group">
+                    {% if site_settings and site_settings.site_logo %}
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-7 w-auto object-contain">
+                    <span class="text-lg font-bold tracking-[-0.04em] font-display leading-none">
+                        {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                    </span>
+                    {% else %}
+                    <span class="grid h-7 w-7 rotate-[-8deg] place-items-center rounded-[8px_8px_8px_3px] bg-butter text-sm shadow-[2px_2px_0_#19253b] font-bold text-ink">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                    <span class="text-lg font-bold tracking-[-.075em] font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                    {% endif %}
+                </a>
+                <span class="text-xs opacity-50 ml-2">© {% now 'Y' %}</span>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold">
+                <a class="opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:shop' %}">Shop</a>
+                <a class="opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:contact' %}">Contact</a>
+                {% for p in footer_pages %}
+                <a class="opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{{ p.get_absolute_url }}">{{ p.title }}</a>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center gap-2">
+                {% if site_settings and site_settings.instagram_url %}
+                <a href="{{ site_settings.instagram_url }}" class="grid h-8 w-8 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-all" aria-label="Instagram" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-instagram text-xs"></i>
+                </a>
+                {% endif %}
+                {% if site_settings and site_settings.facebook_url %}
+                <a href="{{ site_settings.facebook_url }}" class="grid h-8 w-8 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-all" aria-label="Facebook" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-facebook-f text-xs"></i>
+                </a>
+                {% endif %}
+                {% if site_settings and site_settings.twitter_url %}
+                <a href="{{ site_settings.twitter_url }}" class="grid h-8 w-8 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-all" aria-label="Twitter" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-x-twitter text-xs"></i>
+                </a>
+                {% endif %}
+                {% if site_settings and site_settings.youtube_url %}
+                <a href="{{ site_settings.youtube_url }}" class="grid h-8 w-8 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-all" aria-label="YouTube" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-youtube text-xs"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% else %}
+        <!-- ── Classic 4-Column Footer Layout (Default) ── -->
         <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.7fr]">
             <div>
                 <a href="{% url 'storefront:index' %}" class="flex items-center gap-2.5 group">
                     {% if site_settings and site_settings.site_logo %}
                     <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
-                    <span class="text-xl sm:text-[23px] font-bold text-ink tracking-[-0.04em] font-display leading-none">
+                    <span class="text-xl sm:text-[23px] font-bold tracking-[-0.04em] font-display leading-none">
                         {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
                     </span>
                     {% else %}
-                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
-                    <span class="text-[23px] font-bold tracking-[-.075em] text-ink font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                    <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200 text-ink">{{ site_settings.site_name|default:'Kidurabd'|first }}</span>
+                    <span class="text-[23px] font-bold tracking-[-.075em] font-display leading-none">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
                     {% endif %}
                 </a>
-                <p class="mt-4 text-xs leading-5 text-ink/55">{{ site_settings.site_tagline|default:'Toys with a little more heart.' }}</p>
+                <p class="mt-4 text-xs leading-5 opacity-70">{{ site_settings.site_tagline|default:'Toys with a little more heart.' }}</p>
                 <div class="mt-5 flex gap-2">
                     {% if site_settings and site_settings.instagram_url %}
-                    <a href="{{ site_settings.instagram_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Instagram" target="_blank" rel="noopener">
+                    <a href="{{ site_settings.instagram_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-colors" aria-label="Instagram" target="_blank" rel="noopener">
                         <i class="fa-brands fa-instagram text-sm"></i>
                     </a>
                     {% endif %}
                     {% if site_settings and site_settings.facebook_url %}
-                    <a href="{{ site_settings.facebook_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Facebook" target="_blank" rel="noopener">
+                    <a href="{{ site_settings.facebook_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-colors" aria-label="Facebook" target="_blank" rel="noopener">
                         <i class="fa-brands fa-facebook-f text-sm"></i>
                     </a>
                     {% endif %}
                     {% if site_settings and site_settings.twitter_url %}
-                    <a href="{{ site_settings.twitter_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="Twitter / X" target="_blank" rel="noopener">
+                    <a href="{{ site_settings.twitter_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-colors" aria-label="Twitter / X" target="_blank" rel="noopener">
                         <i class="fa-brands fa-x-twitter text-sm"></i>
                     </a>
                     {% endif %}
                     {% if site_settings and site_settings.youtube_url %}
-                    <a href="{{ site_settings.youtube_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-[#f3ede3] text-ink/70 hover:bg-coral hover:text-cream transition-colors" aria-label="YouTube" target="_blank" rel="noopener">
+                    <a href="{{ site_settings.youtube_url }}" class="grid h-9 w-9 place-items-center rounded-full bg-current/10 opacity-80 hover:opacity-100 hover:bg-coral hover:text-white transition-colors" aria-label="YouTube" target="_blank" rel="noopener">
                         <i class="fa-brands fa-youtube text-sm"></i>
                     </a>
                     {% endif %}
@@ -536,40 +1047,40 @@
 
             <div class="grid grid-cols-2 gap-8 sm:grid-cols-3">
                 <div>
-                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Shop</h4>
-                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="{% url 'storefront:shop' %}">All toys</a>
+                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest opacity-90">Shop</h4>
+                    <a class="mb-2 block text-xs opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:shop' %}">All toys</a>
                     {% for cat in nav_categories %}
-                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="{% url 'storefront:category_detail' cat.slug %}">{{ cat.name }}</a>
+                    <a class="mb-2 block text-xs opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:category_detail' cat.slug %}">{{ cat.name }}</a>
                     {% endfor %}
                 </div>
                 <div>
-                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Need help?</h4>
+                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest opacity-90">Need help?</h4>
                     {% if site_settings and site_settings.site_email %}
-                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral transition-colors" href="mailto:{{ site_settings.site_email }}">
+                    <a class="mb-2 flex items-center gap-1.5 text-xs opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="mailto:{{ site_settings.site_email }}">
                         <i class="fa-regular fa-envelope text-coral text-xs"></i> {{ site_settings.site_email }}
                     </a>
                     {% endif %}
                     {% if site_settings and site_settings.site_phone %}
-                    <a class="mb-2 flex items-center gap-1.5 text-xs text-ink/55 hover:text-coral transition-colors" href="tel:{{ site_settings.site_phone }}">
+                    <a class="mb-2 flex items-center gap-1.5 text-xs opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="tel:{{ site_settings.site_phone }}">
                         <i class="fa-solid fa-phone text-coral text-xs"></i> {{ site_settings.site_phone }}
                     </a>
                     {% endif %}
-                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral transition-colors" href="{% url 'storefront:contact' %}">Contact Us</a>
+                    <a class="mb-2 block text-xs opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{% url 'storefront:contact' %}">Contact Us</a>
                     {% for p in footer_pages %}
-                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral transition-colors" href="{{ p.get_absolute_url }}">{{ p.title }}</a>
+                    <a class="mb-2 block text-xs opacity-75 hover:opacity-100 hover:text-coral transition-colors" href="{{ p.get_absolute_url }}">{{ p.title }}</a>
                     {% empty %}
-                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#">Delivery &amp; returns</a>
-                    <a class="mb-2 block text-xs text-ink/55 hover:text-coral" href="#">Payment &amp; safety</a>
+                    <a class="mb-2 block text-xs opacity-75 hover:opacity-100 hover:text-coral" href="#">Delivery &amp; returns</a>
+                    <a class="mb-2 block text-xs opacity-75 hover:opacity-100 hover:text-coral" href="#">Payment &amp; safety</a>
                     {% endfor %}
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest">Stay curious</h4>
-                    <p class="mb-4 text-xs leading-5 text-ink/55">Play ideas, new toys,<br>zero boring emails.</p>
-                    <form id="newsletterForm" action="{% url 'storefront:newsletter_subscribe' %}" method="post" class="flex border-b border-ink/30 pb-2">
+                    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest opacity-90">Stay curious</h4>
+                    <p class="mb-4 text-xs leading-5 opacity-70">Play ideas, new toys,<br>zero boring emails.</p>
+                    <form id="newsletterForm" action="{% url 'storefront:newsletter_subscribe' %}" method="post" class="flex border-b border-current/30 pb-2">
                         {% csrf_token %}
-                        <input name="email" class="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-ink/40 text-ink"
+                        <input name="email" class="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:opacity-40 text-current"
                                 placeholder="Your email address" type="email" required>
-                        <button type="submit" class="text-coral hover:text-coral/80 transition-colors cursor-pointer" aria-label="Subscribe">
+                        <button type="submit" class="text-coral hover:opacity-80 transition-opacity cursor-pointer" aria-label="Subscribe">
                             <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </form>
@@ -577,20 +1088,21 @@
             </div>
         </div>
 
-        <div class="mx-auto mt-12 flex max-w-7xl flex-col justify-between gap-3 border-t border-ink/10 pt-5 text-[10px] text-ink/45 sm:flex-row sm:items-center">
+        <div class="mx-auto mt-12 flex max-w-7xl flex-col justify-between gap-3 border-t border-current/10 pt-5 text-[10px] opacity-60 sm:flex-row sm:items-center">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>© {% now 'Y' %} {{ site_settings.site_name|default:'Kidurabd' }}</span>
                 {% for p in footer_pages %}
-                <span class="text-ink/20">·</span>
+                <span class="opacity-40">·</span>
                 <a href="{{ p.get_absolute_url }}" class="hover:text-coral transition-colors">{{ p.title }}</a>
                 {% endfor %}
             </div>
             <span>Secure checkout ·
-                <strong class="text-ink/70">VISA</strong> ·
-                <strong class="text-ink/70">Mastercard</strong> ·
-                <strong class="text-[#e90070]">bKash</strong>
+                <strong class="font-bold opacity-90">VISA</strong> ·
+                <strong class="font-bold opacity-90">Mastercard</strong> ·
+                <strong class="font-bold text-[#e90070]">bKash</strong>
             </span>
         </div>
+        {% endif %}
     </footer>
 
     <!-- ── Toast notification helper ────────────────────── -->

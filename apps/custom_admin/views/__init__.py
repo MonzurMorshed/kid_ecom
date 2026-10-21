@@ -11,6 +11,7 @@ from .dashboard import (
 )
 from .settings import (
     site_settings,
+    theme_settings,
     payment_method_list,
     payment_method_create,
     payment_method_edit,
@@ -74,6 +75,7 @@ __all__ = [
     'revenue_chart_data',
     # Settings & Payment
     'site_settings',
+    'theme_settings',
     'payment_method_list',
     'payment_method_create',
     'payment_method_edit',

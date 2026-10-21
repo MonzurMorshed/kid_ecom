@@ -1,0 +1,808 @@
+{% extends 'custom_admin/admin_base.html' %}
+{% block title %}Theme Settings &amp; Storefront UI{% endblock %}
+{% block page_title %}Theme Settings{% endblock %}
+
+{% block content %}
+<div class="space-y-6"
+     x-data="{
+        store_bg_color: '{{ settings.store_bg_color|default:"#fffaf2" }}',
+        primary_color: '{{ settings.primary_color|default:"#ff6b4d" }}',
+        secondary_color: '{{ settings.secondary_color|default:"#f6c64d" }}',
+        text_color: '{{ settings.text_color|default:"#19253b" }}',
+        header_layout: '{{ settings.header_layout|default:"classic" }}',
+        header_bg_color: '{{ settings.header_bg_color|default:"#fffaf2" }}',
+        header_text_color: '{{ settings.header_text_color|default:"#19253b" }}',
+        header_sticky: {{ settings.header_sticky|yesno:'true,false' }},
+        header_border: {{ settings.header_border|yesno:'true,false' }},
+        show_search_in_header: {{ settings.show_search_in_header|yesno:'true,false' }},
+        show_wishlist_in_header: {{ settings.show_wishlist_in_header|yesno:'true,false' }},
+        announcement_enabled: {{ settings.announcement_enabled|yesno:'true,false' }},
+        announcement_text: '{{ settings.announcement_text|escapejs|default:"Free delivery on orders over ৳1,000 · Designed for curious little humans" }}',
+        announcement_bg_color: '{{ settings.announcement_bg_color|default:"#19253b" }}',
+        announcement_text_color: '{{ settings.announcement_text_color|default:"#fffaf2" }}',
+        footer_layout: '{{ settings.footer_layout|default:"classic" }}',
+        footer_bg_color: '{{ settings.footer_bg_color|default:"#fffaf2" }}',
+        footer_text_color: '{{ settings.footer_text_color|default:"#19253b" }}',
+        card_border_radius: '{{ settings.card_border_radius|default:"rounded-2xl" }}',
+
+        // Quick Preset Palettes
+        applyPreset(preset) {
+            if (preset === 'default') {
+                this.store_bg_color = '#fffaf2';
+                this.primary_color = '#ff6b4d';
+                this.secondary_color = '#f6c64d';
+                this.text_color = '#19253b';
+                this.header_bg_color = '#fffaf2';
+                this.header_text_color = '#19253b';
+                this.announcement_bg_color = '#19253b';
+                this.announcement_text_color = '#fffaf2';
+                this.footer_bg_color = '#fffaf2';
+                this.footer_text_color = '#19253b';
+            } else if (preset === 'blossom') {
+                this.store_bg_color = '#fff5f7';
+                this.primary_color = '#f43f5e';
+                this.secondary_color = '#f7c9bd';
+                this.text_color = '#3b1828';
+                this.header_bg_color = '#fff5f7';
+                this.header_text_color = '#3b1828';
+                this.announcement_bg_color = '#881337';
+                this.announcement_text_color = '#fff5f7';
+                this.footer_bg_color = '#fff5f7';
+                this.footer_text_color = '#3b1828';
+            } else if (preset === 'mint') {
+                this.store_bg_color = '#f4f8f5';
+                this.primary_color = '#15803d';
+                this.secondary_color = '#bfe3d5';
+                this.text_color = '#064e3b';
+                this.header_bg_color = '#f4f8f5';
+                this.header_text_color = '#064e3b';
+                this.announcement_bg_color = '#064e3b';
+                this.announcement_text_color = '#f4f8f5';
+                this.footer_bg_color = '#f4f8f5';
+                this.footer_text_color = '#064e3b';
+            } else if (preset === 'ocean') {
+                this.store_bg_color = '#f0f9ff';
+                this.primary_color = '#0284c7';
+                this.secondary_color = '#b8deeb';
+                this.text_color = '#0c4a6e';
+                this.header_bg_color = '#f0f9ff';
+                this.header_text_color = '#0c4a6e';
+                this.announcement_bg_color = '#0c4a6e';
+                this.announcement_text_color = '#f0f9ff';
+                this.footer_bg_color = '#f0f9ff';
+                this.footer_text_color = '#0c4a6e';
+            } else if (preset === 'minimal') {
+                this.store_bg_color = '#ffffff';
+                this.primary_color = '#ea580c';
+                this.secondary_color = '#f59e0b';
+                this.text_color = '#0f172a';
+                this.header_bg_color = '#ffffff';
+                this.header_text_color = '#0f172a';
+                this.announcement_bg_color = '#0f172a';
+                this.announcement_text_color = '#ffffff';
+                this.footer_bg_color = '#f8fafc';
+                this.footer_text_color = '#0f172a';
+            } else if (preset === 'midnight') {
+                this.store_bg_color = '#f8fafc';
+                this.primary_color = '#6366f1';
+                this.secondary_color = '#ded8f4';
+                this.text_color = '#0f172a';
+                this.header_bg_color = '#ffffff';
+                this.header_text_color = '#0f172a';
+                this.announcement_bg_color = '#1e1b4b';
+                this.announcement_text_color = '#f8fafc';
+                this.footer_bg_color = '#0f172a';
+                this.footer_text_color = '#f8fafc';
+            }
+        }
+     }">
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-white flex items-center gap-2.5">
+                <i class="fa-solid fa-palette text-sky-400"></i>
+                Storefront Theme &amp; UI Customizer
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">Control your storefront branding, background colors, header/footer layouts, and components in real time.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'storefront:index' %}" target="_blank"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition">
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                View Live Store
+            </a>
+            <button type="submit" form="themeSettingsForm"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold text-xs rounded-xl shadow-lg shadow-sky-500/20 transition cursor-pointer">
+                <i class="fa-solid fa-check text-xs"></i>
+                Save Theme Changes
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Live Preview & Quick Presets Section ── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- 1-Click Curated Presets -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-white">Curated Theme Presets</h2>
+                    <p class="text-xs text-slate-400">Click a palette to apply instant color harmony</p>
+                </div>
+            </div>
+
+            <div class="space-y-2.5">
+                <!-- Preset 1: Default Playful -->
+                <button type="button" @click="applyPreset('default')"
+                        class="w-full text-left p-3 rounded-xl border border-slate-700 hover:border-sky-500/50 bg-slate-950/60 hover:bg-slate-800/50 transition flex items-center justify-between group">
+                    <div>
+                        <p class="text-xs font-semibold text-white group-hover:text-sky-300">🧸 Playful Warm (Default)</p>
+                        <p class="text-[11px] text-slate-400">Soft Cream, Coral, Butter, Ink</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="w-4 h-4 rounded-full border border-slate-600" style="background:#fffaf2;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#ff6b4d;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#f6c64d;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#19253b;"></span>
+                    </div>
+                </button>
+
+                <!-- Preset 2: Pastel Blossom -->
+                <button type="button" @click="applyPreset('blossom')"
+                        class="w-full text-left p-3 rounded-xl border border-slate-700 hover:border-pink-500/50 bg-slate-950/60 hover:bg-slate-800/50 transition flex items-center justify-between group">
+                    <div>
+                        <p class="text-xs font-semibold text-white group-hover:text-pink-300">🌸 Pastel Blossom</p>
+                        <p class="text-[11px] text-slate-400">Rose Tint, Berry, Soft Peach</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="w-4 h-4 rounded-full border border-slate-600" style="background:#fff5f7;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#f43f5e;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#f7c9bd;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#3b1828;"></span>
+                    </div>
+                </button>
+
+                <!-- Preset 3: Mint & Sage -->
+                <button type="button" @click="applyPreset('mint')"
+                        class="w-full text-left p-3 rounded-xl border border-slate-700 hover:border-emerald-500/50 bg-slate-950/60 hover:bg-slate-800/50 transition flex items-center justify-between group">
+                    <div>
+                        <p class="text-xs font-semibold text-white group-hover:text-emerald-300">🌿 Mint &amp; Sage</p>
+                        <p class="text-[11px] text-slate-400">Clean Botanical Green, Sage</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="w-4 h-4 rounded-full border border-slate-600" style="background:#f4f8f5;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#15803d;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#bfe3d5;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#064e3b;"></span>
+                    </div>
+                </button>
+
+                <!-- Preset 4: Ocean Breeze -->
+                <button type="button" @click="applyPreset('ocean')"
+                        class="w-full text-left p-3 rounded-xl border border-slate-700 hover:border-sky-500/50 bg-slate-950/60 hover:bg-slate-800/50 transition flex items-center justify-between group">
+                    <div>
+                        <p class="text-xs font-semibold text-white group-hover:text-sky-300">🌊 Ocean Breeze</p>
+                        <p class="text-[11px] text-slate-400">Sky Tint, Deep Ocean, Coastal Navy</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="w-4 h-4 rounded-full border border-slate-600" style="background:#f0f9ff;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#0284c7;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#b8deeb;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#0c4a6e;"></span>
+                    </div>
+                </button>
+
+                <!-- Preset 5: Modern Clean -->
+                <button type="button" @click="applyPreset('minimal')"
+                        class="w-full text-left p-3 rounded-xl border border-slate-700 hover:border-amber-500/50 bg-slate-950/60 hover:bg-slate-800/50 transition flex items-center justify-between group">
+                    <div>
+                        <p class="text-xs font-semibold text-white group-hover:text-amber-300">⚡ Modern Minimalist</p>
+                        <p class="text-[11px] text-slate-400">Crisp White, Electric Coral, Slate</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="w-4 h-4 rounded-full border border-slate-600" style="background:#ffffff;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#ea580c;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#f59e0b;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#0f172a;"></span>
+                    </div>
+                </button>
+
+                <!-- Preset 6: Midnight Slate -->
+                <button type="button" @click="applyPreset('midnight')"
+                        class="w-full text-left p-3 rounded-xl border border-slate-700 hover:border-indigo-500/50 bg-slate-950/60 hover:bg-slate-800/50 transition flex items-center justify-between group">
+                    <div>
+                        <p class="text-xs font-semibold text-white group-hover:text-indigo-300">🌙 Indigo Cozy</p>
+                        <p class="text-[11px] text-slate-400">Clean Slate, Royal Indigo, Dark Footer</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="w-4 h-4 rounded-full border border-slate-600" style="background:#f8fafc;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#6366f1;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#ded8f4;"></span>
+                        <span class="w-4 h-4 rounded-full" style="background:#1e1b4b;"></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Live Interactive Visual Preview Card -->
+        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <h2 class="text-sm font-bold text-white">Live Storefront Preview</h2>
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">Updates live as you tweak controls below</span>
+                </div>
+
+                <!-- Mini Mock Browser Frame -->
+                <div class="rounded-2xl overflow-hidden border border-slate-700 shadow-2xl transition-colors duration-300"
+                     :style="`background-color: ${store_bg_color}; color: ${text_color};`">
+
+                    <!-- Mini Announcement Bar -->
+                    <div x-show="announcement_enabled"
+                         class="px-4 py-1.5 text-center text-[10px] font-semibold tracking-wider transition-colors duration-300"
+                         :style="`background-color: ${announcement_bg_color}; color: ${announcement_text_color};`">
+                        <span x-text="announcement_text || 'Free delivery on orders over ৳1,000'"></span>
+                    </div>
+
+                    <!-- Mini Header -->
+                    <div class="px-5 py-3 flex items-center justify-between transition-colors duration-300"
+                         :class="{ 'border-b border-black/10': header_border }"
+                         :style="`background-color: ${header_bg_color}; color: ${header_text_color};`">
+
+                        <!-- Classic Layout Preview -->
+                        <template x-if="header_layout === 'classic'">
+                            <div class="flex items-center justify-between w-full">
+                                <div class="flex items-center gap-2 font-bold text-sm">
+                                    <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px]"
+                                          :style="`background-color: ${secondary_color}; color: ${text_color};`">K</span>
+                                    <span>{{ settings.site_name|default:'Kidurabd' }}</span>
+                                </div>
+                                <div class="hidden sm:flex items-center gap-3 text-[11px] font-medium opacity-75">
+                                    <span class="font-bold underline" :style="`color: ${primary_color};`">Home</span>
+                                    <span>Categories</span>
+                                    <span>All Toys</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span x-show="show_search_in_header" class="text-xs opacity-60"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <span x-show="show_wishlist_in_header" class="text-xs" :style="`color: ${primary_color};`"><i class="fa-regular fa-heart"></i></span>
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold text-white flex items-center gap-1"
+                                          :style="`background-color: ${text_color};`">
+                                        <i class="fa-solid fa-bag-shopping text-[9px]"></i>
+                                        <span class="w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-bold"
+                                              :style="`background-color: ${secondary_color}; color: ${text_color};`">2</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Centered Layout Preview -->
+                        <template x-if="header_layout === 'centered'">
+                            <div class="flex flex-col items-center w-full gap-2">
+                                <div class="flex items-center justify-between w-full">
+                                    <span x-show="show_search_in_header" class="text-xs opacity-60"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <div class="flex items-center gap-2 font-bold text-sm">
+                                        <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px]"
+                                              :style="`background-color: ${secondary_color}; color: ${text_color};`">K</span>
+                                        <span>{{ settings.site_name|default:'Kidurabd' }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span x-show="show_wishlist_in_header" class="text-xs" :style="`color: ${primary_color};`"><i class="fa-regular fa-heart"></i></span>
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold text-white" :style="`background-color: ${text_color};`">Bag</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4 text-[11px] font-medium opacity-75 border-t border-black/5 pt-1.5 w-full justify-center">
+                                    <span class="font-bold underline" :style="`color: ${primary_color};`">Home</span>
+                                    <span>Categories</span>
+                                    <span>All Toys</span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Compact Layout Preview -->
+                        <template x-if="header_layout === 'compact'">
+                            <div class="flex items-center justify-between w-full">
+                                <div class="flex items-center gap-2 font-bold text-xs">
+                                    <span>{{ settings.site_name|default:'Kidurabd' }}</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-[10px]">
+                                    <span class="font-semibold" :style="`color: ${primary_color};`">Shop</span>
+                                    <span x-show="show_search_in_header" class="opacity-60"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" :style="`background-color: ${primary_color};`">Cart (2)</span>
+                                </div>
+                            </div>
+                        </template>
+
+                    </div>
+
+                    <!-- Mini Hero & Card Preview -->
+                    <div class="p-5 space-y-4">
+                        <div class="p-4 rounded-xl border border-black/5 flex items-center justify-between"
+                             :style="`background-color: ${header_bg_color};`">
+                            <div class="space-y-1">
+                                <span class="px-2 py-0.5 text-[9px] font-bold rounded-md uppercase tracking-wider"
+                                      :style="`background-color: ${secondary_color}; color: ${text_color};`">
+                                    Featured Pick
+                                </span>
+                                <p class="text-sm font-bold">Wooden Activity Cube</p>
+                                <p class="text-xs opacity-75">৳ 1,450</p>
+                            </div>
+                            <button type="button" class="px-3.5 py-1.5 text-xs font-bold text-white shadow transition"
+                                    :class="card_border_radius"
+                                    :style="`background-color: ${primary_color};`">
+                                Add to Bag
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mini Footer Preview -->
+                    <div class="px-5 py-4 border-t border-black/10 text-xs transition-colors duration-300"
+                         :style="`background-color: ${footer_bg_color}; color: ${footer_text_color};`">
+
+                        <!-- Classic 4-Col Footer -->
+                        <template x-if="footer_layout === 'classic'">
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-3 gap-2 text-[10px] opacity-75">
+                                    <div><strong>{{ settings.site_name|default:'Kidurabd' }}</strong><br>Curious minds.</div>
+                                    <div><strong>Shop</strong><br>Toys · Categories</div>
+                                    <div><strong>Help</strong><br>Contact · FAQs</div>
+                                </div>
+                                <div class="pt-2 border-t border-black/5 flex justify-between text-[9px] opacity-60">
+                                    <span>© {% now 'Y' %} {{ settings.site_name|default:'Kidurabd' }}</span>
+                                    <span>Secure Payments · bKash</span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Centered Modern Footer -->
+                        <template x-if="footer_layout === 'centered'">
+                            <div class="text-center space-y-2">
+                                <p class="font-bold text-xs">{{ settings.site_name|default:'Kidurabd' }}</p>
+                                <div class="flex items-center justify-center gap-3 text-[10px] opacity-75">
+                                    <span>Home</span><span>Shop</span><span>Contact</span><span>Privacy</span>
+                                </div>
+                                <p class="text-[9px] opacity-60 pt-1 border-t border-black/5">© {% now 'Y' %} All rights reserved.</p>
+                            </div>
+                        </template>
+
+                        <!-- Minimal Footer -->
+                        <template x-if="footer_layout === 'minimal'">
+                            <div class="flex items-center justify-between text-[10px] opacity-75">
+                                <span>© {% now 'Y' %} {{ settings.site_name|default:'Kidurabd' }}</span>
+                                <div class="flex gap-3"><span>Shop</span><span>Terms</span><span>Contact</span></div>
+                            </div>
+                        </template>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Hint footer -->
+            <p class="text-xs text-slate-500 mt-4 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-sky-400"></i>
+                Preview renders in mock mode with live values. Click <strong>Save Theme Changes</strong> to apply globally to all storefront visitors.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- ── Main Theme Customizer Form ── -->
+    <form id="themeSettingsForm" method="post" action="{% url 'custom_admin:theme_settings' %}" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- 1. STORE COLORS & BRANDING -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                    <i class="fa-solid fa-droplet text-sm"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-white">Store Color Palette</h2>
+                    <p class="text-xs text-slate-400">Define the core brand colors used across the entire storefront</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Store Page Background Color -->
+                <div class="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Page Background
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" x-model="store_bg_color"
+                               class="w-10 h-10 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                        <input type="text" name="store_bg_color" x-model="store_bg_color" required
+                               class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <p class="text-[11px] text-slate-500">Default: <code class="text-slate-400">#fffaf2</code> (Warm Cream)</p>
+                </div>
+
+                <!-- Primary Brand / Accent Color -->
+                <div class="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Primary Accent (Buttons/Links)
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" x-model="primary_color"
+                               class="w-10 h-10 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                        <input type="text" name="primary_color" x-model="primary_color" required
+                               class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <p class="text-[11px] text-slate-500">Default: <code class="text-slate-400">#ff6b4d</code> (Vibrant Coral)</p>
+                </div>
+
+                <!-- Secondary Accent Color -->
+                <div class="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Secondary Accent (Badges/Stars)
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" x-model="secondary_color"
+                               class="w-10 h-10 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                        <input type="text" name="secondary_color" x-model="secondary_color" required
+                               class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <p class="text-[11px] text-slate-500">Default: <code class="text-slate-400">#f6c64d</code> (Butter Yellow)</p>
+                </div>
+
+                <!-- Text / Ink Color -->
+                <div class="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Body Text / Ink
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" x-model="text_color"
+                               class="w-10 h-10 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                        <input type="text" name="text_color" x-model="text_color" required
+                               class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <p class="text-[11px] text-slate-500">Default: <code class="text-slate-400">#19253b</code> (Navy Ink)</p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 2. HEADER CUSTOMIZATION -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+                <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                    <i class="fa-solid fa-window-maximize text-sm"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-white">Header &amp; Navigation Layout</h2>
+                    <p class="text-xs text-slate-400">Select how your top header and navigation appear to customers</p>
+                </div>
+            </div>
+
+            <!-- Header Layout Cards -->
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Choose Header Layout</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Layout 1: Classic -->
+                    <label class="relative flex flex-col p-4 bg-slate-950 border rounded-2xl cursor-pointer transition select-none"
+                           :class="header_layout === 'classic' ? 'border-sky-500 ring-2 ring-sky-500/30' : 'border-slate-800 hover:border-slate-700'">
+                        <input type="radio" name="header_layout" value="classic" x-model="header_layout" class="sr-only">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-white">Classic Standard</span>
+                            <span x-show="header_layout === 'classic'" class="text-sky-400 text-xs"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                        <div class="h-10 bg-slate-900 rounded-lg p-2 border border-slate-800 flex items-center justify-between mb-2">
+                            <div class="w-8 h-3 bg-sky-500/40 rounded"></div>
+                            <div class="flex gap-1.5"><div class="w-6 h-2 bg-slate-700 rounded"></div><div class="w-6 h-2 bg-slate-700 rounded"></div></div>
+                            <div class="flex gap-1"><div class="w-3 h-3 bg-slate-700 rounded"></div><div class="w-3 h-3 bg-amber-500/40 rounded"></div></div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Logo Left · Nav Center · Search &amp; Cart Right</p>
+                    </label>
+
+                    <!-- Layout 2: Centered -->
+                    <label class="relative flex flex-col p-4 bg-slate-950 border rounded-2xl cursor-pointer transition select-none"
+                           :class="header_layout === 'centered' ? 'border-sky-500 ring-2 ring-sky-500/30' : 'border-slate-800 hover:border-slate-700'">
+                        <input type="radio" name="header_layout" value="centered" x-model="header_layout" class="sr-only">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-white">Centered Editorial</span>
+                            <span x-show="header_layout === 'centered'" class="text-sky-400 text-xs"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                        <div class="h-10 bg-slate-900 rounded-lg p-1.5 border border-slate-800 flex flex-col items-center justify-between mb-2">
+                            <div class="w-12 h-2.5 bg-sky-500/40 rounded"></div>
+                            <div class="flex gap-2"><div class="w-5 h-1.5 bg-slate-700 rounded"></div><div class="w-5 h-1.5 bg-slate-700 rounded"></div><div class="w-5 h-1.5 bg-slate-700 rounded"></div></div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Prominent Centered Logo · Clean Nav Below</p>
+                    </label>
+
+                    <!-- Layout 3: Compact -->
+                    <label class="relative flex flex-col p-4 bg-slate-950 border rounded-2xl cursor-pointer transition select-none"
+                           :class="header_layout === 'compact' ? 'border-sky-500 ring-2 ring-sky-500/30' : 'border-slate-800 hover:border-slate-700'">
+                        <input type="radio" name="header_layout" value="compact" x-model="header_layout" class="sr-only">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-white">Compact Slim</span>
+                            <span x-show="header_layout === 'compact'" class="text-sky-400 text-xs"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                        <div class="h-10 bg-slate-900 rounded-lg px-2 border border-slate-800 flex items-center justify-between mb-2">
+                            <div class="w-10 h-3 bg-sky-500/40 rounded"></div>
+                            <div class="flex gap-2"><div class="w-8 h-2 bg-slate-700 rounded"></div><div class="w-4 h-4 bg-sky-500/30 rounded"></div></div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Space-Saving Minimalist Navigation Bar</p>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Header Colors & Toggles -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Header Background</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" x-model="header_bg_color"
+                               class="w-9 h-9 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                        <input type="text" name="header_bg_color" x-model="header_bg_color" required
+                               class="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Header Text &amp; Icons</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" x-model="header_text_color"
+                               class="w-9 h-9 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                        <input type="text" name="header_text_color" x-model="header_text_color" required
+                               class="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-white">
+                    </div>
+                </div>
+
+                <!-- Sticky Header Switch -->
+                <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-white block">Sticky Header</span>
+                        <span class="text-[10px] text-slate-500">Stays pinned on scroll</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="header_sticky" class="sr-only peer" x-model="header_sticky">
+                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                    </label>
+                </div>
+
+                <!-- Header Border Switch -->
+                <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-white block">Header Bottom Border</span>
+                        <span class="text-[10px] text-slate-500">Subtle divider line</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="header_border" class="sr-only peer" x-model="header_border">
+                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Extra Header Elements Toggles -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-white block">Show Search Bar in Header</span>
+                        <span class="text-[10px] text-slate-500">Desktop search input box</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_search_in_header" class="sr-only peer" x-model="show_search_in_header">
+                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                    </label>
+                </div>
+
+                <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-white block">Show Wishlist in Header</span>
+                        <span class="text-[10px] text-slate-500">Heart icon button with counter</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="show_wishlist_in_header" class="sr-only peer" x-model="show_wishlist_in_header">
+                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. TOP ANNOUNCEMENT BAR -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                        <i class="fa-solid fa-bullhorn text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Top Announcement Strip</h2>
+                        <p class="text-xs text-slate-400">Promote free shipping, seasonal sales, or important notices at the very top of your site</p>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="announcement_enabled" class="sr-only peer" x-model="announcement_enabled">
+                    <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                </label>
+            </div>
+
+            <div x-show="announcement_enabled" x-transition class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Announcement Message</label>
+                    <input type="text" name="announcement_text" x-model="announcement_text"
+                           placeholder="Free delivery on orders over ৳1,000 · Special Discount Today!"
+                           class="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Announcement Background</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" x-model="announcement_bg_color"
+                                   class="w-9 h-9 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                            <input type="text" name="announcement_bg_color" x-model="announcement_bg_color"
+                                   class="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-white">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Announcement Text Color</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" x-model="announcement_text_color"
+                                   class="w-9 h-9 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                            <input type="text" name="announcement_text_color" x-model="announcement_text_color"
+                                   class="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-white">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. FOOTER CUSTOMIZATION -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-shoe-prints text-sm"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-white">Footer Layout &amp; Styling</h2>
+                    <p class="text-xs text-slate-400">Customize the footer columns, background styling and links</p>
+                </div>
+            </div>
+
+            <!-- Footer Layout Choices -->
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Choose Footer Layout</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Classic 4-Col -->
+                    <label class="relative flex flex-col p-4 bg-slate-950 border rounded-2xl cursor-pointer transition select-none"
+                           :class="footer_layout === 'classic' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-800 hover:border-slate-700'">
+                        <input type="radio" name="footer_layout" value="classic" x-model="footer_layout" class="sr-only">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-white">Classic 4-Column</span>
+                            <span x-show="footer_layout === 'classic'" class="text-emerald-400 text-xs"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                        <div class="h-10 bg-slate-900 rounded-lg p-2 border border-slate-800 grid grid-cols-4 gap-1.5 mb-2">
+                            <div class="h-full bg-slate-700 rounded-sm"></div>
+                            <div class="h-full bg-slate-700 rounded-sm"></div>
+                            <div class="h-full bg-slate-700 rounded-sm"></div>
+                            <div class="h-full bg-emerald-500/30 rounded-sm"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Brand Info · Shop Links · Help/Pages · Newsletter Box</p>
+                    </label>
+
+                    <!-- Centered Modern -->
+                    <label class="relative flex flex-col p-4 bg-slate-950 border rounded-2xl cursor-pointer transition select-none"
+                           :class="footer_layout === 'centered' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-800 hover:border-slate-700'">
+                        <input type="radio" name="footer_layout" value="centered" x-model="footer_layout" class="sr-only">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-white">Modern Centered</span>
+                            <span x-show="footer_layout === 'centered'" class="text-emerald-400 text-xs"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                        <div class="h-10 bg-slate-900 rounded-lg p-1.5 border border-slate-800 flex flex-col items-center justify-center gap-1 mb-2">
+                            <div class="w-12 h-2.5 bg-emerald-500/40 rounded"></div>
+                            <div class="w-24 h-1.5 bg-slate-700 rounded"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Centered Wordmark · Horizontal Navigation · Social Pills</p>
+                    </label>
+
+                    <!-- Minimal -->
+                    <label class="relative flex flex-col p-4 bg-slate-950 border rounded-2xl cursor-pointer transition select-none"
+                           :class="footer_layout === 'minimal' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-800 hover:border-slate-700'">
+                        <input type="radio" name="footer_layout" value="minimal" x-model="footer_layout" class="sr-only">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-white">Compact Minimal</span>
+                            <span x-show="footer_layout === 'minimal'" class="text-emerald-400 text-xs"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                        <div class="h-10 bg-slate-900 rounded-lg px-3 border border-slate-800 flex items-center justify-between mb-2">
+                            <div class="w-16 h-2 bg-slate-700 rounded"></div>
+                            <div class="w-16 h-2 bg-slate-700 rounded"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Single Row Minimalist Bar (Ideal for streamlined landing)</p>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Footer Colors -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Footer Background Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" x-model="footer_bg_color"
+                               class="w-9 h-9 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                        <input type="text" name="footer_bg_color" x-model="footer_bg_color" required
+                               class="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Footer Text Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" x-model="footer_text_color"
+                               class="w-9 h-9 rounded-lg bg-transparent border border-slate-700 cursor-pointer p-0.5">
+                        <input type="text" name="footer_text_color" x-model="footer_text_color" required
+                               class="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-white">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. COMPONENT & CARD ROUNDNESS -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+                <div class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                    <i class="fa-solid fa-shapes text-sm"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-white">Component Styling &amp; Card Corners</h2>
+                    <p class="text-xs text-slate-400">Choose the corner roundness of product cards, banners, and buttons</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <label class="p-3 bg-slate-950 border rounded-xl cursor-pointer text-center select-none transition"
+                       :class="card_border_radius === 'rounded-lg' ? 'border-sky-500 ring-2 ring-sky-500/30' : 'border-slate-800 hover:border-slate-700'">
+                    <input type="radio" name="card_border_radius" value="rounded-lg" x-model="card_border_radius" class="sr-only">
+                    <div class="w-12 h-8 mx-auto mb-2 border-2 border-sky-400/50 rounded-lg bg-slate-900"></div>
+                    <span class="text-xs font-semibold text-white block">Standard (8px)</span>
+                </label>
+
+                <label class="p-3 bg-slate-950 border rounded-xl cursor-pointer text-center select-none transition"
+                       :class="card_border_radius === 'rounded-xl' ? 'border-sky-500 ring-2 ring-sky-500/30' : 'border-slate-800 hover:border-slate-700'">
+                    <input type="radio" name="card_border_radius" value="rounded-xl" x-model="card_border_radius" class="sr-only">
+                    <div class="w-12 h-8 mx-auto mb-2 border-2 border-sky-400/50 rounded-xl bg-slate-900"></div>
+                    <span class="text-xs font-semibold text-white block">Curved (12px)</span>
+                </label>
+
+                <label class="p-3 bg-slate-950 border rounded-xl cursor-pointer text-center select-none transition"
+                       :class="card_border_radius === 'rounded-2xl' ? 'border-sky-500 ring-2 ring-sky-500/30' : 'border-slate-800 hover:border-slate-700'">
+                    <input type="radio" name="card_border_radius" value="rounded-2xl" x-model="card_border_radius" class="sr-only">
+                    <div class="w-12 h-8 mx-auto mb-2 border-2 border-sky-400/50 rounded-2xl bg-slate-900"></div>
+                    <span class="text-xs font-semibold text-white block">Soft (16px, Default)</span>
+                </label>
+
+                <label class="p-3 bg-slate-950 border rounded-xl cursor-pointer text-center select-none transition"
+                       :class="card_border_radius === 'rounded-3xl' ? 'border-sky-500 ring-2 ring-sky-500/30' : 'border-slate-800 hover:border-slate-700'">
+                    <input type="radio" name="card_border_radius" value="rounded-3xl" x-model="card_border_radius" class="sr-only">
+                    <div class="w-12 h-8 mx-auto mb-2 border-2 border-sky-400/50 rounded-3xl bg-slate-900"></div>
+                    <span class="text-xs font-semibold text-white block">Playful Bubble (24px)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Sticky Save Floating Bar -->
+        <div class="sticky bottom-4 z-40 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-4 shadow-2xl flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <button type="button" @click="applyPreset('default')"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl border border-slate-700 transition">
+                    <i class="fa-solid fa-arrow-rotate-left mr-1.5 text-xs"></i> Reset to Defaults
+                </button>
+            </div>
+            <button type="submit"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold text-xs rounded-xl shadow-lg shadow-sky-500/25 transition cursor-pointer">
+                <i class="fa-solid fa-check text-xs"></i> Save Theme Settings
+            </button>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}

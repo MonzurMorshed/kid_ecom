@@ -52,6 +52,71 @@ class SiteSettings(models.Model):
         help_text='List of admin menu keys to hide from the sidebar'
     )
 
+    # ── Theme & Storefront UI Customizer ──────────────────────────────────────
+    store_bg_color = models.CharField(
+        max_length=30, default='#fffaf2',
+        help_text='Store page background color (e.g. #fffaf2)'
+    )
+    primary_color = models.CharField(
+        max_length=30, default='#ff6b4d',
+        help_text='Primary brand & accent color for buttons, badges, links'
+    )
+    secondary_color = models.CharField(
+        max_length=30, default='#f6c64d',
+        help_text='Secondary accent color (stars, counter badges)'
+    )
+    text_color = models.CharField(
+        max_length=30, default='#19253b',
+        help_text='Primary text / ink color'
+    )
+
+    # Header Customization
+    HEADER_LAYOUT_CHOICES = [
+        ('classic', 'Classic (Logo Left · Nav Center · Icons Right)'),
+        ('centered', 'Centered (Logo Center · Clean Editorial Nav)'),
+        ('compact', 'Compact Slim (Minimalist Space-Saving Bar)'),
+    ]
+    header_layout = models.CharField(max_length=20, choices=HEADER_LAYOUT_CHOICES, default='classic')
+    header_bg_color = models.CharField(max_length=30, default='#fffaf2')
+    header_text_color = models.CharField(max_length=30, default='#19253b')
+    header_sticky = models.BooleanField(default=True)
+    header_border = models.BooleanField(default=True)
+    show_search_in_header = models.BooleanField(default=True)
+    show_wishlist_in_header = models.BooleanField(default=True)
+
+    # Announcement Bar
+    announcement_enabled = models.BooleanField(default=True)
+    announcement_text = models.CharField(
+        max_length=255,
+        default='Free delivery on orders over ৳1,000 · Designed for curious little humans',
+        blank=True
+    )
+    announcement_bg_color = models.CharField(max_length=30, default='#19253b')
+    announcement_text_color = models.CharField(max_length=30, default='#fffaf2')
+
+    # Footer Customization
+    FOOTER_LAYOUT_CHOICES = [
+        ('classic', '4-Column (Brand Info, Shop Categories, Help/Legal, Newsletter)'),
+        ('centered', 'Modern Centered (Centered Logo, Socials, Horizontal Links, Copyright)'),
+        ('minimal', 'Compact Minimal (Logo & Copyright Left, Quick Links Right)'),
+    ]
+    footer_layout = models.CharField(max_length=20, choices=FOOTER_LAYOUT_CHOICES, default='classic')
+    footer_bg_color = models.CharField(max_length=30, default='#fffaf2')
+    footer_text_color = models.CharField(max_length=30, default='#19253b')
+
+    # Component styling
+    card_border_radius = models.CharField(
+        max_length=20,
+        choices=[
+            ('rounded-xl', 'Curved (12px)'),
+            ('rounded-2xl', 'Soft Rounded (16px)'),
+            ('rounded-3xl', 'Playful Bubble (24px)'),
+            ('rounded-lg', 'Standard (8px)'),
+        ],
+        default='rounded-2xl',
+        help_text='Corner roundness for cards, banners and buttons'
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -60,6 +125,16 @@ class SiteSettings(models.Model):
 
     def __str__(self):
         return f'Site Settings — {self.site_name}'
+
+    @property
+    def card_border_radius_css(self):
+        mapping = {
+            'rounded-lg': '8px',
+            'rounded-xl': '12px',
+            'rounded-2xl': '16px',
+            'rounded-3xl': '24px',
+        }
+        return mapping.get(self.card_border_radius, '16px')
 
     @property
     def hidden_menu_list(self):
@@ -111,6 +186,35 @@ class SiteSettings(models.Model):
                     cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `maintenance_msg` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")
                 if 'hidden_menus' not in existing_cols:
                     cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `hidden_menus` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")
+
+                # Auto-heal Theme settings columns
+                theme_cols = {
+                    'store_bg_color': "VARCHAR(30) NOT NULL DEFAULT '#fffaf2'",
+                    'primary_color': "VARCHAR(30) NOT NULL DEFAULT '#ff6b4d'",
+                    'secondary_color': "VARCHAR(30) NOT NULL DEFAULT '#f6c64d'",
+                    'text_color': "VARCHAR(30) NOT NULL DEFAULT '#19253b'",
+                    'header_layout': "VARCHAR(20) NOT NULL DEFAULT 'classic'",
+                    'header_bg_color': "VARCHAR(30) NOT NULL DEFAULT '#fffaf2'",
+                    'header_text_color': "VARCHAR(30) NOT NULL DEFAULT '#19253b'",
+                    'header_sticky': "TINYINT(1) NOT NULL DEFAULT 1",
+                    'header_border': "TINYINT(1) NOT NULL DEFAULT 1",
+                    'show_search_in_header': "TINYINT(1) NOT NULL DEFAULT 1",
+                    'show_wishlist_in_header': "TINYINT(1) NOT NULL DEFAULT 1",
+                    'announcement_enabled': "TINYINT(1) NOT NULL DEFAULT 1",
+                    'announcement_text': "VARCHAR(255) NOT NULL DEFAULT 'Free delivery on orders over ৳1,000 · Designed for curious little humans'",
+                    'announcement_bg_color': "VARCHAR(30) NOT NULL DEFAULT '#19253b'",
+                    'announcement_text_color': "VARCHAR(30) NOT NULL DEFAULT '#fffaf2'",
+                    'footer_layout': "VARCHAR(20) NOT NULL DEFAULT 'classic'",
+                    'footer_bg_color': "VARCHAR(30) NOT NULL DEFAULT '#fffaf2'",
+                    'footer_text_color': "VARCHAR(30) NOT NULL DEFAULT '#19253b'",
+                    'card_border_radius': "VARCHAR(20) NOT NULL DEFAULT 'rounded-2xl'",
+                }
+                for col_name, col_def in theme_cols.items():
+                    if col_name not in existing_cols:
+                        try:
+                            cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `{col_name}` {col_def}")
+                        except Exception:
+                            pass
         except Exception:
             pass
 

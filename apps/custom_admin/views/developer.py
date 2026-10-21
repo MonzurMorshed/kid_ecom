@@ -40,6 +40,7 @@ ADMIN_NAV_SECTIONS = [
         'key': 'settings',
         'items': [
             {'key': 'site_settings', 'label': 'Site Settings', 'url_name': 'site_settings', 'icon': 'fa-solid fa-gear', 'desc': 'Store branding, contact info, currency, shipping & tax'},
+            {'key': 'theme_settings', 'label': 'Theme Settings', 'url_name': 'theme_settings', 'icon': 'fa-solid fa-palette', 'desc': 'Customize store colors, header & footer layouts, and UI styling'},
             {'key': 'payment_methods', 'label': 'Payment Methods', 'url_name': 'payment_method_list', 'icon': 'fa-solid fa-credit-card', 'desc': 'Payment gateways (bKash, Nagad, Rocket, Cash on Delivery)'},
         ]
     },

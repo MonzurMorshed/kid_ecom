@@ -71,7 +71,14 @@ class AdminRegisterForm(forms.ModelForm):
 class SiteSettingsForm(forms.ModelForm):
     class Meta:
         model  = SiteSettings
-        exclude = ['updated_at', 'maintenance_mode', 'maintenance_msg']
+        exclude = [
+            'updated_at', 'maintenance_mode', 'maintenance_msg', 'hidden_menus',
+            'store_bg_color', 'primary_color', 'secondary_color', 'text_color',
+            'header_layout', 'header_bg_color', 'header_text_color', 'header_sticky', 'header_border',
+            'show_search_in_header', 'show_wishlist_in_header',
+            'announcement_enabled', 'announcement_text', 'announcement_bg_color', 'announcement_text_color',
+            'footer_layout', 'footer_bg_color', 'footer_text_color', 'card_border_radius',
+        ]
         widgets = {
             'site_name':     _input('e.g. Kidurabd'),
             'site_tagline':  _input('Short tagline for your store'),
@@ -138,6 +145,74 @@ class SiteSettingsForm(forms.ModelForm):
                          'text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 '
                          'focus:ring-sky-500 focus:border-transparent transition text-sm',
                 'placeholder': 'https://youtube.com/yourchannel',
+            }),
+        }
+
+
+# ── Theme Settings Form ──────────────────────────────────────────────────────
+class ThemeSettingsForm(forms.ModelForm):
+    class Meta:
+        model = SiteSettings
+        fields = [
+            'store_bg_color', 'primary_color', 'secondary_color', 'text_color',
+            'header_layout', 'header_bg_color', 'header_text_color', 'header_sticky', 'header_border',
+            'show_search_in_header', 'show_wishlist_in_header',
+            'announcement_enabled', 'announcement_text', 'announcement_bg_color', 'announcement_text_color',
+            'footer_layout', 'footer_bg_color', 'footer_text_color', 'card_border_radius',
+        ]
+        widgets = {
+            'store_bg_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#fffaf2'
+            }),
+            'primary_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#ff6b4d'
+            }),
+            'secondary_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#f6c64d'
+            }),
+            'text_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#19253b'
+            }),
+            'header_layout': forms.Select(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:border-sky-500 focus:outline-none'
+            }),
+            'header_bg_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#fffaf2'
+            }),
+            'header_text_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#19253b'
+            }),
+            'announcement_text': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:border-sky-500 focus:outline-none',
+                'placeholder': 'Special notice or discount alert...'
+            }),
+            'announcement_bg_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#19253b'
+            }),
+            'announcement_text_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#fffaf2'
+            }),
+            'footer_layout': forms.Select(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:border-sky-500 focus:outline-none'
+            }),
+            'footer_bg_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#fffaf2'
+            }),
+            'footer_text_color': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm font-mono focus:border-sky-500 focus:outline-none',
+                'placeholder': '#19253b'
+            }),
+            'card_border_radius': forms.Select(attrs={
+                'class': 'w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-sm focus:border-sky-500 focus:outline-none'
             }),
         }
 

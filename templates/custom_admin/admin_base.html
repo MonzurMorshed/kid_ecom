@@ -297,7 +297,7 @@
             {% endif %}
 
             <!-- Settings Group -->
-            {% if 'site_settings' not in site_settings.hidden_menu_list or 'payment_methods' not in site_settings.hidden_menu_list %}
+            {% if 'site_settings' not in site_settings.hidden_menu_list or 'theme_settings' not in site_settings.hidden_menu_list or 'payment_methods' not in site_settings.hidden_menu_list %}
             <div class="mt-2 pt-2 border-t border-slate-800/60">
                 <p class="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Settings</p>
             </div>
@@ -313,6 +313,15 @@
                     <circle cx="12" cy="12" r="3"></circle>
                 </svg>
                 Site Settings
+            </a>
+            {% endif %}
+
+            {% if 'theme_settings' not in site_settings.hidden_menu_list %}
+            <a href="{% url 'custom_admin:theme_settings' %}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
+                      {% if 'theme_settings' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
+                <i class="fa-solid fa-palette text-base w-5 text-center"></i>
+                Theme Settings
             </a>
             {% endif %}
 
