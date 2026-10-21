@@ -120,33 +120,69 @@ def checkout(request):
         if not shipping_address: errors['shipping_address'] = 'Delivery address is required.'
 
         if not errors:
+            is_new_user = False
+            auto_password = None
+
             if request.user.is_authenticated:
                 order_user = request.user
             else:
                 from accounts.models import User as UserModel
                 order_user = UserModel.objects.filter(email__iexact=email).first()
                 if not order_user:
+                    is_new_user = True
                     import secrets
+                    import re
+
                     parts = full_name.strip().split(maxsplit=1)
-                    first_name = parts[0] if parts else 'Guest'
+                    first_name = parts[0] if parts else 'Customer'
                     last_name = parts[1] if len(parts) > 1 else ''
 
-                    base_username = email.lower()
+                    # Generate clean, unique username based on email prefix
+                    clean_prefix = re.sub(r'[^a-zA-Z0-9_]', '', email.split('@')[0].lower())
+                    if not clean_prefix or len(clean_prefix) < 3:
+                        clean_prefix = 'user'
+
+                    base_username = clean_prefix
                     username = base_username
-                    counter = 1
-                    while UserModel.objects.filter(username=username).exists():
-                        username = f"{base_username}_{counter}"
-                        counter += 1
+                    while UserModel.objects.filter(username__iexact=username).exists():
+                        username = f"{base_username}_{secrets.randbelow(9000) + 1000}"
+
+                    # Generate clean, user-friendly temporary password (10 chars, letters & digits)
+                    alphabet = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+                    auto_password = ''.join(secrets.choice(alphabet) for _ in range(10))
+
+                    # Safely handle phone number uniqueness
+                    user_phone = phone_number
+                    if UserModel.objects.filter(phone_number=phone_number).exists():
+                        user_phone = None
 
                     order_user = UserModel.objects.create_user(
                         username=username,
                         email=email.lower(),
                         first_name=first_name,
                         last_name=last_name,
-                        phone_number=phone_number,
+                        phone_number=user_phone,
                         is_customer=True,
-                        password=secrets.token_urlsafe(16),
+                        password=auto_password,
                     )
+
+                    # Save address to address book
+                    try:
+                        from accounts.models import UserAddress
+                        UserAddress.objects.create(
+                            user=order_user,
+                            full_name=full_name,
+                            phone_number=phone_number,
+                            address_line1=shipping_address,
+                            city='Dhaka',
+                            is_default=True,
+                        )
+                    except Exception:
+                        pass
+
+                    # Automatically log in the newly registered user
+                    from django.contrib.auth import login
+                    login(request, order_user, backend='django.contrib.auth.backends.ModelBackend')
 
             order = Order.objects.create(
                 user=order_user,
@@ -175,7 +211,15 @@ def checkout(request):
             cart.clear()
 
             # ── Transactional emails ──────────────────────────────────────────
-            from orders.emails import send_order_placed, send_admin_new_order
+            from orders.emails import send_order_placed, send_admin_new_order, send_auto_registration_email
+
+            if is_new_user and auto_password:
+                send_auto_registration_email(order_user, auto_password, order=order)
+                request.session['just_auto_registered'] = {
+                    'username': order_user.username,
+                    'email': order_user.email,
+                }
+
             send_order_placed(order)
             send_admin_new_order(order)
 
@@ -203,4 +247,9 @@ def checkout(request):
 
 def order_success(request, pk):
     order = get_object_or_404(Order, pk=pk)
-    return render(request, 'storefront/order_success.html', {'order': order})
+    just_registered = request.session.pop('just_auto_registered', None)
+    return render(request, 'storefront/order_success.html', {
+        'order': order,
+        'just_registered': just_registered,
+    })
+

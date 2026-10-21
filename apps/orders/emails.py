@@ -97,3 +97,29 @@ def send_welcome_email(user) -> bool:
         reply_to=['care@kidurabd.com'],
         fail_silently=True,
     )
+
+
+# ── Auto-registration email — on guest checkout ───────────────────────────────
+
+def send_auto_registration_email(user, auto_password: str, order=None) -> bool:
+    """
+    Send an email with automatically generated username and password
+    to a customer who was automatically registered during guest checkout.
+    Includes a prominent security note advising them to change their password.
+    """
+    ctx = {
+        'user': user,
+        'auto_password': auto_password,
+        'order': order,
+    }
+    order_ref = f" for Order #{order.id:05d}" if order else ""
+    return send_templated_email(
+        channel='care',
+        subject=f'[{SITE_NAME}] Your Account & Login Credentials{order_ref} 🔐',
+        template_name='emails/auto_registration.html',
+        context=ctx,
+        to=user.email,
+        reply_to=['care@kidurabd.com'],
+        fail_silently=True,
+    )
+

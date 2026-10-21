@@ -7,6 +7,42 @@
 <section class="py-12 sm:py-16 px-4">
     <div class="mx-auto max-w-3xl">
 
+        {% if just_registered %}
+        <!-- Auto-Registration Announcement Card -->
+        <div class="rounded-3xl bg-gradient-to-br from-sky-50 via-white to-indigo-50/60 border border-sky-200/90 p-6 sm:p-7 shadow-sm mb-8 text-left">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-xl shrink-0 shadow-sm">
+                    <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                        <h2 class="text-base sm:text-lg font-bold text-slate-900">Account Created Automatically! 🎉</h2>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">You are logged in</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-600 mb-3 leading-relaxed">
+                        An account has been created for you with username <strong class="text-slate-900 font-mono font-bold">{{ just_registered.username }}</strong>. Your automatic password and login details have been sent to <strong class="text-slate-900 font-bold">{{ just_registered.email }}</strong>.
+                    </p>
+                    <div class="flex items-start sm:items-center gap-2.5 p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 mb-4">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm shrink-0 mt-0.5 sm:mt-0" aria-hidden="true"></i>
+                        <span><strong class="font-bold">Important Security Note:</strong> For your protection, please change your temporary password as soon as possible.</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <a href="{% url 'accounts:change_password' %}"
+                           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm transition">
+                            <i class="fa-solid fa-key text-xs" aria-hidden="true"></i>
+                            <span>Change My Password Now</span>
+                        </a>
+                        <a href="{% url 'accounts:profile' %}"
+                           class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs border border-slate-200 transition">
+                            <i class="fa-solid fa-user text-xs text-slate-500" aria-hidden="true"></i>
+                            <span>My Profile Dashboard</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Success Header Card -->
         <div class="rounded-3xl bg-white border border-ink/8 p-8 sm:p-10 shadow-soft text-center mb-8">
             <div class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-3xl shadow-inner">

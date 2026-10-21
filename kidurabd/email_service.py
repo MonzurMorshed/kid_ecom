@@ -116,7 +116,10 @@ def send_templated_email(
 
     try:
         html_content = render_to_string(template_name, merged_context)
-        text_content = strip_tags(html_content)
+        import re
+        # Strip <style> and <script> blocks so CSS/JS doesn't leak into plain-text email
+        clean_html = re.sub(r'<(style|script)[^>]*>[\s\S]*?</\1>', '', html_content, flags=re.IGNORECASE)
+        text_content = re.sub(r'\n\s*\n', '\n\n', strip_tags(clean_html)).strip()
 
         connection = get_channel_connection(channel)
         msg = EmailMultiAlternatives(
