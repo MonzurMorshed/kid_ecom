@@ -170,6 +170,131 @@
         </form>
     </div>
 
+    <!-- Sidebar Menu Visibility Manager Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <form method="POST" action="{% url 'custom_admin:developer_settings' %}"
+              x-data="{
+                  hiddenCount: {{ hidden_menu_count|default:0 }},
+                  resetAll() {
+                      this.$el.querySelectorAll('input[type=checkbox][name=hidden_menus]').forEach(cb => {
+                          if (cb.checked) {
+                              cb.checked = false;
+                              cb.dispatchEvent(new Event('change'));
+                          }
+                      });
+                      this.hiddenCount = 0;
+                  },
+                  updateCount() {
+                      this.hiddenCount = this.$el.querySelectorAll('input[type=checkbox][name=hidden_menus]:checked').length;
+                  }
+              }">
+            {% csrf_token %}
+            <input type="hidden" name="update_hidden_menus" value="1">
+
+            <!-- Card Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-list-check text-base"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <h2 class="text-base font-bold text-white">Admin Sidebar Menu Visibility</h2>
+                            <span x-show="hiddenCount > 0"
+                                  class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300">
+                                <span x-text="hiddenCount"></span> Menu<span x-show="hiddenCount !== 1">s</span> Hidden
+                            </span>
+                            <span x-show="hiddenCount === 0"
+                                  class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                                All Menus Visible
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                            Toggle individual admin menus ON or OFF. Hidden menus will be immediately removed from the navigation sidebar.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
+                    <button type="button" @click="resetAll()"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl transition">
+                        <i class="fa-solid fa-eye text-xs"></i>
+                        Show All
+                    </button>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-5 py-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs rounded-xl transition shadow-lg shadow-violet-500/20">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                        Save Menu Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sections Container -->
+            <div class="mt-6 space-y-6">
+                {% for section in nav_menu_sections %}
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ section.title }}</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                        {% for item in section.items %}
+                        <div x-data="{ isVisible: {% if item.key in hidden_menus %}false{% else %}true{% endif %} }"
+                             class="flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200"
+                             :class="isVisible ? 'bg-slate-950/50 border-slate-800/80 hover:border-slate-700' : 'bg-rose-500/5 border-rose-500/20'">
+                            <div class="flex items-center gap-3 min-w-0 flex-1 mr-3">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition"
+                                     :class="isVisible ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-slate-800 text-slate-500 border border-slate-700'">
+                                    <i class="{{ item.icon }} text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-semibold text-white truncate">{{ item.label }}</span>
+                                        <span x-show="!isVisible" class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                                            HIDDEN
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 truncate mt-0.5" title="{{ item.desc }}">{{ item.desc }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Toggle Switch: Visible when unchecked for hidden_menus -->
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0" title="Toggle visibility">
+                                <input type="checkbox"
+                                       name="hidden_menus"
+                                       value="{{ item.key }}"
+                                       class="sr-only"
+                                       :checked="!isVisible"
+                                       @change="isVisible = !$event.target.checked; updateCount()">
+                                <div class="w-10 h-5 rounded-full transition-colors duration-200 ease-in-out relative"
+                                     :class="isVisible ? 'bg-emerald-500' : 'bg-slate-800 border border-slate-700'">
+                                    <div class="w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform duration-200 ease-in-out shadow-sm"
+                                         :class="isVisible ? 'translate-x-5' : 'translate-x-0.5'"></div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Protected Developer Settings Note -->
+                <div class="flex items-center justify-between p-3.5 bg-slate-950/40 border border-slate-800/60 rounded-xl text-xs text-slate-400">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-lock text-[10px]"></i>
+                        </div>
+                        <span><strong>Developer Settings</strong> is locked to visible to ensure you never lose access to system controls.</span>
+                    </div>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                        PROTECTED
+                    </span>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <!-- Cache Management Card -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">

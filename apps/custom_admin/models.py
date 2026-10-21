@@ -45,6 +45,13 @@ class SiteSettings(models.Model):
         blank=True,
         default='We are currently performing maintenance. Please check back soon.')
 
+    # Navigation Visibility
+    hidden_menus = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of admin menu keys to hide from the sidebar'
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -53,6 +60,27 @@ class SiteSettings(models.Model):
 
     def __str__(self):
         return f'Site Settings — {self.site_name}'
+
+    @property
+    def hidden_menu_list(self):
+        """Returns a list of hidden menu keys safely, handling list, JSON string, or None."""
+        val = getattr(self, 'hidden_menus', None)
+        if not val:
+            return []
+        if isinstance(val, list):
+            return [str(item).strip() for item in val if item]
+        if isinstance(val, str):
+            import json
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, list):
+                    return [str(item).strip() for item in parsed if item]
+            except Exception:
+                return [x.strip() for x in val.split(',') if x.strip()]
+        return []
+
+    def is_menu_visible(self, menu_key):
+        return menu_key not in self.hidden_menu_list
 
     @classmethod
     def _ensure_table_and_columns(cls):
@@ -81,6 +109,8 @@ class SiteSettings(models.Model):
                     cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `maintenance_mode` tinyint(1) NOT NULL DEFAULT 0")
                 if 'maintenance_msg' not in existing_cols:
                     cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `maintenance_msg` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")
+                if 'hidden_menus' not in existing_cols:
+                    cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `hidden_menus` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")
         except Exception:
             pass
 

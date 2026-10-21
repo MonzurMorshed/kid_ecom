@@ -175,6 +175,7 @@
 
         <!-- Navigation Menu -->
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            {% if 'dashboard' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:dashboard' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'dashboard' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -185,7 +186,9 @@
                 </svg>
                 Dashboard
             </a>
+            {% endif %}
 
+            {% if 'categories' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:category_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'category_create' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -196,7 +199,9 @@
                 </svg>
                 Categories
             </a>
+            {% endif %}
 
+            {% if 'products' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:product_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'product_list' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -206,7 +211,9 @@
                 </svg>
                 Products
             </a>
+            {% endif %}
 
+            {% if 'trash' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:product_trash' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'product_trash' %} bg-rose-500/10 text-rose-400 border border-rose-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -217,7 +224,9 @@
                 </svg>
                 Trash
             </a>
+            {% endif %}
 
+            {% if 'orders' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:order_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'order_list' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -227,7 +236,9 @@
                 </svg>
                 Orders
             </a>
+            {% endif %}
 
+            {% if 'customers' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:customer_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'customer_list' or request.resolver_match.url_name == 'customer_detail' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -238,12 +249,15 @@
                 </svg>
                 Customers
             </a>
+            {% endif %}
 
-            <!-- Settings Group -->
+            <!-- Content Group -->
+            {% if 'slider' not in site_settings.hidden_menu_list or 'banners' not in site_settings.hidden_menu_list or 'pages' not in site_settings.hidden_menu_list %}
             <div class="mt-2 pt-2 border-t border-slate-800/60">
                 <p class="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Content</p>
             </div>
 
+            {% if 'slider' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:slider_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'slider' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -254,7 +268,9 @@
                 </svg>
                 Hero Slider
             </a>
+            {% endif %}
 
+            {% if 'banners' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:banner_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'banner' in request.resolver_match.url_name %} bg-violet-500/10 text-violet-400 border border-violet-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -265,7 +281,9 @@
                 </svg>
                 Banners
             </a>
+            {% endif %}
 
+            {% if 'pages' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:page_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'page' in request.resolver_match.url_name %} bg-teal-500/10 text-teal-400 border border-teal-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -275,12 +293,16 @@
                 </svg>
                 Pages
             </a>
+            {% endif %}
+            {% endif %}
 
             <!-- Settings Group -->
+            {% if 'site_settings' not in site_settings.hidden_menu_list or 'payment_methods' not in site_settings.hidden_menu_list %}
             <div class="mt-2 pt-2 border-t border-slate-800/60">
                 <p class="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Settings</p>
             </div>
 
+            {% if 'site_settings' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:site_settings' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'site_settings' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -292,7 +314,9 @@
                 </svg>
                 Site Settings
             </a>
+            {% endif %}
 
+            {% if 'payment_methods' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:payment_method_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'payment_method' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -303,13 +327,15 @@
                 </svg>
                 Payment Methods
             </a>
+            {% endif %}
+            {% endif %}
 
             <!-- Administration Group -->
             <div class="mt-2 pt-2 border-t border-slate-800/60">
-                <p class="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Administration
-                </p>
+                <p class="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Administration</p>
             </div>
 
+            {% if 'admin_users' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:admin_user_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'admin_user' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -320,7 +346,9 @@
                 </svg>
                 Admin Users
             </a>
+            {% endif %}
 
+            {% if 'activity_log' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:activity_log' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'activity_log' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -331,7 +359,9 @@
                 </svg>
                 Activity Log
             </a>
+            {% endif %}
 
+            {% if 'locked_users' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:locked_users_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'locked_users' in request.resolver_match.url_name %} bg-rose-500/10 text-rose-400 border border-rose-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -342,7 +372,9 @@
                 </svg>
                 Locked Accounts
             </a>
+            {% endif %}
 
+            {% if 'change_password' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:change_password' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'change_password' %} bg-amber-500/10 text-amber-400 border border-amber-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -353,6 +385,7 @@
                 </svg>
                 Change Password
             </a>
+            {% endif %}
 
             <a href="{% url 'custom_admin:developer_settings' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition

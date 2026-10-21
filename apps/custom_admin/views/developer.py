@@ -13,6 +13,50 @@ from ..models import ActivityLog, SiteSettings
 
 logger = logging.getLogger('django.request')
 
+ADMIN_NAV_SECTIONS = [
+    {
+        'title': 'Main Navigation',
+        'key': 'main',
+        'items': [
+            {'key': 'dashboard', 'label': 'Dashboard', 'url_name': 'dashboard', 'icon': 'fa-solid fa-table-cells-large', 'desc': 'Main admin overview, sales metrics, and recent orders'},
+            {'key': 'categories', 'label': 'Categories', 'url_name': 'category_list', 'icon': 'fa-solid fa-folder-tree', 'desc': 'Category hierarchy, parent/sub-categories, and sorting'},
+            {'key': 'products', 'label': 'Products', 'url_name': 'product_list', 'icon': 'fa-solid fa-box', 'desc': 'Product catalog, prices, stock, images, and discounts'},
+            {'key': 'trash', 'label': 'Trash', 'url_name': 'product_trash', 'icon': 'fa-solid fa-trash-can', 'desc': 'Soft-deleted products with restore & permanent delete options'},
+            {'key': 'orders', 'label': 'Orders', 'url_name': 'order_list', 'icon': 'fa-solid fa-cart-shopping', 'desc': 'Customer orders, invoices, and fulfillment tracking'},
+            {'key': 'customers', 'label': 'Customers', 'url_name': 'customer_list', 'icon': 'fa-solid fa-users', 'desc': 'Customer registered profiles, addresses, and order history'},
+        ]
+    },
+    {
+        'title': 'Content & Marketing',
+        'key': 'content',
+        'items': [
+            {'key': 'slider', 'label': 'Hero Slider', 'url_name': 'slider_list', 'icon': 'fa-solid fa-images', 'desc': 'Homepage hero promotional banner carousel'},
+            {'key': 'banners', 'label': 'Banners', 'url_name': 'banner_list', 'icon': 'fa-solid fa-rectangle-ad', 'desc': 'Promotional marketing banners across the storefront'},
+            {'key': 'pages', 'label': 'Pages', 'url_name': 'page_list', 'icon': 'fa-solid fa-file-lines', 'desc': 'CMS content pages (About, Privacy, Terms, FAQ, etc.)'},
+        ]
+    },
+    {
+        'title': 'Store Settings',
+        'key': 'settings',
+        'items': [
+            {'key': 'site_settings', 'label': 'Site Settings', 'url_name': 'site_settings', 'icon': 'fa-solid fa-gear', 'desc': 'Store branding, contact info, currency, shipping & tax'},
+            {'key': 'payment_methods', 'label': 'Payment Methods', 'url_name': 'payment_method_list', 'icon': 'fa-solid fa-credit-card', 'desc': 'Payment gateways (bKash, Nagad, Rocket, Cash on Delivery)'},
+        ]
+    },
+    {
+        'title': 'Administration & Security',
+        'key': 'administration',
+        'items': [
+            {'key': 'admin_users', 'label': 'Admin Users', 'url_name': 'admin_user_list', 'icon': 'fa-solid fa-user-shield', 'desc': 'Admin user management and role access control'},
+            {'key': 'activity_log', 'label': 'Activity Log', 'url_name': 'activity_log', 'icon': 'fa-solid fa-clipboard-list', 'desc': 'Comprehensive audit trail of administrator actions'},
+            {'key': 'locked_users', 'label': 'Locked Accounts', 'url_name': 'locked_users_list', 'icon': 'fa-solid fa-user-lock', 'desc': 'Account lockout and login attempt security monitoring'},
+            {'key': 'change_password', 'label': 'Change Password', 'url_name': 'change_password', 'icon': 'fa-solid fa-key', 'desc': 'Update current logged-in admin user password'},
+        ]
+    },
+]
+
+VALID_NAV_KEYS = {item['key'] for section in ADMIN_NAV_SECTIONS for item in section['items']}
+
 
 def _format_size(size_bytes):
     """Formats bytes to human-readable size string."""
@@ -70,6 +114,34 @@ def developer_settings(request):
         except Exception as e:
             logger.error(f"Failed to update maintenance settings: {e}", exc_info=True)
             messages.error(request, f"Failed to update maintenance mode: {e}")
+        return redirect('custom_admin:developer_settings')
+
+    # Handle Navigation Menus Visibility Update
+    if request.method == 'POST' and 'update_hidden_menus' in request.POST:
+        submitted_hidden = request.POST.getlist('hidden_menus')
+        valid_hidden = [k for k in submitted_hidden if k in VALID_NAV_KEYS]
+        try:
+            site_settings_obj.hidden_menus = valid_hidden
+            site_settings_obj.save(update_fields=['hidden_menus'])
+
+            from django.core.cache import cache
+            try:
+                cache.clear()
+            except Exception:
+                pass
+
+            hidden_count = len(valid_hidden)
+            desc = f"Updated sidebar menu visibility: {hidden_count} menu(s) hidden ({', '.join(valid_hidden) if valid_hidden else 'none'})."
+            ActivityLog.log(
+                request=request,
+                action='settings',
+                description=desc,
+                target_type='Developer Settings',
+            )
+            messages.success(request, f'Sidebar menu visibility updated successfully. {hidden_count} menu(s) currently hidden.')
+        except Exception as e:
+            logger.error(f"Failed to update menu visibility: {e}", exc_info=True)
+            messages.error(request, f"Failed to update menu visibility: {e}")
         return redirect('custom_admin:developer_settings')
 
     log_file = getattr(settings, 'ERROR_LOG_FILE', settings.BASE_DIR / 'logs' / 'error.log')
@@ -157,6 +229,9 @@ def developer_settings(request):
         'settings': site_settings_obj,
         'maintenance_mode': getattr(site_settings_obj, 'maintenance_mode', False),
         'maintenance_msg': getattr(site_settings_obj, 'maintenance_msg', ''),
+        'nav_menu_sections': ADMIN_NAV_SECTIONS,
+        'hidden_menus': site_settings_obj.hidden_menu_list,
+        'hidden_menu_count': len(site_settings_obj.hidden_menu_list),
     }
     return render(request, 'custom_admin/settings/developer_settings.html', context)
 
