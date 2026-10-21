@@ -56,7 +56,7 @@ class SiteSettings(models.Model):
 
     @classmethod
     def _ensure_table_and_columns(cls):
-        """Self-healing helper: ensures custom_admin_sitesettings table and required columns exist in MySQL."""
+        """Self-healing helper: ensures custom_admin_sitesettings table, columns, and utf8mb4 charset in MySQL."""
         from django.db import connection
         try:
             with connection.cursor() as cursor:
@@ -67,13 +67,20 @@ class SiteSettings(models.Model):
                     call_command('migrate', 'custom_admin', interactive=False)
                     return
 
+                # Convert entire table to utf8mb4 to support Bengali Unicode characters (৳)
+                try:
+                    cursor.execute(f"ALTER TABLE `{table_name}` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+                    cursor.execute(f"ALTER TABLE `{table_name}` MODIFY `currency_symbol` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '৳'")
+                except Exception:
+                    pass
+
                 cursor.execute(f"SHOW COLUMNS FROM `{table_name}`")
                 existing_cols = {row[0].lower() for row in cursor.fetchall()}
 
                 if 'maintenance_mode' not in existing_cols:
                     cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `maintenance_mode` tinyint(1) NOT NULL DEFAULT 0")
                 if 'maintenance_msg' not in existing_cols:
-                    cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `maintenance_msg` longtext NULL")
+                    cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `maintenance_msg` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")
         except Exception:
             pass
 
@@ -82,7 +89,15 @@ class SiteSettings(models.Model):
         try:
             obj = cls.objects.first()
             if not obj:
-                obj, _ = cls.objects.get_or_create(pk=1)
+                try:
+                    obj, _ = cls.objects.get_or_create(pk=1)
+                except Exception:
+                    # Likely latin1 charset on table — convert to utf8mb4 and retry
+                    cls._ensure_table_and_columns()
+                    try:
+                        obj, _ = cls.objects.get_or_create(pk=1)
+                    except Exception:
+                        obj, _ = cls.objects.get_or_create(pk=1, defaults={'currency_symbol': 'Tk'})
             return obj
         except Exception as first_err:
             import logging
@@ -91,7 +106,10 @@ class SiteSettings(models.Model):
             try:
                 obj = cls.objects.first()
                 if not obj:
-                    obj, _ = cls.objects.get_or_create(pk=1)
+                    try:
+                        obj, _ = cls.objects.get_or_create(pk=1)
+                    except Exception:
+                        obj, _ = cls.objects.get_or_create(pk=1, defaults={'currency_symbol': 'Tk'})
                 return obj
             except Exception as second_err:
                 logging.getLogger('django.request').error(f"SiteSettings fallback used: {second_err}")
@@ -99,7 +117,7 @@ class SiteSettings(models.Model):
                     pk=1,
                     site_name='Kidurabd',
                     currency='BDT',
-                    currency_symbol='৳',
+                    currency_symbol='Tk',
                     default_shipping_charge=60,
                     free_shipping_threshold=0,
                     tax_rate=0,
