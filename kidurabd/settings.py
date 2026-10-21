@@ -260,13 +260,17 @@ else:
 
 # ── Logging Configuration ───────────────────────────────────────────────────
 LOGS_DIR = BASE_DIR / 'logs'
-LOGS_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
+
 ERROR_LOG_FILE = LOGS_DIR / 'error.log'
-if not ERROR_LOG_FILE.exists():
-    try:
+try:
+    if not ERROR_LOG_FILE.exists():
         ERROR_LOG_FILE.touch()
-    except Exception:
-        pass
+except Exception:
+    pass
 
 LOGGING = {
     'version': 1,
@@ -286,6 +290,7 @@ LOGGING = {
             'backupCount': 3,
             'formatter': 'standard',
             'encoding': 'utf-8',
+            'delay': True,
         },
         'console': {
             'level': 'INFO',

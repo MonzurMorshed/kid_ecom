@@ -13,7 +13,14 @@ from ..models import SiteSettings, PaymentMethod
 @admin_required
 def site_settings(request):
     """Single-page settings hub — general info, currency, shipping, social."""
-    settings_obj = SiteSettings.get_settings()
+    import logging
+    logger = logging.getLogger('django.request')
+
+    try:
+        settings_obj = SiteSettings.get_settings()
+    except Exception as e:
+        logger.error(f'Error getting SiteSettings: {e}', exc_info=True)
+        settings_obj = SiteSettings(pk=1, site_name='Kidurabd')
 
     if request.method == 'POST':
         form = SiteSettingsForm(request.POST, request.FILES, instance=settings_obj)
@@ -23,13 +30,16 @@ def site_settings(request):
                 messages.success(request, 'Site settings saved successfully.')
                 return redirect('custom_admin:site_settings')
             except Exception as e:
-                import logging
-                logging.getLogger('django.request').error(f'Error saving site settings: {e}', exc_info=True)
+                logger.error(f'Error saving site settings: {e}', exc_info=True)
                 messages.error(request, f'Failed to save settings: {e}')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = SiteSettingsForm(instance=settings_obj)
+        try:
+            form = SiteSettingsForm(instance=settings_obj)
+        except Exception as e:
+            logger.error(f'Error initializing SiteSettingsForm: {e}', exc_info=True)
+            form = SiteSettingsForm()
 
     tabs = [
         ('general',     'General',       '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></circle></svg>'),

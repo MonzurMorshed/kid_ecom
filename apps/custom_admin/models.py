@@ -55,11 +55,57 @@ class SiteSettings(models.Model):
         return f'Site Settings — {self.site_name}'
 
     @classmethod
+    def _ensure_table_and_columns(cls):
+        """Self-healing helper: ensures custom_admin_sitesettings table and required columns exist in MySQL."""
+        from django.db import connection
+        try:
+            with connection.cursor() as cursor:
+                table_name = cls._meta.db_table
+                cursor.execute(f"SHOW TABLES LIKE '{table_name}'")
+                if not cursor.fetchone():
+                    from django.core.management import call_command
+                    call_command('migrate', 'custom_admin', interactive=False)
+                    return
+
+                cursor.execute(f"SHOW COLUMNS FROM `{table_name}`")
+                existing_cols = {row[0].lower() for row in cursor.fetchall()}
+
+                if 'maintenance_mode' not in existing_cols:
+                    cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `maintenance_mode` tinyint(1) NOT NULL DEFAULT 0")
+                if 'maintenance_msg' not in existing_cols:
+                    cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `maintenance_msg` longtext NULL")
+        except Exception:
+            pass
+
+    @classmethod
     def get_settings(cls):
-        obj = cls.objects.first()
-        if not obj:
-            obj, _ = cls.objects.get_or_create(pk=1)
-        return obj
+        try:
+            obj = cls.objects.first()
+            if not obj:
+                obj, _ = cls.objects.get_or_create(pk=1)
+            return obj
+        except Exception as first_err:
+            import logging
+            logging.getLogger('django.request').warning(f"SiteSettings query failed ({first_err}), attempting auto-heal...")
+            cls._ensure_table_and_columns()
+            try:
+                obj = cls.objects.first()
+                if not obj:
+                    obj, _ = cls.objects.get_or_create(pk=1)
+                return obj
+            except Exception as second_err:
+                logging.getLogger('django.request').error(f"SiteSettings fallback used: {second_err}")
+                return cls(
+                    pk=1,
+                    site_name='Kidurabd',
+                    currency='BDT',
+                    currency_symbol='৳',
+                    default_shipping_charge=60,
+                    free_shipping_threshold=0,
+                    tax_rate=0,
+                    maintenance_mode=False,
+                    maintenance_msg='We are currently performing maintenance. Please check back soon.',
+                )
 
     @property
     def logo_url(self):

@@ -73,15 +73,15 @@ jobs:
             
             # 6. Run database migrations (only if DB is configured)
             echo "🗄️ Running migrations..."
-            python manage.py migrate --noinput || echo "⚠️ Migration skipped (check DB credentials in .env)"
+            python manage.py migrate --noinput || { echo "⚠️ Migration had issues, retrying with traceback..."; python manage.py migrate --traceback || true; }
             
             # 7. Collect static files
             echo "🎨 Collecting static files..."
             python manage.py collectstatic --noinput
             
-            # 8. Restart CloudLinux Phusion Passenger
+            # 8. Restart CloudLinux Phusion Passenger & ensure runtime dirs
             echo "🔄 Restarting Django Passenger Application..."
-            mkdir -p tmp
+            mkdir -p tmp logs
             touch tmp/restart.txt
             
             echo "✅ Deployment completed successfully!"
