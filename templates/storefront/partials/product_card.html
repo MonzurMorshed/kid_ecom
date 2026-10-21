@@ -17,7 +17,7 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
                      alt="{{ feat_image.alt_text|default:product.title }}"
                      loading="lazy"
                      decoding="async"
-                     class="h-full w-full object-contain p-3 sm:p-4 transition-transform duration-300 ease-out group-hover:scale-105">
+                     class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105">
             {% else %}
                 <span class="product-emoji text-7xl sm:text-8xl leading-none transition-transform duration-300 ease-out group-hover:scale-110">
                     {{ product.category.emoji|default:"🧸" }}
@@ -26,7 +26,7 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
             {% endwith %}
 
             <!-- Badges -->
-            <div class="absolute left-3 top-3 flex flex-col gap-1">
+            <div class="absolute left-3 top-3 flex flex-col gap-1 z-10">
                 {% if product.is_new %}
                 <span class="rounded-full bg-softmint px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-ink">New</span>
                 {% endif %}
@@ -39,7 +39,7 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
             </div>
 
             <!-- Favorite button -->
-            <button class="toggle-favorite absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm text-ink/40 hover:text-coral transition-colors shadow-sm"
+            <button class="toggle-favorite absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm text-ink/40 hover:text-coral transition-colors shadow-sm"
                     data-active="false"
                     aria-label="Save {{ product.title }} to wishlist">
                 <i class="fa-regular fa-heart text-xs" aria-hidden="true"></i>
