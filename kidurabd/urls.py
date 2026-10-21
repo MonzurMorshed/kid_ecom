@@ -19,6 +19,13 @@ sitemaps = {
     'pages': PageSitemap,
 }
 
+from django.utils.cache import patch_cache_control
+
+def cached_media_serve(request, path, document_root=None, show_indexes=False):
+    response = serve(request, path, document_root, show_indexes)
+    patch_cache_control(response, public=True, max_age=2592000, immutable=True)
+    return response
+
 urlpatterns = [
     # SEO endpoints
     path('robots.txt', robots_txt, name='robots_txt'),
@@ -30,8 +37,8 @@ urlpatterns = [
     path('api/v1/', include('kidurabd.api', namespace='api')),
     path('accounts/', include('accounts.urls', namespace='accounts')),
 
-    # Media files (served in both dev & cPanel production when not using an external CDN)
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    # Media files (served with 30-day browser caching headers)
+    re_path(r'^media/(?P<path>.*)$', cached_media_serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 
 handler404 = 'storefront.views.seo_views.custom_404'

@@ -84,6 +84,9 @@
     <!-- Alpine.js Local -->
     <script defer src="{% static 'vendor/alpinejs/alpine.min.js' %}"></script>
 
+    <!-- HTMX Local (Django SPA Engine) -->
+    <script src="{% static 'vendor/htmx/htmx.min.js' %}"></script>
+
     <style>
         :root {
             --store-bg: {{ site_settings.store_bg_color|default:"#fffaf2" }};
@@ -103,6 +106,33 @@
             color: var(--text-color);
         }
         h1, h2, h3, .display { font-family: 'Fraunces', serif; }
+
+        /* Top Navigation Progress Indicator (YouTube / Turbo / Next.js style) */
+        #spa-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3.5px;
+            background: linear-gradient(90deg, #ff6b4d, #f6c64d, #38bdf8);
+            z-index: 999999;
+            box-shadow: 0 0 12px rgba(255, 107, 77, 0.8), 0 0 6px rgba(246, 198, 77, 0.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: width 0.2s ease, opacity 0.25s ease;
+        }
+        #spa-progress-bar::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -3px;
+            bottom: -3px;
+            width: 80px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9));
+            box-shadow: 0 0 14px #ff6b4d, 0 0 6px #f6c64d;
+            border-radius: 50%;
+            opacity: 0.9;
+        }
 
         .product-card {
             border-radius: var(--card-radius);
@@ -143,7 +173,12 @@
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="bg-cream text-ink antialiased">
+<body class="bg-cream text-ink antialiased"
+      hx-boost="true"
+      hx-indicator="#spa-progress-bar">
+
+    <!-- Top SPA Progress Indicator -->
+    <div id="spa-progress-bar" aria-hidden="true"></div>
 
     <!-- ── Announcement strip ────────────────────────────── -->
     {% if site_settings.announcement_enabled %}
@@ -217,7 +252,7 @@
                                         {% if cat.emoji %}
                                         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-base group-hover:scale-110 transition-transform">{{ cat.emoji }}</span>
                                         {% elif cat.image %}
-                                        <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="h-7 w-7 shrink-0 rounded-lg object-cover">
+                                        <img src="{{ cat.image.url }}" alt="{{ cat.name }}" loading="lazy" decoding="async" class="h-7 w-7 shrink-0 rounded-lg object-cover">
                                         {% else %}
                                         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-xs text-ink/40 group-hover:scale-110 transition-transform"><i class="fa-solid fa-shapes"></i></span>
                                         {% endif %}
@@ -248,7 +283,9 @@
             <div class="flex shrink-0 items-center justify-center">
                 <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2.5 group">
                     {% if site_settings and site_settings.site_logo %}
-                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                         decoding="async" fetchpriority="high"
+                         class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
                     <span class="text-xl sm:text-[23px] font-bold tracking-[-0.04em] font-display leading-none">
                         {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
                     </span>
@@ -346,14 +383,14 @@
                             <p class="text-xs font-bold text-ink truncate mt-1">{{ user.get_full_name|default:user.username }}</p>
                             <p class="text-[10px] text-ink/45 truncate">{{ user.email }}</p>
                         </div>
-                        <a href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
+                        <a hx-boost="false" href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
                             <i class="fa-solid fa-gauge-high text-xs text-sky-500"></i> Admin Dashboard
                         </a>
                         <a href="{% url 'accounts:login' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
                             <i class="fa-solid fa-user text-xs text-coral"></i> Customer Sign In
                         </a>
                         <div class="border-t border-ink/8 mt-1 pt-1">
-                            <a href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
+                            <a hx-boost="false" href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                                 Admin Sign Out
                             </a>
@@ -386,7 +423,9 @@
 
                 <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2.5 group">
                     {% if site_settings and site_settings.site_logo %}
-                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                         decoding="async" fetchpriority="high"
+                         class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
                     <span class="text-xl sm:text-[23px] font-bold tracking-[-0.04em] font-display leading-none">
                         {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
                     </span>
@@ -486,14 +525,14 @@
                             <p class="text-xs font-bold text-ink truncate mt-1">{{ user.get_full_name|default:user.username }}</p>
                             <p class="text-[10px] text-ink/45 truncate">{{ user.email }}</p>
                         </div>
-                        <a href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
+                        <a hx-boost="false" href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
                             <i class="fa-solid fa-gauge-high text-xs text-sky-500"></i> Admin Dashboard
                         </a>
                         <a href="{% url 'accounts:login' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
                             <i class="fa-solid fa-user text-xs text-coral"></i> Customer Sign In
                         </a>
                         <div class="border-t border-ink/8 mt-1 pt-1">
-                            <a href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
+                            <a hx-boost="false" href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                                 Admin Sign Out
                             </a>
@@ -526,7 +565,9 @@
             <!-- Logo / Wordmark -->
             <a href="{% url 'storefront:index' %}" class="flex shrink-0 items-center gap-2.5 group">
                 {% if site_settings and site_settings.site_logo %}
-                <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                     decoding="async" fetchpriority="high"
+                     class="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
                 <span class="text-xl sm:text-[23px] font-bold tracking-[-0.04em] font-display leading-none">
                     {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
                 </span>
@@ -581,7 +622,7 @@
                                         {{ cat.emoji }}
                                     </span>
                                     {% elif cat.image %}
-                                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="h-7 w-7 shrink-0 rounded-lg object-cover">
+                                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}" loading="lazy" decoding="async" class="h-7 w-7 shrink-0 rounded-lg object-cover">
                                     {% else %}
                                     <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cream text-xs text-ink/40 group-hover:scale-110 transition-transform">
                                         <i class="fa-solid fa-shapes"></i>
@@ -705,7 +746,7 @@
                             <p class="text-xs font-bold text-ink truncate mt-1">{{ user.get_full_name|default:user.username }}</p>
                             <p class="text-[10px] text-ink/45 truncate">{{ user.email }}</p>
                         </div>
-                        <a href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
+                        <a hx-boost="false" href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
                             <i class="fa-solid fa-gauge-high text-xs text-sky-500"></i>
                             Admin Dashboard
                         </a>
@@ -714,7 +755,7 @@
                             Customer Sign In
                         </a>
                         <div class="border-t border-ink/8 mt-1 pt-1">
-                            <a href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
+                            <a hx-boost="false" href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                                 Admin Sign Out
                             </a>
@@ -882,7 +923,9 @@
             <div class="flex flex-col items-center justify-center">
                 <a href="{% url 'storefront:index' %}" class="flex items-center gap-2.5 group">
                     {% if site_settings and site_settings.site_logo %}
-                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                         loading="lazy" decoding="async"
+                         class="h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
                     <span class="text-2xl font-bold tracking-[-0.04em] font-display leading-none">
                         {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
                     </span>
@@ -961,7 +1004,9 @@
             <div class="flex items-center gap-3">
                 <a href="{% url 'storefront:index' %}" class="flex items-center gap-2 group">
                     {% if site_settings and site_settings.site_logo %}
-                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-7 w-auto object-contain">
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                         loading="lazy" decoding="async"
+                         class="h-7 w-auto object-contain">
                     <span class="text-lg font-bold tracking-[-0.04em] font-display leading-none">
                         {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
                     </span>
@@ -1011,7 +1056,9 @@
             <div>
                 <a href="{% url 'storefront:index' %}" class="flex items-center gap-2.5 group">
                     {% if site_settings and site_settings.site_logo %}
-                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}" class="h-8 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
+                    <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                         loading="lazy" decoding="async"
+                         class="h-8 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
                     <span class="text-xl sm:text-[23px] font-bold tracking-[-0.04em] font-display leading-none">
                         {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
                     </span>
@@ -1182,72 +1229,187 @@
             }
         });
 
-        // Wishlist state
-        let wishlistCount = 0;
-        document.querySelectorAll('.toggle-favorite').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const active = btn.dataset.active === 'true';
-                btn.dataset.active = String(!active);
-                const icon = btn.querySelector('i');
-                if (icon) {
-                    if (active) {
-                        icon.classList.remove('fa-solid', 'text-coral');
-                        icon.classList.add('fa-regular');
-                    } else {
-                        icon.classList.remove('fa-regular');
-                        icon.classList.add('fa-solid', 'text-coral');
+        // Continuous Trickle Progress Bar Controller (YouTube / Turbo / Next.js style)
+        const ProgressBar = {
+            el: document.getElementById('spa-progress-bar'),
+            timer: null,
+            progress: 0,
+            start() {
+                if (!this.el) this.el = document.getElementById('spa-progress-bar');
+                if (!this.el) return;
+                clearInterval(this.timer);
+                this.progress = 18;
+                this.el.style.transition = 'width 0.2s ease, opacity 0.2s ease';
+                this.el.style.opacity = '1';
+                this.el.style.width = '18%';
+
+                this.timer = setInterval(() => {
+                    if (this.progress < 85) {
+                        const step = Math.max(1, (85 - this.progress) * 0.15);
+                        this.progress += step;
+                        this.el.style.width = `${Math.min(85, this.progress)}%`;
                     }
-                } else {
-                    btn.innerHTML = active ? '<i class="fa-regular fa-heart"></i>' : '<i class="fa-solid fa-heart text-coral"></i>';
+                }, 100);
+            },
+            done() {
+                if (!this.el) return;
+                clearInterval(this.timer);
+                this.progress = 100;
+                this.el.style.transition = 'width 0.18s ease-out, opacity 0.3s ease 0.12s';
+                this.el.style.width = '100%';
+                setTimeout(() => {
+                    this.el.style.opacity = '0';
+                    setTimeout(() => {
+                        this.el.style.width = '0%';
+                        this.progress = 0;
+                    }, 300);
+                }, 180);
+            },
+            reset() {
+                clearInterval(this.timer);
+                if (this.el) {
+                    this.el.style.opacity = '0';
+                    this.el.style.width = '0%';
                 }
-                btn.classList.toggle('text-coral', !active);
-                wishlistCount += active ? -1 : 1;
-                const badge = document.getElementById('wishlistCount');
-                if (badge) {
-                    badge.textContent = wishlistCount;
-                    badge.classList.toggle('hidden', wishlistCount === 0);
-                }
-                toast(active ? 'Removed from wishlist' : 'Saved to wishlist ♥');
-            });
+                this.progress = 0;
+            }
+        };
+
+        // HTMX SPA Lifecycle & CSRF Configuration
+        document.addEventListener('htmx:configRequest', function(evt) {
+            const token = getCookie('csrftoken') || '{{ csrf_token }}';
+            if (token) {
+                evt.detail.headers['X-CSRFToken'] = token;
+            }
         });
 
-        const wishlistBtn = document.getElementById('wishlistButton');
-        if (wishlistBtn) {
-            wishlistBtn.addEventListener('click', () => {
-                toast(wishlistCount ? `${wishlistCount} saved toy${wishlistCount === 1 ? '' : 's'}` : 'Your wishlist is waiting');
-            });
-        }
+        document.addEventListener('htmx:beforeRequest', function(evt) {
+            const reqPath = evt.detail.pathInfo?.requestPath || '';
+            // Force normal browser navigation for admin, django-admin, and logout
+            if (reqPath.startsWith('/admin') || reqPath.startsWith('/django-admin') || reqPath.includes('/logout')) {
+                evt.preventDefault();
+                window.location.href = reqPath;
+                return;
+            }
+            ProgressBar.start();
+        });
 
-        const newsletterForm = document.getElementById('newsletterForm');
-        if (newsletterForm) {
-            newsletterForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const form = e.target;
-                const emailInput = form.querySelector('input[name="email"]');
-                const email = emailInput ? emailInput.value.trim() : '';
-                if (!email) return;
+        document.addEventListener('htmx:afterOnLoad', function(evt) {
+            ProgressBar.done();
+        });
 
-                const csrftoken = getCookie('csrftoken') || form.querySelector('[name=csrfmiddlewaretoken]')?.value;
-                const formData = new FormData();
-                formData.append('email', email);
+        document.addEventListener('htmx:sendError', function(evt) {
+            ProgressBar.reset();
+            toast('Network connection error.');
+        });
 
+        // Trigger progress bar immediately on any link click
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (
+                link &&
+                link.href &&
+                !link.target &&
+                !link.href.startsWith('javascript:') &&
+                !link.href.includes('#') &&
+                !e.ctrlKey &&
+                !e.metaKey &&
+                !e.shiftKey &&
+                !e.altKey
+            ) {
+                ProgressBar.start();
+            }
+        });
+
+        window.addEventListener('pageshow', function() {
+            ProgressBar.done();
+        });
+
+        document.addEventListener('htmx:afterSettle', function(evt) {
+            // Reinitialize Alpine.js on newly swapped content
+            if (window.Alpine && evt.detail.elt) {
                 try {
-                    const res = await fetch("{% url 'storefront:newsletter_subscribe' %}", {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': csrftoken,
-                        }
-                    });
-                    const data = await res.json();
-                    toast(data.message || "You're on the list — welcome to the playful side 🎉");
-                    if (res.ok) form.reset();
-                } catch (err) {
-                    toast('Something went wrong, please try again.');
+                    window.Alpine.initTree(evt.detail.elt);
+                } catch (e) {}
+            }
+            // Auto close mobile drawer on SPA navigation
+            const rootEl = document.documentElement;
+            if (rootEl && window.Alpine) {
+                try {
+                    const data = Alpine.$data(rootEl);
+                    if (data && data.mobileMenuOpen) data.mobileMenuOpen = false;
+                } catch(e) {}
+            }
+            // Scroll to top on fresh page navigation
+            if (!window.location.hash) {
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            }
+        });
+
+        // Wishlist state & delegated event listener (works across all SPA page loads)
+        let wishlistCount = 0;
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.toggle-favorite');
+            if (!btn) return;
+            e.preventDefault();
+            const active = btn.dataset.active === 'true';
+            btn.dataset.active = String(!active);
+            const icon = btn.querySelector('i');
+            if (icon) {
+                if (active) {
+                    icon.classList.remove('fa-solid', 'text-coral');
+                    icon.classList.add('fa-regular');
+                } else {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid', 'text-coral');
                 }
-            });
-        }
+            } else {
+                btn.innerHTML = active ? '<i class="fa-regular fa-heart"></i>' : '<i class="fa-solid fa-heart text-coral"></i>';
+            }
+            btn.classList.toggle('text-coral', !active);
+            wishlistCount = Math.max(0, wishlistCount + (active ? -1 : 1));
+            const badge = document.getElementById('wishlistCount');
+            if (badge) {
+                badge.textContent = wishlistCount;
+                badge.classList.toggle('hidden', wishlistCount === 0);
+            }
+            toast(active ? 'Removed from wishlist' : 'Saved to wishlist ♥');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#wishlistButton')) {
+                toast(wishlistCount ? `${wishlistCount} saved toy${wishlistCount === 1 ? '' : 's'}` : 'Your wishlist is waiting');
+            }
+        });
+
+        document.addEventListener('submit', async (e) => {
+            const form = e.target.closest('#newsletterForm');
+            if (!form) return;
+            e.preventDefault();
+            const emailInput = form.querySelector('input[name="email"]');
+            const email = emailInput ? emailInput.value.trim() : '';
+            if (!email) return;
+
+            const csrftoken = getCookie('csrftoken') || form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            const formData = new FormData();
+            formData.append('email', email);
+
+            try {
+                const res = await fetch("{% url 'storefront:newsletter_subscribe' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken,
+                    }
+                });
+                const data = await res.json();
+                toast(data.message || "You're on the list — welcome to the playful side 🎉");
+                if (res.ok) form.reset();
+            } catch (err) {
+                toast('Something went wrong, please try again.');
+            }
+        });
     </script>
 
     {% block extra_scripts %}{% endblock %}

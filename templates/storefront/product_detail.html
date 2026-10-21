@@ -118,6 +118,8 @@
                     {% if product.images.exists %}
                     <img :src="activeImageUrl || '{{ product.images.first.image.url }}'"
                          alt="{{ product.title }}"
+                         decoding="async"
+                         fetchpriority="high"
                          class="w-full h-full transition-transform duration-150 ease-out will-change-transform"
                          :style="{ transformOrigin: zoomOrigin, transform: zoomed ? 'scale(1.8)' : 'scale(1)' }">
 
@@ -150,7 +152,9 @@
                             @click="selectThumb({{ forloop.counter0 }}, '{{ img.image.url }}')"
                             :class="activeImageUrl === '{{ img.image.url }}' ? 'border-coral shadow-md ring-2 ring-coral/20' : 'border-ink/10 hover:border-coral/50 opacity-70 hover:opacity-100'"
                             aria-label="View image {{ forloop.counter }}">
-                        <img src="{{ img.image.url }}" alt="{{ product.title }} image {{ forloop.counter }}" class="h-full w-full object-cover rounded-xl">
+                        <img src="{{ img.image.url }}" alt="{{ product.title }} image {{ forloop.counter }}"
+                             loading="lazy" decoding="async"
+                             class="h-full w-full object-cover rounded-xl">
                     </button>
                     {% endfor %}
                 </div>
@@ -384,7 +388,9 @@
                         @click="selectThumb({{ forloop.counter0 }}, '{{ img.image.url }}')"
                         class="h-14 w-14 shrink-0 rounded-xl overflow-hidden border-2 transition-all p-0.5 cursor-pointer bg-white"
                         :class="activeImageUrl === '{{ img.image.url }}' ? 'border-coral ring-2 ring-coral/20' : 'border-ink/10 opacity-60 hover:opacity-100'">
-                    <img src="{{ img.image.url }}" alt="thumb" class="h-full w-full object-contain rounded-lg">
+                    <img src="{{ img.image.url }}" alt="thumb"
+                         loading="lazy" decoding="async"
+                         class="h-full w-full object-contain rounded-lg">
                 </button>
                 {% endfor %}
             </div>

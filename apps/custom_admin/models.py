@@ -218,6 +218,17 @@ class SiteSettings(models.Model):
         except Exception:
             pass
 
+    def save(self, *args, **kwargs):
+        try:
+            from products.image_optimizer import compress_and_resize_image
+            if self.site_logo:
+                compress_and_resize_image(self.site_logo, max_dimensions=(500, 500), quality=85)
+            if self.site_favicon:
+                compress_and_resize_image(self.site_favicon, max_dimensions=(128, 128), quality=85)
+        except Exception:
+            pass
+        super().save(*args, **kwargs)
+
     @classmethod
     def get_settings(cls):
         try:

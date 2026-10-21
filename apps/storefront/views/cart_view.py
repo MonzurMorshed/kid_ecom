@@ -30,7 +30,7 @@ def cart_page(request):
 @require_POST
 def cart_add(request):
     cart = Cart(request)
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.headers.get('HX-Request') == 'true'
 
     product_id = request.POST.get('product_id')
     variant_id = request.POST.get('variant_id') or None
@@ -61,7 +61,11 @@ def cart_remove(request):
         except Exception:
             pass
 
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    is_ajax = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+        'application/json' in request.headers.get('Accept', '') or
+        request.headers.get('HX-Request') == 'true'
+    )
 
     cart.remove(key)
 
@@ -85,7 +89,11 @@ def cart_update(request):
         except Exception:
             pass
 
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+    is_ajax = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+        'application/json' in request.headers.get('Accept', '') or
+        request.headers.get('HX-Request') == 'true'
+    )
 
     cart.update_qty(key, qty)
 

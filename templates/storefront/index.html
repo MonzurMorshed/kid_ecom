@@ -193,7 +193,9 @@
                style="background-color: {{ cat.theme_color|default:'#e6f0e8' }};">
                 <div class="mb-4 text-5xl sm:text-6xl leading-none transition-transform group-hover:scale-110 duration-200">
                     {% if cat.image %}
-                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto">
+                    <img src="{{ cat.image.url }}" alt="{{ cat.name }}"
+                         loading="lazy" decoding="async" width="80" height="80"
+                         class="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto">
                     {% else %}
                     <span class="text-4xl text-ink/70"><i class="fa-solid fa-cubes text-coral" aria-hidden="true"></i></span>
                     {% endif %}

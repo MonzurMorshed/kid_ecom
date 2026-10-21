@@ -99,7 +99,7 @@
                             <!-- Image or Fallback -->
                             <div class="h-16 w-16 shrink-0 rounded-2xl bg-[#faf6ee] border border-ink/8 overflow-hidden flex items-center justify-center">
                                 {% if item.product and item.product.images.first %}
-                                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.title }}" class="h-full w-full object-cover">
+                                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.title }}" loading="lazy" decoding="async" class="h-full w-full object-cover">
                                 {% else %}
                                     <i class="fa-solid fa-shapes text-2xl text-slate-300" aria-hidden="true"></i>
                                 {% endif %}

@@ -48,7 +48,7 @@
                 <!-- Image/Emoji -->
                 <div class="w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-mint/50 flex items-center justify-center">
                     {% if item.image %}
-                    <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-full object-contain p-1">
+                    <img src="{{ item.image }}" alt="{{ item.title }}" loading="lazy" decoding="async" class="w-full h-full object-contain p-1">
                     {% else %}
                     <span class="text-4xl">{{ item.emoji }}</span>
                     {% endif %}
@@ -354,5 +354,10 @@ function updateQty(key, qty) {
     const currentQty = qtySpan ? parseInt(qtySpan.textContent.trim(), 10) || 1 : 1;
     return changeItemQty(key, qty - currentQty);
 }
+
+window.renderCartState = renderCartState;
+window.changeItemQty = changeItemQty;
+window.removeCartItem = removeCartItem;
+window.updateQty = updateQty;
 </script>
 {% endblock %}
