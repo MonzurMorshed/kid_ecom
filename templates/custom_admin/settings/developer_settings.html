@@ -396,7 +396,7 @@
              staticUrl: '{{ static_cdn_url|default:''|escapejs }}',
              mediaUrl: '{{ media_cdn_url|default:''|escapejs }}'
          }">
-        <form method="POST" action="{% url 'custom_admin:developer_settings' %}">
+        <form method="POST" action="{% url 'custom_admin:developer_settings' %}" id="cdn-settings-form">
             {% csrf_token %}
             <input type="hidden" name="update_cdn_settings" value="1">
 
@@ -591,16 +591,17 @@
                     </div>
                     <p class="text-[11px] text-slate-400 mt-0.5">Instantly clears all cached CSS, JS, and media files across Cloudflare's 300+ global edge data centers.</p>
                 </div>
-            </div>
-            <form method="POST" action="{% url 'custom_admin:developer_settings' %}" onsubmit="return confirm('Purge Cloudflare CDN cache globally? All cached assets will be instantly cleared worldwide.');" class="shrink-0">
-                {% csrf_token %}
-                <input type="hidden" name="purge_cloudflare_cache" value="1">
+            <div class="shrink-0">
                 <button type="submit"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg shadow-orange-500/10">
+                        form="cdn-settings-form"
+                        name="purge_cloudflare_cache"
+                        value="1"
+                        onclick="return confirm('Purge Cloudflare CDN cache globally? All cached assets will be instantly cleared worldwide.');"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg shadow-orange-500/10 cursor-pointer">
                     <i class="fa-solid fa-broom text-xs"></i>
                     Purge Cloudflare Cache Now
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 

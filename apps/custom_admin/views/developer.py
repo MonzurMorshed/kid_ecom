@@ -276,8 +276,27 @@ def developer_settings(request):
 
     # Handle Cloudflare Cache Purge Action
     if request.method == 'POST' and 'purge_cloudflare_cache' in request.POST:
+        # If user submitted zone_id/token in the same form, save them first
+        cf_zone_id = request.POST.get('cloudflare_zone_id', '').strip()
+        cf_api_token = request.POST.get('cloudflare_api_token', '').strip()
+        updated_cols = []
+        if cf_zone_id:
+            site_settings_obj.cloudflare_zone_id = cf_zone_id
+            updated_cols.append('cloudflare_zone_id')
+        if cf_api_token and not cf_api_token.startswith('•'):
+            site_settings_obj.cloudflare_api_token = cf_api_token
+            updated_cols.append('cloudflare_api_token')
+        if updated_cols:
+            try:
+                site_settings_obj.save(update_fields=updated_cols)
+            except Exception:
+                pass
+
         from custom_admin.cloudflare import purge_cloudflare_cache
-        success, msg = purge_cloudflare_cache()
+        success, msg = purge_cloudflare_cache(
+            zone_id=site_settings_obj.cloudflare_zone_id,
+            api_token=site_settings_obj.cloudflare_api_token
+        )
         if success:
             ActivityLog.log(
                 request=request,
