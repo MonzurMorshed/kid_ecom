@@ -370,8 +370,8 @@
                         <a hx-boost="false" href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
                             <i class="fa-solid fa-gauge-high text-xs text-sky-500"></i> Admin Dashboard
                         </a>
-                        <a href="{% url 'accounts:login' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
-                            <i class="fa-solid fa-user text-xs text-coral"></i> Customer Sign In
+                        <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
+                            <i class="fa-solid fa-user text-xs text-coral"></i> My Profile
                         </a>
                         <div class="border-t border-ink/8 mt-1 pt-1">
                             <a hx-boost="false" href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
@@ -512,8 +512,8 @@
                         <a hx-boost="false" href="{% url 'custom_admin:dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-sky-600 hover:bg-sky-50 transition font-medium">
                             <i class="fa-solid fa-gauge-high text-xs text-sky-500"></i> Admin Dashboard
                         </a>
-                        <a href="{% url 'accounts:login' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
-                            <i class="fa-solid fa-user text-xs text-coral"></i> Customer Sign In
+                        <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
+                            <i class="fa-solid fa-user text-xs text-coral"></i> My Profile
                         </a>
                         <div class="border-t border-ink/8 mt-1 pt-1">
                             <a hx-boost="false" href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
@@ -734,9 +734,8 @@
                             <i class="fa-solid fa-gauge-high text-xs text-sky-500"></i>
                             Admin Dashboard
                         </a>
-                        <a href="{% url 'accounts:login' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
-                            <i class="fa-solid fa-user text-xs text-coral"></i>
-                            Customer Sign In
+                        <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-ink/70 hover:text-coral hover:bg-coral/5 transition font-medium">
+                            <i class="fa-solid fa-user text-xs text-coral"></i> My Profile
                         </a>
                         <div class="border-t border-ink/8 mt-1 pt-1">
                             <a hx-boost="false" href="{% url 'custom_admin:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 transition font-medium">
@@ -834,9 +833,9 @@
                     <span>Admin Dashboard ({{ user.username }})</span>
                 </a>
                 <a class="flex items-center gap-2 py-2 text-sm font-semibold opacity-85 hover:text-coral"
-                   href="{% url 'accounts:login' %}" @click="mobileMenuOpen = false">
+                   href="{% url 'accounts:profile' %}" @click="mobileMenuOpen = false">
                     <i class="fa-solid fa-user text-xs"></i>
-                    <span>Customer Sign In</span>
+                    <span>My Profile</span>
                 </a>
                 <a class="flex items-center gap-2 py-2 text-sm font-semibold text-rose-500 hover:text-rose-600"
                    href="{% url 'custom_admin:logout' %}">

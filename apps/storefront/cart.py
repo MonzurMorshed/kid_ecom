@@ -80,7 +80,7 @@ class Cart:
     def __init__(self, request):
         self.session  = request.session
         self.request  = request
-        self._user    = request.user if request.user.is_authenticated and not request.user.is_staff else None
+        self._user    = request.user if request.user.is_authenticated else None
 
         # Always load from session first (cheap, no DB hit)
         cart = self.session.get(CART_SESSION_KEY)
@@ -295,7 +295,7 @@ def merge_session_cart_to_user(request, user):
         login(request, user)
         merge_session_cart_to_user(request, user)
     """
-    if user.is_staff or user.is_superuser:
+    if not user or not user.is_authenticated:
         return
 
     from products.models import Product, ProductVariant

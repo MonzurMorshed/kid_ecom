@@ -42,8 +42,8 @@
                 <div class="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3">
                     <i class="fa-solid fa-circle-info text-amber-500 text-base mt-0.5 shrink-0"></i>
                     <div>
-                        <p class="font-bold">You are currently logged in as Admin ({{ user.username }}).</p>
-                        <p class="mt-0.5 text-amber-800">To browse or place orders as a customer, sign in with your customer account below, or <a href="{% url 'custom_admin:dashboard' %}" class="font-bold underline hover:text-amber-950">return to Admin Dashboard</a>.</p>
+                        <p class="font-bold">You are currently logged in as {{ user.username }}.</p>
+                        <p class="mt-0.5 text-amber-800">You can sign in with another account below, view <a href="{% url 'accounts:profile' %}" class="font-bold underline hover:text-amber-950">My Profile</a>, or <a href="{% url 'custom_admin:dashboard' %}" class="font-bold underline hover:text-amber-950">return to Admin Dashboard</a>.</p>
                     </div>
                 </div>
                 {% endif %}

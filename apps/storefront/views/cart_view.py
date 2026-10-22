@@ -121,7 +121,7 @@ def checkout(request):
     # Pre-fill from logged-in user if available
     user = request.user if request.user.is_authenticated else None
     initial = {}
-    if user and not user.is_staff:
+    if user:
         default_addr = user.addresses.filter(is_default=True).first() or user.addresses.first()
         initial = {
             'full_name':        default_addr.full_name if default_addr else (user.get_full_name() or user.username),

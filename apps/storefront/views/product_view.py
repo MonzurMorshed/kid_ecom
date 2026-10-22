@@ -83,7 +83,7 @@ class ProductDetailView:
 
         # Wishlist state — server-side flag for authenticated customers
         is_wishlisted = False
-        if request.user.is_authenticated and not request.user.is_staff:
+        if request.user.is_authenticated:
             from accounts.models import Wishlist
             is_wishlisted = Wishlist.objects.filter(user=request.user, product=product).exists()
 

@@ -26,10 +26,10 @@ from products.models import Product, ProductReview
 # ── Auth decorators ───────────────────────────────────────────────────────────
 
 def customer_required(view_func):
-    """Redirect to login if not a logged-in customer."""
+    """Redirect to login if not authenticated."""
     @wraps(view_func)
     def _wrapped(request, *args, **kwargs):
-        if not request.user.is_authenticated or request.user.is_staff or request.user.is_superuser:
+        if not request.user.is_authenticated:
             messages.info(request, 'Please log in to access that page.')
             return redirect('accounts:login')
         if request.user.is_blocked:
@@ -66,7 +66,8 @@ def register_view(request):
             send_welcome_email(user)
 
             messages.success(request, f'Welcome to Kidurabd, {user.first_name}! 🎉')
-            return redirect(request.GET.get('next') or 'storefront:index')
+            next_url = request.POST.get('next') or request.GET.get('next')
+            return redirect(next_url or 'storefront:index')
     else:
         form = CustomerRegisterForm()
     return render(request, 'accounts/register.html', {'form': form})
@@ -102,13 +103,12 @@ def login_view(request):
             else:
                 request.session.set_expiry(getattr(settings, 'SESSION_COOKIE_AGE', 86400))  # 1 day (24 hours)
             # Merge any guest-session cart items into the user's DB cart
-            if not user.is_staff and not user.is_superuser:
-                from storefront.cart import merge_session_cart_to_user
-                merge_session_cart_to_user(request, user)
-            if user.is_staff or user.is_superuser:
-                return redirect('custom_admin:dashboard')
-            messages.success(request, f'Welcome back, {user.first_name or user.email}!')
-            return redirect(request.GET.get('next') or 'storefront:index')
+            from storefront.cart import merge_session_cart_to_user
+            merge_session_cart_to_user(request, user)
+
+            messages.success(request, f'Welcome back, {user.first_name or user.username or user.email}!')
+            next_url = request.POST.get('next') or request.GET.get('next')
+            return redirect(next_url or 'storefront:index')
         else:
             messages.error(request, 'No account found with that email and password.')
 
