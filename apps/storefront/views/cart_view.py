@@ -25,6 +25,25 @@ def cart_page(request):
     return render(request, 'storefront/cart.html', {'cart': cart})
 
 
+def cart_drawer(request):
+    """
+    Renders the lazy-loaded Cart Drawer partial for HTMX.
+    """
+    cart = Cart(request)
+    threshold = Decimal('1000.00')
+    remaining = max(Decimal('0.00'), threshold - cart.total)
+    progress = int(min(100, (cart.total / threshold) * 100)) if threshold > 0 else 100
+    context = {
+        'cart': cart,
+        'free_delivery_threshold': threshold,
+        'free_delivery_remaining': remaining,
+        'free_delivery_progress': progress,
+    }
+    response = render(request, 'storefront/partials/cart_drawer.html', context)
+    response['HX-Trigger'] = json.dumps({'updateCartCount': {'count': cart.item_count}})
+    return response
+
+
 from django.urls import reverse
 
 # ── Add to cart (AJAX + normal POST) ─────────────────────────────────────────
@@ -54,6 +73,9 @@ def cart_add(request):
 
     if is_ajax:
         return _json_cart(cart)
+
+    if is_htmx and request.headers.get('HX-Target') == 'cartDrawerPanel':
+        return cart_drawer(request)
 
     messages.success(request, f'"{product.title}" added to your bag!')
     target_url = next_url or reverse('storefront:cart')
@@ -90,6 +112,9 @@ def cart_remove(request):
     if is_ajax:
         return _json_cart(cart)
 
+    if is_htmx and request.headers.get('HX-Target') == 'cartDrawerPanel':
+        return cart_drawer(request)
+
     target_url = reverse('storefront:cart')
     if is_htmx:
         response = redirect(target_url)
@@ -123,6 +148,9 @@ def cart_update(request):
 
     if is_ajax:
         return _json_cart(cart)
+
+    if is_htmx and request.headers.get('HX-Target') == 'cartDrawerPanel':
+        return cart_drawer(request)
 
     target_url = reverse('storefront:cart')
     if is_htmx:

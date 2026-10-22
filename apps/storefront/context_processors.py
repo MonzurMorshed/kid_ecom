@@ -2,14 +2,24 @@
 Context processors for the storefront app.
 These inject data into every template automatically.
 """
+from django.core.cache import cache
 from products.models import Category
 from .cart import Cart
 
 
 def nav_categories(request):
     """Inject top-level active categories into every template for the navigation bar."""
+    cats = cache.get("nav_categories_cache")
+    if cats is None:
+        try:
+            cats = list(
+                Category.objects.filter(is_active=True, parent__isnull=True).order_by("display_order")
+            )
+            cache.set("nav_categories_cache", cats, 3600)
+        except Exception:
+            cats = []
     return {
-        "nav_categories": Category.objects.filter(is_active=True, parent__isnull=True).order_by("display_order"),
+        "nav_categories": cats,
     }
 
 
@@ -23,7 +33,9 @@ def cart_context(request):
             "cart_delivery_fee": 0,
             "cart_grand_total":  0,
         }
-    cart = Cart(request)
+    if not hasattr(request, '_cart_instance'):
+        request._cart_instance = Cart(request)
+    cart = request._cart_instance
     return {
         "cart":              cart,
         "cart_count":        cart.item_count,
@@ -60,10 +72,13 @@ def footer_pages(request):
     """
     Inject published pages configured to show in footer into every template.
     """
-    from custom_admin.models import Page
-    try:
-        pages = Page.objects.filter(is_published=True, show_in_footer=True).order_by('sort_order', 'title')
-    except Exception:
-        pages = []
+    pages = cache.get("footer_pages_cache")
+    if pages is None:
+        from custom_admin.models import Page
+        try:
+            pages = list(Page.objects.filter(is_published=True, show_in_footer=True).order_by('sort_order', 'title'))
+            cache.set("footer_pages_cache", pages, 3600)
+        except Exception:
+            pages = []
     return {"footer_pages": pages}
 

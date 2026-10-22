@@ -4,7 +4,7 @@ from storefront.views.shop_view import ShopView
 from storefront.views.product_view import ProductDetailView
 from storefront.views.page_view import PageView
 from storefront.views.cart_view import (
-    cart_page, cart_add, cart_remove, cart_update, cart_count,
+    cart_page, cart_drawer, cart_add, cart_remove, cart_update, cart_count,
     checkout, order_success,
 )
 from storefront.views.contact_view import contact_view
@@ -23,6 +23,7 @@ urlpatterns = [
 
     # ── Cart ──────────────────────────────────────────────────────────────────
     path("cart/",              cart_page,   name="cart"),
+    path("cart/drawer/",       cart_drawer, name="cart_drawer"),
     path("cart/add/",          cart_add,    name="cart_add"),
     path("cart/remove/",       cart_remove, name="cart_remove"),
     path("cart/update/",       cart_update, name="cart_update"),

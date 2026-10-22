@@ -336,9 +336,22 @@ class SiteSettings(models.Model):
         except Exception:
             pass
         super().save(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete('site_settings_singleton')
+        except Exception:
+            pass
 
     @classmethod
     def get_settings(cls):
+        from django.core.cache import cache
+        try:
+            cached_obj = cache.get('site_settings_singleton')
+            if cached_obj is not None:
+                return cached_obj
+        except Exception:
+            pass
+
         try:
             obj = cls.objects.first()
             if not obj:
@@ -351,6 +364,11 @@ class SiteSettings(models.Model):
                         obj, _ = cls.objects.get_or_create(pk=1)
                     except Exception:
                         obj, _ = cls.objects.get_or_create(pk=1, defaults={'currency_symbol': 'Tk'})
+            if obj:
+                try:
+                    cache.set('site_settings_singleton', obj, 3600)
+                except Exception:
+                    pass
             return obj
         except Exception as first_err:
             import logging
@@ -363,6 +381,11 @@ class SiteSettings(models.Model):
                         obj, _ = cls.objects.get_or_create(pk=1)
                     except Exception:
                         obj, _ = cls.objects.get_or_create(pk=1, defaults={'currency_symbol': 'Tk'})
+                if obj:
+                    try:
+                        cache.set('site_settings_singleton', obj, 3600)
+                    except Exception:
+                        pass
                 return obj
             except Exception as second_err:
                 logging.getLogger('django.request').error(f"SiteSettings fallback used: {second_err}")
@@ -510,6 +533,9 @@ class HeroSlide(models.Model):
         ordering            = ['sort_order', 'created_at']
         verbose_name        = 'Hero Slide'
         verbose_name_plural = 'Hero Slides'
+        indexes = [
+            models.Index(fields=['is_active', 'sort_order'], name='hero_active_sort_idx'),
+        ]
 
     def __str__(self):
         status = '✓' if self.is_active else '✗'
@@ -520,6 +546,19 @@ class HeroSlide(models.Model):
             from products.image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.image, use_hero=True)  # uses img_hero_width/height from SiteSettings
         super().save(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete('home_hero_slides')
+        except Exception:
+            pass
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete('home_hero_slides')
+        except Exception:
+            pass
 
 
 # ── Banners ──────────────────────────────────────────────────────────────────
@@ -576,6 +615,10 @@ class Banner(models.Model):
         ordering            = ['position', 'sort_order']
         verbose_name        = 'Banner'
         verbose_name_plural = 'Banners'
+        indexes = [
+            models.Index(fields=['is_active', 'position'], name='banner_active_pos_idx'),
+            models.Index(fields=['is_active', 'position', 'sort_order'], name='banner_act_pos_sort_idx'),
+        ]
 
     def __str__(self):
         status = '✓' if self.is_active else '✗'
@@ -586,6 +629,21 @@ class Banner(models.Model):
             from products.image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.image)  # uses img_max_width/height from SiteSettings
         super().save(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete('home_banners_dict')
+            cache.delete('banner_category_top')
+        except Exception:
+            pass
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete('home_banners_dict')
+            cache.delete('banner_category_top')
+        except Exception:
+            pass
 
 
 # ── Admin Profile (roles) ─────────────────────────────────────────────────────
@@ -728,6 +786,19 @@ class Page(models.Model):
             from django.utils.text import slugify
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete("footer_pages_cache")
+        except Exception:
+            pass
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete("footer_pages_cache")
+        except Exception:
+            pass
 
     def get_absolute_url(self):
         from django.urls import reverse

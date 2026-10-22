@@ -85,14 +85,13 @@ class Cart:
         # Always load from session first (cheap, no DB hit)
         cart = self.session.get(CART_SESSION_KEY)
         if cart is None:
-            cart = {}
+            # Load from DB for authenticated customer on first request of session
+            if self._user:
+                cart = self._load_from_db()
+            else:
+                cart = {}
+            self.session[CART_SESSION_KEY] = cart
 
-        # Authenticated customers: rebuild session from DB so it's
-        # always the authoritative source.
-        if self._user:
-            cart = self._load_from_db()
-
-        self.session[CART_SESSION_KEY] = cart
         self.cart = self.session[CART_SESSION_KEY]
 
     # ── Private: DB layer ─────────────────────────────────────────────────────

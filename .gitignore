@@ -15,4 +15,5 @@ performance_checklist.txt
 deployment_guide.md
 drive-download-20261020T152954Z-1-001/
 logs/*.log
-tmp/
+tmp/
+.cache/

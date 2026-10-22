@@ -305,13 +305,15 @@
                 </button>
                 {% endif %}
 
-                <a href="{% url 'storefront:cart' %}" id="cartButton"
+                <button type="button"
+                   @click="cartDrawerOpen = true; $nextTick(() => document.body.dispatchEvent(new CustomEvent('open-cart-drawer')))"
+                   id="cartButton"
                    class="flex h-10 items-center gap-2 rounded-xl bg-ink px-3 text-cream hover:opacity-90 transition-opacity"
                    aria-label="Shopping bag">
                     <i class="fa-solid fa-bag-shopping text-sm" aria-hidden="true"></i>
                     <span class="hidden text-xs font-bold sm:inline">Bag</span>
                     <span id="cartCount" class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">{{ cart_count|default:"0" }}</span>
-                </a>
+                </button>
 
                 {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
                 <div class="relative" x-data="{ open: false }">
@@ -447,13 +449,15 @@
                 </button>
                 {% endif %}
 
-                <a href="{% url 'storefront:cart' %}" id="cartButton"
+                <button type="button"
+                   @click="cartDrawerOpen = true; $nextTick(() => document.body.dispatchEvent(new CustomEvent('open-cart-drawer')))"
+                   id="cartButton"
                    class="flex h-10 items-center gap-2 rounded-xl bg-ink px-3 text-cream hover:opacity-90 transition-opacity"
                    aria-label="Shopping bag">
                     <i class="fa-solid fa-bag-shopping text-sm" aria-hidden="true"></i>
                     <span class="hidden text-xs font-bold sm:inline">Bag</span>
                     <span id="cartCount" class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">{{ cart_count|default:"0" }}</span>
-                </a>
+                </button>
 
                 {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
                 <div class="relative" x-data="{ open: false }">
@@ -665,7 +669,8 @@
                 {% endif %}
 
                 <!-- Cart -->
-                <a href="{% url 'storefront:cart' %}"
+                <button type="button"
+                   @click="cartDrawerOpen = true; $nextTick(() => document.body.dispatchEvent(new CustomEvent('open-cart-drawer')))"
                    id="cartButton"
                    class="flex h-10 items-center gap-2 rounded-xl bg-ink px-3 text-cream hover:opacity-90 transition-opacity"
                    aria-label="Shopping bag">
@@ -673,7 +678,7 @@
                     <span class="hidden text-xs font-bold sm:inline">Bag</span>
                     <span id="cartCount"
                           class="grid h-5 min-w-5 place-items-center rounded-md bg-butter px-1 text-[10px] font-bold text-ink">{{ cart_count|default:"0" }}</span>
-                </a>
+                </button>
 
                 <!-- Account -->
                 {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
@@ -859,7 +864,7 @@
         {% endblock %}
     </main>
 
-    <!-- ── Cart drawer (placeholder) ────────────────────── -->
+    <!-- ── Cart Drawer (HTMX Lazy Loaded) ────────────────── -->
     <div x-show="cartDrawerOpen"
          x-cloak
          class="fixed inset-0 z-50 flex"
@@ -867,31 +872,22 @@
         <!-- Backdrop -->
         <div class="flex-1 bg-ink/40 backdrop-blur-sm" @click="cartDrawerOpen = false"></div>
         <!-- Drawer panel -->
-        <div x-transition:enter="transition ease-out duration-250"
+        <div id="cartDrawerPanel"
+             hx-get="{% url 'storefront:cart_drawer' %}"
+             hx-trigger="open-cart-drawer from:body, refresh-cart-drawer from:body"
+             hx-swap="innerHTML"
+             x-transition:enter="transition ease-out duration-250"
              x-transition:enter-start="translate-x-full"
              x-transition:enter-end="translate-x-0"
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="translate-x-0"
              x-transition:leave-end="translate-x-full"
-             class="w-full max-w-sm bg-cream shadow-2xl flex flex-col">
-            <div class="flex items-center justify-between border-b border-ink/10 px-6 py-5">
-                <h2 class="text-lg font-bold">Your bag</h2>
-                <button @click="cartDrawerOpen = false" class="grid h-8 w-8 place-items-center rounded-full hover:bg-[#f5eee4] transition-colors" aria-label="Close bag"><i class="fa-solid fa-xmark"></i></button>
+             class="w-full max-w-sm bg-cream shadow-2xl flex flex-col h-full overflow-hidden">
+            <!-- Initial loading placeholder until HTMX fetches the drawer -->
+            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center text-ink">
+                <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-coral border-r-transparent mb-3"></div>
+                <p class="text-xs font-bold opacity-60">Loading your bag...</p>
             </div>
-            <div class="flex-1 flex items-center justify-center p-8 text-center">
-                <div>
-                    <div class="w-16 h-16 rounded-full bg-coral/10 text-coral text-3xl flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-bag-shopping"></i>
-                    </div>
-                    <p class="text-sm text-muted">Your bag is empty.<br>Start exploring and add something wonderful.</p>
-                    <a href="{% url 'storefront:shop' %}"
-                       @click="cartDrawerOpen = false"
-                       class="mt-6 inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-3 text-sm font-bold text-white hover:bg-coral/90 transition-colors">
-                        Browse the shop <i class="fa-solid fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
-            </div>
-            <!-- TODO: Render cart items here when cart session logic is implemented -->
         </div>
     </div>
 
@@ -1186,13 +1182,14 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    const badge = document.getElementById('cartCount');
-                    if (badge && data.item_count !== undefined) {
+                    document.querySelectorAll('#cartCount, [id="cartCount"]').forEach(badge => {
                         badge.textContent = data.item_count;
                         badge.classList.add('scale-125');
                         setTimeout(() => badge.classList.remove('scale-125'), 200);
-                    }
+                    });
                     toast('Added to your bag 🛍️');
+                    // Refresh lazy cart drawer content
+                    document.body.dispatchEvent(new CustomEvent('refresh-cart-drawer'));
                     return data;
                 } else {
                     toast('Could not add item to bag.');
@@ -1202,6 +1199,16 @@
                 toast('Network error, please try again.');
             }
         }
+
+        // Listen for HTMX updateCartCount event to update badge numbers across headers
+        document.body.addEventListener('updateCartCount', function(e) {
+            const count = e.detail && e.detail.count !== undefined ? e.detail.count : 0;
+            document.querySelectorAll('#cartCount, [id="cartCount"]').forEach(badge => {
+                badge.textContent = count;
+                badge.classList.add('scale-125');
+                setTimeout(() => badge.classList.remove('scale-125'), 200);
+            });
+        });
 
         // Delegate click for .add-to-cart buttons
         document.addEventListener('click', (e) => {

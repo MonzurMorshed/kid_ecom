@@ -66,6 +66,19 @@ class Category(models.Model):
             from .image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.image, use_thumb=True)  # uses img_thumb_width/height from SiteSettings
         super().save(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete("nav_categories_cache")
+        except Exception:
+            pass
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete("nav_categories_cache")
+        except Exception:
+            pass
 
     def get_absolute_url(self):
         return reverse("storefront:category_detail", kwargs={"category_slug": self.slug})
@@ -116,6 +129,19 @@ class Brand(models.Model):
             from .image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.logo, use_thumb=True)  # uses img_thumb_width/height from SiteSettings
         super().save(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete("all_active_brands")
+        except Exception:
+            pass
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete("all_active_brands")
+        except Exception:
+            pass
 
 
 # =========================================================
@@ -206,6 +232,13 @@ class Product(models.Model):
         verbose_name = "Product"
         verbose_name_plural = "Products"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["is_active", "is_deleted"], name="prod_act_del_idx"),
+            models.Index(fields=["is_active", "is_deleted", "is_featured"], name="prod_feat_idx"),
+            models.Index(fields=["is_active", "is_deleted", "is_bestseller"], name="prod_best_idx"),
+            models.Index(fields=["is_active", "is_deleted", "is_new"], name="prod_new_idx"),
+            models.Index(fields=["title"], name="prod_title_idx"),
+        ]
 
     def __str__(self):
         return self.title
@@ -246,13 +279,50 @@ class Product(models.Model):
     def review_count(self):
         return self.reviews.filter(is_approved=True).count()
 
-    def get_rating_breakdown(self):
-        """Returns dict of percentage and count for each rating 1-5."""
-        approved = self.reviews.filter(is_approved=True)
-        total = approved.count()
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete("home_product_sections")
+            cache.delete("catalog_global_price_bounds")
+            cache.delete("catalog_total_product_count")
+            if self.category_id:
+                cache.delete(f"cat_{self.category_id}_price_bounds")
+                cache.delete(f"cat_{self.category_id}_highlights")
+                cache.delete(f"cat_{self.category_id}_total_count")
+        except Exception:
+            pass
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        try:
+            from django.core.cache import cache
+            cache.delete("home_product_sections")
+            cache.delete("catalog_global_price_bounds")
+            cache.delete("catalog_total_product_count")
+            if self.category_id:
+                cache.delete(f"cat_{self.category_id}_price_bounds")
+                cache.delete(f"cat_{self.category_id}_highlights")
+                cache.delete(f"cat_{self.category_id}_total_count")
+        except Exception:
+            pass
+
+    def get_rating_breakdown(self, approved_reviews=None):
+        """Returns dict of percentage and count for each rating 1-5 (in-memory, avoids 6 DB queries)."""
+        if approved_reviews is None:
+            approved_reviews = list(self.reviews.filter(is_approved=True))
+        total = len(approved_reviews)
+        star_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        for r in approved_reviews:
+            try:
+                star = int(r.rating)
+                if star in star_counts:
+                    star_counts[star] += 1
+            except (ValueError, TypeError):
+                pass
         breakdown = {}
         for star in [5, 4, 3, 2, 1]:
-            cnt = approved.filter(rating=star).count()
+            cnt = star_counts.get(star, 0)
             pct = int(round((cnt / total) * 100)) if total > 0 else 0
             breakdown[star] = {"count": cnt, "pct": pct}
         return breakdown
@@ -503,6 +573,10 @@ class ProductImage(models.Model):
         verbose_name = "Product Image"
         verbose_name_plural = "Product Images"
         ordering = ["sort_order", "created_at"]
+        indexes = [
+            models.Index(fields=["product", "is_feature"], name="prod_img_feat_idx"),
+            models.Index(fields=["is_feature"], name="prod_img_is_feat_idx"),
+        ]
 
         # Note: "one featured image per product" is enforced in
         # application logic (save method) because MySQL does not

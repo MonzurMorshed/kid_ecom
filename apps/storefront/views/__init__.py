@@ -3,7 +3,7 @@ from .shop_view import ShopView
 from .product_view import ProductDetailView
 from .page_view import PageView
 from .cart_view import (
-    cart_page, cart_add, cart_remove, cart_update, cart_count,
+    cart_page, cart_drawer, cart_add, cart_remove, cart_update, cart_count,
     checkout, order_success,
 )
 from .contact_view import contact_view
@@ -15,6 +15,7 @@ __all__ = [
     'ProductDetailView',
     'PageView',
     'cart_page',
+    'cart_drawer',
     'cart_add',
     'cart_remove',
     'cart_update',

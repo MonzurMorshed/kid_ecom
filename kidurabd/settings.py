@@ -71,7 +71,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
+        'APP_DIRS': DEBUG,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -82,6 +82,17 @@ TEMPLATES = [
                 'storefront.context_processors.site_settings',
                 'storefront.context_processors.footer_pages',
             ],
+            **({
+                'loaders': [
+                    (
+                        'django.template.loaders.cached.Loader',
+                        [
+                            'django.template.loaders.filesystem.Loader',
+                            'django.template.loaders.app_directories.Loader',
+                        ],
+                    ),
+                ]
+            } if not DEBUG else {}),
         },
     },
 ]
@@ -190,13 +201,40 @@ ADMIN_NOTIFICATION_EMAIL = config('ADMIN_NOTIFICATION_EMAIL', default='notificat
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ── Local dev performance ───────────────────────────────────────────────────────
-# In-memory cache (avoids DB hit for sessions on every request)
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+# ── Cache Configuration ───────────────────────────────────────────────────────
+# Production shared hosting (no Redis/Memcached): FileBasedCache uses fast SSD storage,
+# avoiding MySQL connection limits while sharing cache across all Passenger processes.
+_cache_backend = config('CACHE_BACKEND', default='')
+if _cache_backend:
+    CACHES = {
+        'default': {
+            'BACKEND': _cache_backend,
+            'LOCATION': config('CACHE_LOCATION', default=str(BASE_DIR / '.cache')),
+            'TIMEOUT': config('CACHE_TIMEOUT', default=300, cast=int),
+        }
     }
-}
+elif not DEBUG:
+    _cache_dir = BASE_DIR / '.cache'
+    try:
+        _cache_dir.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': str(_cache_dir),
+            'TIMEOUT': 300,        # 5 minutes default
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'  # cache-first, then DB
 SESSION_COOKIE_AGE = 86400                                     # 1 day (24 hours) in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True                         # Logout when browser is closed

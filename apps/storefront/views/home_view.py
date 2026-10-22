@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.core.cache import cache
 from products.models import Category, Product
 from custom_admin.models import HeroSlide, Banner, SiteSettings
 
@@ -7,44 +8,73 @@ class HomeView:
 
     @staticmethod
     def index(request):
-        # Top-level categories only (no sub-categories)
-        categories = Category.objects.filter(is_active=True, parent__isnull=True).order_by("display_order", "created_at")
+        # 1. Top-level categories (cached)
+        categories = cache.get("nav_categories_cache")
+        if categories is None:
+            categories = list(
+                Category.objects.filter(is_active=True, parent__isnull=True).order_by("display_order")
+            )
+            cache.set("nav_categories_cache", categories, 3600)
 
-        # Dynamic Hero Slides query
-        hero_slides = HeroSlide.objects.filter(is_active=True).order_by("sort_order", "created_at")
+        # 2. Dynamic Hero Slides query (cached)
+        hero_slides = cache.get("home_hero_slides")
+        if hero_slides is None:
+            hero_slides = list(
+                HeroSlide.objects.filter(is_active=True).order_by("sort_order", "created_at")
+            )
+            cache.set("home_hero_slides", hero_slides, 600)
 
-        # Dynamic Promotional Banners query
-        home_top_banner = Banner.objects.filter(is_active=True, position="home_top").first()
-        home_mid_banner = Banner.objects.filter(is_active=True, position="home_mid").first()
-        home_bottom_banner = Banner.objects.filter(is_active=True, position="home_bottom").first()
+        # 3. Dynamic Promotional Banners query (1 bulk query + cached)
+        banners = cache.get("home_banners_dict")
+        if banners is None:
+            banners_qs = Banner.objects.filter(
+                is_active=True,
+                position__in=["home_top", "home_mid", "home_bottom"]
+            ).order_by("sort_order", "id")
+            banners = {}
+            for b in banners_qs:
+                if b.position not in banners:
+                    banners[b.position] = b
+            cache.set("home_banners_dict", banners, 600)
 
-        # Featured products on homepage
-        featured_products = (
-            Product.objects.filter(is_active=True, is_deleted=False, is_featured=True)
-            .select_related("category")
-            .prefetch_related("images")
-            [:8]
-        )
+        home_top_banner = banners.get("home_top")
+        home_mid_banner = banners.get("home_mid")
+        home_bottom_banner = banners.get("home_bottom")
 
-        # Bestsellers on homepage
-        bestsellers = (
-            Product.objects.filter(is_active=True, is_deleted=False, is_bestseller=True)
-            .select_related("category")
-            .prefetch_related("images")
-            [:4]
-        )
+        # 4. Product sections (featured, bestsellers, recent) — cached together (5 min)
+        home_products = cache.get("home_product_sections")
+        if home_products is None:
+            featured_products = list(
+                Product.objects.filter(is_active=True, is_deleted=False, is_featured=True)
+                .select_related("category")
+                .prefetch_related("images")
+                [:8]
+            )
+            bestsellers = list(
+                Product.objects.filter(is_active=True, is_deleted=False, is_bestseller=True)
+                .select_related("category")
+                .prefetch_related("images")
+                [:4]
+            )
+            recent_products = list(
+                Product.objects.filter(is_active=True, is_deleted=False)
+                .select_related("category")
+                .prefetch_related("images")
+                .order_by("-created_at")
+                [:8]
+            )
+            home_products = {
+                "featured": featured_products,
+                "bestsellers": bestsellers,
+                "recent": recent_products,
+            }
+            cache.set("home_product_sections", home_products, 300)
 
-        # Recent / New arrivals on homepage
-        recent_products = (
-            Product.objects.filter(is_active=True, is_deleted=False)
-            .select_related("category")
-            .prefetch_related("images")
-            .order_by("-created_at")
-            [:8]
-        )
+        featured_products = home_products["featured"]
+        bestsellers = home_products["bestsellers"]
+        recent_products = home_products["recent"]
 
-        # Announcement bar — use site_settings from context processor when available,
-        # fall back to a static string if SiteSettings has no announcement_text field.
+        # 5. Announcement bar — uses cached SiteSettings singleton (0 DB queries)
         try:
             site_settings_obj = SiteSettings.get_settings()
             announcement = getattr(site_settings_obj, 'announcement_text', None) or \
