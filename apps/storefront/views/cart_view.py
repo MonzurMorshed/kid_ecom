@@ -25,16 +25,27 @@ def cart_page(request):
     return render(request, 'storefront/cart.html', {'cart': cart})
 
 
+from django.urls import reverse
+
 # ── Add to cart (AJAX + normal POST) ─────────────────────────────────────────
 
 @require_POST
 def cart_add(request):
     cart = Cart(request)
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.headers.get('HX-Request') == 'true'
+    next_url = request.POST.get('next')
+    is_htmx = request.headers.get('HX-Request') == 'true'
+    # Only return JSON when requested by an AJAX fetch that does not specify a next redirection URL
+    is_ajax = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+        'application/json' in request.headers.get('Accept', '')
+    ) and not is_htmx and not next_url
 
     product_id = request.POST.get('product_id')
     variant_id = request.POST.get('variant_id') or None
-    qty        = int(request.POST.get('qty', 1))
+    try:
+        qty = int(request.POST.get('qty', 1))
+    except (ValueError, TypeError):
+        qty = 1
 
     product = get_object_or_404(Product, pk=product_id, is_active=True, is_deleted=False)
     variant = get_object_or_404(ProductVariant, pk=variant_id, product=product) if variant_id else None
@@ -45,7 +56,14 @@ def cart_add(request):
         return _json_cart(cart)
 
     messages.success(request, f'"{product.title}" added to your bag!')
-    return redirect(request.POST.get('next') or 'storefront:cart')
+    target_url = next_url or reverse('storefront:cart')
+
+    if is_htmx:
+        response = redirect(target_url)
+        response['HX-Redirect'] = target_url
+        return response
+
+    return redirect(target_url)
 
 
 # ── Remove from cart ──────────────────────────────────────────────────────────
@@ -61,17 +79,23 @@ def cart_remove(request):
         except Exception:
             pass
 
+    is_htmx = request.headers.get('HX-Request') == 'true'
     is_ajax = (
         request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
-        'application/json' in request.headers.get('Accept', '') or
-        request.headers.get('HX-Request') == 'true'
-    )
+        'application/json' in request.headers.get('Accept', '')
+    ) and not is_htmx
 
     cart.remove(key)
 
     if is_ajax:
         return _json_cart(cart)
-    return redirect('storefront:cart')
+
+    target_url = reverse('storefront:cart')
+    if is_htmx:
+        response = redirect(target_url)
+        response['HX-Redirect'] = target_url
+        return response
+    return redirect(target_url)
 
 
 # ── Update quantity ───────────────────────────────────────────────────────────
@@ -89,17 +113,23 @@ def cart_update(request):
         except Exception:
             pass
 
+    is_htmx = request.headers.get('HX-Request') == 'true'
     is_ajax = (
         request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
-        'application/json' in request.headers.get('Accept', '') or
-        request.headers.get('HX-Request') == 'true'
-    )
+        'application/json' in request.headers.get('Accept', '')
+    ) and not is_htmx
 
     cart.update_qty(key, qty)
 
     if is_ajax:
         return _json_cart(cart)
-    return redirect('storefront:cart')
+
+    target_url = reverse('storefront:cart')
+    if is_htmx:
+        response = redirect(target_url)
+        response['HX-Redirect'] = target_url
+        return response
+    return redirect(target_url)
 
 
 # ── Cart count (AJAX) ─────────────────────────────────────────────────────────

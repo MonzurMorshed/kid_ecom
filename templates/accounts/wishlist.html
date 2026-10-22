@@ -109,7 +109,7 @@
                         {% endif %}
                     </div>
 
-                    <form method="post" action="{% url 'storefront:cart_add' %}" class="shrink-0">
+                    <form method="post" action="{% url 'storefront:cart_add' %}" class="shrink-0" hx-boost="false">
                         {% csrf_token %}
                         <input type="hidden" name="product_id" value="{{ product.id }}">
                         <input type="hidden" name="qty" value="1">

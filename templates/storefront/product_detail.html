@@ -265,7 +265,7 @@
                 {% endif %}
 
                 <!-- Form for Add to bag & Buy now -->
-                <form method="post" action="{% url 'storefront:cart_add' %}" id="productForm" class="mt-8">
+                <form method="post" action="{% url 'storefront:cart_add' %}" id="productForm" class="mt-8" hx-boost="false">
                     {% csrf_token %}
                     <input type="hidden" name="product_id" value="{{ product.id }}">
                     <input type="hidden" name="qty" :value="qty">
