@@ -117,6 +117,80 @@ class SiteSettings(models.Model):
         help_text='Corner roundness for cards, banners and buttons'
     )
 
+    # ── Image Optimization Settings ───────────────────────────────────────────
+    img_format = models.CharField(
+        max_length=10,
+        choices=[
+            ('WEBP', 'WebP (Recommended — smallest file size)'),
+            ('JPEG', 'JPEG (Wide compatibility)'),
+            ('PNG',  'PNG (Lossless, for transparent images)'),
+        ],
+        default='WEBP',
+        help_text='Output format for all uploaded images (product, category, banner, slider)'
+    )
+    img_quality = models.PositiveSmallIntegerField(
+        default=82,
+        help_text='Compression quality (1–100). 75–85 = optimal web quality. Lower = smaller file.'
+    )
+    img_max_width = models.PositiveSmallIntegerField(
+        default=1200,
+        help_text='Maximum width in pixels for product/banner images (e.g. 1200)'
+    )
+    img_max_height = models.PositiveSmallIntegerField(
+        default=1200,
+        help_text='Maximum height in pixels for product/banner images (e.g. 1200)'
+    )
+    img_thumb_width = models.PositiveSmallIntegerField(
+        default=400,
+        help_text='Thumbnail max width in pixels (used for category icons, cart thumbnails)'
+    )
+    img_thumb_height = models.PositiveSmallIntegerField(
+        default=400,
+        help_text='Thumbnail max height in pixels'
+    )
+    img_hero_width = models.PositiveSmallIntegerField(
+        default=1600,
+        help_text='Hero/slider image max width in pixels'
+    )
+    img_hero_height = models.PositiveSmallIntegerField(
+        default=900,
+        help_text='Hero/slider image max height in pixels'
+    )
+    img_lazy_loading = models.BooleanField(
+        default=True,
+        help_text='Add loading="lazy" to below-the-fold images for faster page display'
+    )
+
+    # ── Static Files & CDN Settings ───────────────────────────────────────────
+    enable_cdn = models.BooleanField(
+        default=False,
+        help_text='Enable serving static and media assets via high-speed Content Delivery Network (Cloudflare, BunnyCDN, CloudFront)'
+    )
+    static_cdn_url = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text='CDN URL prefix for static files (e.g. https://cdn.kidurabd.com/static/)'
+    )
+    media_cdn_url = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text='CDN URL prefix for media uploads (e.g. https://cdn.kidurabd.com/media/)'
+    )
+    cloudflare_zone_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Cloudflare Zone ID (found in domain Overview page)'
+    )
+    cloudflare_api_token = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text='Cloudflare API Token with Cache Purge permissions'
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -210,6 +284,40 @@ class SiteSettings(models.Model):
                     'card_border_radius': "VARCHAR(20) NOT NULL DEFAULT 'rounded-2xl'",
                 }
                 for col_name, col_def in theme_cols.items():
+                    if col_name not in existing_cols:
+                        try:
+                            cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `{col_name}` {col_def}")
+                        except Exception:
+                            pass
+
+                # Auto-heal Image Optimization settings columns
+                img_cols = {
+                    'img_format':      "VARCHAR(10) NOT NULL DEFAULT 'WEBP'",
+                    'img_quality':     "SMALLINT UNSIGNED NOT NULL DEFAULT 82",
+                    'img_max_width':   "SMALLINT UNSIGNED NOT NULL DEFAULT 1200",
+                    'img_max_height':  "SMALLINT UNSIGNED NOT NULL DEFAULT 1200",
+                    'img_thumb_width': "SMALLINT UNSIGNED NOT NULL DEFAULT 400",
+                    'img_thumb_height':"SMALLINT UNSIGNED NOT NULL DEFAULT 400",
+                    'img_hero_width':  "SMALLINT UNSIGNED NOT NULL DEFAULT 1600",
+                    'img_hero_height': "SMALLINT UNSIGNED NOT NULL DEFAULT 900",
+                    'img_lazy_loading':"TINYINT(1) NOT NULL DEFAULT 1",
+                }
+                for col_name, col_def in img_cols.items():
+                    if col_name not in existing_cols:
+                        try:
+                            cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `{col_name}` {col_def}")
+                        except Exception:
+                            pass
+
+                # Auto-heal CDN settings columns
+                cdn_cols = {
+                    'enable_cdn':           "TINYINT(1) NOT NULL DEFAULT 0",
+                    'static_cdn_url':       "VARCHAR(255) NULL",
+                    'media_cdn_url':        "VARCHAR(255) NULL",
+                    'cloudflare_zone_id':   "VARCHAR(100) NULL",
+                    'cloudflare_api_token': "VARCHAR(255) NULL",
+                }
+                for col_name, col_def in cdn_cols.items():
                     if col_name not in existing_cols:
                         try:
                             cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `{col_name}` {col_def}")
@@ -377,7 +485,7 @@ class HeroSlide(models.Model):
     def save(self, *args, **kwargs):
         if self.image:
             from products.image_optimizer import compress_and_resize_image
-            compress_and_resize_image(self.image, max_dimensions=(1920, 1080), quality=85)
+            compress_and_resize_image(self.image, use_hero=True)  # uses img_hero_width/height from SiteSettings
         super().save(*args, **kwargs)
 
 
@@ -443,7 +551,7 @@ class Banner(models.Model):
     def save(self, *args, **kwargs):
         if self.image:
             from products.image_optimizer import compress_and_resize_image
-            compress_and_resize_image(self.image, max_dimensions=(1400, 800), quality=85)
+            compress_and_resize_image(self.image)  # uses img_max_width/height from SiteSettings
         super().save(*args, **kwargs)
 
 
@@ -545,6 +653,9 @@ class ActivityLog(models.Model):
     def _get_ip(request):
         if not request:
             return None
+        cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
+        if cf_ip:
+            return cf_ip.strip()
         x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded:
             return x_forwarded.split(',')[0].strip()

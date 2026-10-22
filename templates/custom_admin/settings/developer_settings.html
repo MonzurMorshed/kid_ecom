@@ -170,7 +170,442 @@
         </form>
     </div>
 
+    <!-- ══ Image Optimization Settings Card ═══════════════════════════════ -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl"
+         x-data="{
+             fmt: '{{ img_format|default:'WEBP' }}',
+             quality: {{ img_quality|default:82 }},
+             formatLabel() {
+                 const map = { WEBP: 'WebP — Best for web (avg 60–80% smaller than PNG)', JPEG: 'JPEG — Good quality, wide support', PNG: 'PNG — Lossless, use for transparent images' };
+                 return map[this.fmt] || this.fmt;
+             },
+             qualityHint() {
+                 if (this.quality >= 90) return 'Excellent quality · Large files';
+                 if (this.quality >= 75) return 'Optimal web quality · Recommended range';
+                 if (this.quality >= 55) return 'Smaller files · Slight quality reduction';
+                 return 'Very small files · Visible quality loss';
+             }
+         }">
+        <form method="POST" action="{% url 'custom_admin:developer_settings' %}">
+            {% csrf_token %}
+            <input type="hidden" name="update_image_settings" value="1">
+
+            <!-- Card Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-image text-base"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-semibold text-white">Image Optimization</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Controls how uploaded images (products, hero slides, banners, categories) are compressed and resized on the server.
+                            <span class="text-amber-400 font-medium">Applies to new uploads only.</span>
+                        </p>
+                    </div>
+                </div>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl transition shadow-lg shadow-emerald-500/10 shrink-0">
+                    <i class="fa-solid fa-floppy-disk text-xs"></i>
+                    Save Image Settings
+                </button>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- LEFT COLUMN: Format + Quality -->
+                <div class="space-y-5">
+
+                    <!-- Output Format -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-2">
+                            <i class="fa-solid fa-file-image text-emerald-400 mr-1.5"></i>Output Format
+                        </label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <!-- WebP -->
+                            <label :class="fmt === 'WEBP' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'"
+                                   class="flex flex-col items-center gap-1.5 p-3 rounded-xl border cursor-pointer transition text-center">
+                                <input type="radio" name="img_format" value="WEBP" x-model="fmt" class="sr-only"
+                                       {% if img_format == 'WEBP' or not img_format %}checked{% endif %}>
+                                <i class="fa-solid fa-bolt text-sm" :class="fmt === 'WEBP' ? 'text-emerald-400' : 'text-slate-500'"></i>
+                                <span class="text-[11px] font-bold">WebP</span>
+                                <span class="text-[10px] opacity-70">Recommended</span>
+                            </label>
+                            <!-- JPEG -->
+                            <label :class="fmt === 'JPEG' ? 'border-sky-500 bg-sky-500/10 text-sky-300' : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'"
+                                   class="flex flex-col items-center gap-1.5 p-3 rounded-xl border cursor-pointer transition text-center">
+                                <input type="radio" name="img_format" value="JPEG" x-model="fmt" class="sr-only"
+                                       {% if img_format == 'JPEG' %}checked{% endif %}>
+                                <i class="fa-solid fa-image text-sm" :class="fmt === 'JPEG' ? 'text-sky-400' : 'text-slate-500'"></i>
+                                <span class="text-[11px] font-bold">JPEG</span>
+                                <span class="text-[10px] opacity-70">Photos</span>
+                            </label>
+                            <!-- PNG -->
+                            <label :class="fmt === 'PNG' ? 'border-violet-500 bg-violet-500/10 text-violet-300' : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'"
+                                   class="flex flex-col items-center gap-1.5 p-3 rounded-xl border cursor-pointer transition text-center">
+                                <input type="radio" name="img_format" value="PNG" x-model="fmt" class="sr-only"
+                                       {% if img_format == 'PNG' %}checked{% endif %}>
+                                <i class="fa-solid fa-layer-group text-sm" :class="fmt === 'PNG' ? 'text-violet-400' : 'text-slate-500'"></i>
+                                <span class="text-[11px] font-bold">PNG</span>
+                                <span class="text-[10px] opacity-70">Transparent</span>
+                            </label>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-2 italic" x-text="formatLabel()"></p>
+                    </div>
+
+                    <!-- Quality Slider -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-xs font-semibold text-slate-300">
+                                <i class="fa-solid fa-sliders text-emerald-400 mr-1.5"></i>Compression Quality
+                            </label>
+                            <span class="text-sm font-bold text-white tabular-nums" x-text="quality + '%'"></span>
+                        </div>
+                        <input type="range" name="img_quality" min="30" max="100" step="1"
+                               x-model="quality"
+                               value="{{ img_quality|default:82 }}"
+                               class="w-full h-2 rounded-full appearance-none cursor-pointer accent-emerald-500 bg-slate-700">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>30 · Tiny</span><span>55 · Smaller</span><span>75 · Optimal</span><span>100 · Max</span>
+                        </div>
+                        <p class="text-[11px] mt-1.5 font-medium"
+                           :class="quality >= 75 ? 'text-emerald-400' : quality >= 55 ? 'text-amber-400' : 'text-rose-400'"
+                           x-text="qualityHint()"></p>
+                    </div>
+
+                    <!-- Lazy Loading Toggle -->
+                    <div class="flex items-center justify-between p-3.5 bg-slate-800/60 border border-slate-700/60 rounded-xl">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-200">
+                                <i class="fa-solid fa-hourglass-half text-emerald-400 mr-1.5"></i>Lazy Loading
+                            </p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Add <code class="text-emerald-400">loading="lazy"</code> to below-the-fold images — improves LCP score.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
+                            <input type="checkbox" name="img_lazy_loading" {% if img_lazy_loading %}checked{% endif %} class="sr-only peer">
+                            <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Max Dimensions -->
+                <div class="space-y-4">
+                    <!-- Impact Summary -->
+                    <div class="p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                        <p class="text-xs font-semibold text-emerald-400 mb-2"><i class="fa-solid fa-chart-bar mr-1.5"></i>Size Reduction Estimates</p>
+                        <div class="space-y-1.5 text-[11px] text-slate-400">
+                            <div class="flex justify-between"><span>PNG 1.2 MB hero → WebP</span><span class="text-emerald-400 font-bold">~80–120 KB</span></div>
+                            <div class="flex justify-between"><span>JPEG 500 KB product → WebP</span><span class="text-emerald-400 font-bold">~60–120 KB</span></div>
+                            <div class="flex justify-between"><span>Category thumb PNG → WebP</span><span class="text-emerald-400 font-bold">~8–20 KB</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Product Image Max Dimensions -->
+                    <div>
+                        <p class="text-xs font-semibold text-slate-300 mb-2">
+                            <i class="fa-solid fa-box text-sky-400 mr-1.5"></i>Product &amp; Banner Images
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">Max Width (px)</label>
+                                <input type="number" name="img_max_width" min="400" max="4000" step="100"
+                                       value="{{ img_max_width|default:1200 }}"
+                                       class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">Max Height (px)</label>
+                                <input type="number" name="img_max_height" min="400" max="4000" step="100"
+                                       value="{{ img_max_height|default:1200 }}"
+                                       class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thumbnail Dimensions -->
+                    <div>
+                        <p class="text-xs font-semibold text-slate-300 mb-2">
+                            <i class="fa-solid fa-grip text-violet-400 mr-1.5"></i>Thumbnails (Category, Cart, Nav)
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">Max Width (px)</label>
+                                <input type="number" name="img_thumb_width" min="50" max="1000" step="50"
+                                       value="{{ img_thumb_width|default:400 }}"
+                                       class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">Max Height (px)</label>
+                                <input type="number" name="img_thumb_height" min="50" max="1000" step="50"
+                                       value="{{ img_thumb_height|default:400 }}"
+                                       class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hero / Slider Dimensions -->
+                    <div>
+                        <p class="text-xs font-semibold text-slate-300 mb-2">
+                            <i class="fa-solid fa-images text-amber-400 mr-1.5"></i>Hero Slider Images
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">Max Width (px)</label>
+                                <input type="number" name="img_hero_width" min="400" max="4000" step="100"
+                                       value="{{ img_hero_width|default:1600 }}"
+                                       class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">Max Height (px)</label>
+                                <input type="number" name="img_hero_height" min="200" max="3000" step="100"
+                                       value="{{ img_hero_height|default:900 }}"
+                                       class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition">
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1.5">Recommended: 1600×900 for full-width hero banners.</p>
+                    </div>
+            </div><!-- /grid -->
+        </form>
+
+        <!-- Bulk Optimization Action Bar -->
+        <div class="mt-6 pt-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-200">Optimize Existing Images in Database</p>
+                    <p class="text-[11px] text-slate-400">Batch-converts all existing hero slides, banners, product pictures, categories, and brand logos to your configured format (WebP) &amp; dimensions.</p>
+                </div>
+            </div>
+            <form method="POST" action="{% url 'custom_admin:developer_settings' %}" onsubmit="return confirm('Start bulk optimization? Existing images will be recompressed into WebP/configured format.');" class="shrink-0">
+                {% csrf_token %}
+                <input type="hidden" name="bulk_optimize_images" value="1">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg shadow-amber-500/10">
+                    <i class="fa-solid fa-bolt-lightning text-xs"></i>
+                    Run Bulk Optimization Now
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ══ Static Files & CDN Management Card ═════════════════════════════ -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl"
+         x-data="{
+             cdnEnabled: {% if enable_cdn %}true{% else %}false{% endif %},
+             staticUrl: '{{ static_cdn_url|default:''|escapejs }}',
+             mediaUrl: '{{ media_cdn_url|default:''|escapejs }}'
+         }">
+        <form method="POST" action="{% url 'custom_admin:developer_settings' %}">
+            {% csrf_token %}
+            <input type="hidden" name="update_cdn_settings" value="1">
+
+            <!-- Card Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-base font-semibold text-white">Static Files &amp; CDN Management</h2>
+                            {% if enable_cdn %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                CDN Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                                Local Storage
+                            </span>
+                            {% endif %}
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Route CSS, JS, fonts, and uploaded media images through a Content Delivery Network (Cloudflare, BunnyCDN, AWS CloudFront) to reduce server load and maximize page load speeds.
+                        </p>
+                    </div>
+                </div>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs rounded-xl transition shadow-lg shadow-cyan-500/10 shrink-0">
+                    <i class="fa-solid fa-floppy-disk text-xs"></i>
+                    Save CDN Settings
+                </button>
+            </div>
+
+            <!-- Asset Metrics Bar -->
+            <div class="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                    <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Static Assets</p>
+                    <p class="text-sm font-bold text-slate-200 mt-1">{{ static_file_count }} <span class="text-xs font-normal text-slate-400">files</span></p>
+                    <p class="text-[11px] text-cyan-400 mt-0.5">{{ static_total_size }} total</p>
+                </div>
+                <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                    <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Media Uploads</p>
+                    <p class="text-sm font-bold text-slate-200 mt-1">{{ media_file_count }} <span class="text-xs font-normal text-slate-400">files</span></p>
+                    <p class="text-[11px] text-emerald-400 mt-0.5">{{ media_total_size }} total</p>
+                </div>
+                <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                    <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Storage Engine</p>
+                    <p class="text-sm font-bold text-slate-200 mt-1">{% if whitenoise_active %}WhiteNoise{% else %}StaticStorage{% endif %}</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Gzip + Hash Caching</p>
+                </div>
+                <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                    <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Media Route</p>
+                    <p class="text-xs font-bold text-slate-200 mt-1 truncate" title="{{ current_media_url }}">{{ current_media_url }}</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">{% if enable_cdn %}CDN Rewritten{% else %}Direct Disk / cPanel{% endif %}</p>
+                </div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Left Column: CDN Switch + URLs -->
+                <div class="space-y-4">
+                    <!-- Enable CDN Switch -->
+                    <div class="flex items-center justify-between p-3.5 bg-slate-800/60 border border-slate-700/60 rounded-xl">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-200">
+                                <i class="fa-solid fa-tower-broadcast text-cyan-400 mr-1.5"></i>Enable Content Delivery Network (CDN)
+                            </p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">When checked, all template asset URLs automatically prepend the configured CDN endpoints.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
+                            <input type="checkbox" name="enable_cdn" x-model="cdnEnabled" class="sr-only peer">
+                            <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Static CDN URL Input -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                            <i class="fa-solid fa-code text-cyan-400 mr-1.5"></i>Static Files CDN URL
+                        </label>
+                        <input type="url" name="static_cdn_url" x-model="staticUrl"
+                               value="{{ static_cdn_url }}"
+                               placeholder="https://cdn.kidurabd.com/static/"
+                               class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition">
+                        <p class="text-[11px] text-slate-500 mt-1">Leave empty to serve static files from local webserver (`/static/`).</p>
+                    </div>
+
+                    <!-- Media CDN URL Input -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                            <i class="fa-solid fa-images text-emerald-400 mr-1.5"></i>Media Uploads CDN URL
+                        </label>
+                        <input type="url" name="media_cdn_url" x-model="mediaUrl"
+                               value="{{ media_cdn_url }}"
+                               placeholder="https://cdn.kidurabd.com/media/"
+                               class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition">
+                        <p class="text-[11px] text-slate-500 mt-1">Recommended for production. Product photos and banners are routed via CDN.</p>
+                    </div>
+
+                    <!-- Cloudflare API Credentials -->
+                    <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <p class="text-xs font-semibold text-orange-400 flex items-center gap-1.5">
+                                <i class="fa-brands fa-cloudflare text-sm"></i>Cloudflare API Credentials
+                            </p>
+                            {% if has_cloudflare_token and cloudflare_zone_id %}
+                            <span class="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold">
+                                <i class="fa-solid fa-circle-check text-[10px]"></i> Saved
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 block mb-1">Zone ID (From Domain Overview)</label>
+                            <input type="text" name="cloudflare_zone_id"
+                                   value="{{ cloudflare_zone_id }}"
+                                   placeholder="e.g. 4d87a81ec9ac4c3ca6b28fc9b281bdc7"
+                                   class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 block mb-1">API Token (With Cache Purge permission)</label>
+                            <input type="password" name="cloudflare_api_token"
+                                   value="{{ cloudflare_api_token_masked }}"
+                                   placeholder="{% if has_cloudflare_token %}•••••••••••••••• (Leave blank to keep current){% else %}Paste your Cloudflare API Token{% endif %}"
+                                   class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Quick CDN Setup Guide -->
+                <div class="space-y-3.5">
+                    <div class="p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl">
+                        <p class="text-xs font-semibold text-cyan-400 mb-2">
+                            <i class="fa-solid fa-circle-info mr-1.5"></i>Recommended CDN Setup (Free or Low Cost)
+                        </p>
+                        <div class="space-y-2 text-[11px] text-slate-300 leading-relaxed">
+                            <p><strong>1. Cloudflare (Free):</strong> Set DNS proxy (Orange Cloud) on <code class="text-cyan-300">kidurabd.com</code> pointing to your origin IP. Create a Cache Rule for <code class="text-cyan-300">/static/</code> with Cache Everything.</p>
+                            <p><strong>2. 1-Click Cache Purge:</strong> Add your Cloudflare Zone ID &amp; API Token on the left to purge CDN cache directly from this dashboard without logging into Cloudflare.</p>
+                            <p><strong>3. CORS &amp; Caching:</strong> Far-future 1-year headers, Brotli compression, and <code class="text-cyan-300">Access-Control-Allow-Origin: *</code> are already configured in `.htaccess`.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl text-[11px] text-slate-400">
+                        <p class="font-semibold text-slate-300 mb-1"><i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i>Instant Failover Protection</p>
+                        <p>If you uncheck <strong>Enable CDN</strong> or leave URLs blank, the application automatically falls back to your local server storage without broken images or broken styling.</p>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Collectstatic Action Bar -->
+        <div class="mt-6 pt-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-boxes-packing text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-200">Collect &amp; Compress Static Files</p>
+                    <p class="text-[11px] text-slate-400">Runs <code class="text-sky-400">collectstatic</code> to harvest all app assets into <code class="text-slate-300">staticfiles/</code> with WhiteNoise compression &amp; hashes.</p>
+                </div>
+            </div>
+            <form method="POST" action="{% url 'custom_admin:developer_settings' %}" onsubmit="return confirm('Run collectstatic now? This will gather all static assets into staticfiles.');" class="shrink-0">
+                {% csrf_token %}
+                <input type="hidden" name="run_collectstatic" value="1">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-sky-500/10">
+                    <i class="fa-solid fa-box-archive text-xs"></i>
+                    Run Collectstatic Now
+                </button>
+            </form>
+        </div>
+
+        <!-- Cloudflare Cache Purge Action Bar -->
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-orange-950/20 p-4 rounded-xl border border-orange-500/20">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-cloud-bolt text-sm"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <p class="text-xs font-semibold text-slate-200">Cloudflare Edge Cache Purge</p>
+                        {% if has_cloudflare_token and cloudflare_zone_id %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> API Connected
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            API Credentials Needed
+                        </span>
+                        {% endif %}
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Instantly clears all cached CSS, JS, and media files across Cloudflare's 300+ global edge data centers.</p>
+                </div>
+            </div>
+            <form method="POST" action="{% url 'custom_admin:developer_settings' %}" onsubmit="return confirm('Purge Cloudflare CDN cache globally? All cached assets will be instantly cleared worldwide.');" class="shrink-0">
+                {% csrf_token %}
+                <input type="hidden" name="purge_cloudflare_cache" value="1">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg shadow-orange-500/10">
+                    <i class="fa-solid fa-broom text-xs"></i>
+                    Purge Cloudflare Cache Now
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Sidebar Menu Visibility Manager Card -->
+
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
         <form method="POST" action="{% url 'custom_admin:developer_settings' %}"
               x-data="{

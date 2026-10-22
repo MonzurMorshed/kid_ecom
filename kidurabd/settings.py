@@ -142,13 +142,13 @@ if MEDIA_CDN_URL:
 else:
     MEDIA_URL = '/media/'
 
-# ── Static Files Storage Optimization (WhiteNoise) ───────────────────────────
+# ── Static & Media Storage Optimization (WhiteNoise + Dynamic CDN) ───────────
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "kidurabd.storage.CdnMediaStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage" if not DEBUG else "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "kidurabd.storage.CdnWhiteNoiseStaticStorage" if not DEBUG else "kidurabd.storage.CdnStaticFilesStorage",
     },
 }
 

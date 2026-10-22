@@ -5,3 +5,4 @@ python manage.py migrate // Database update
 python manage.py runserver
 python manage.py runserver 8001 // run server on port 8001
 python seed.py // Database seeded with data
+python manage.py optimize_images // convert image to webp (bulk)

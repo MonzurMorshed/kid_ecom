@@ -64,7 +64,7 @@ class Category(models.Model):
             self.slug = slugify(self.name, allow_unicode=True)
         if self.image and not getattr(self.image, '_committed', True):
             from .image_optimizer import compress_and_resize_image
-            compress_and_resize_image(self.image, max_dimensions=(800, 800), quality=82)
+            compress_and_resize_image(self.image, use_thumb=True)  # uses img_thumb_width/height from SiteSettings
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -114,7 +114,7 @@ class Brand(models.Model):
             self.slug = slugify(self.name)
         if self.logo and not getattr(self.logo, '_committed', True):
             from .image_optimizer import compress_and_resize_image
-            compress_and_resize_image(self.logo, max_dimensions=(400, 400), quality=85)
+            compress_and_resize_image(self.logo, use_thumb=True)  # uses img_thumb_width/height from SiteSettings
         super().save(*args, **kwargs)
 
 
@@ -445,9 +445,9 @@ class ProductVariant(models.Model):
         return f"{self.product.title} - {self.sku}"
 
     def save(self, *args, **kwargs):
-        if self.image and not getattr(self.image, '_committed', True):
+        if self.image:
             from .image_optimizer import compress_and_resize_image
-            compress_and_resize_image(self.image, max_dimensions=(800, 800), quality=82)
+            compress_and_resize_image(self.image)
         super().save(*args, **kwargs)
 
     @property
@@ -514,9 +514,9 @@ class ProductImage(models.Model):
     def save(self, *args, **kwargs):
         if not self.alt_text and self.product_id:
             self.alt_text = f"{self.product.title} photo"
-        if self.image and not getattr(self.image, '_committed', True):
+        if self.image:
             from .image_optimizer import compress_and_resize_image
-            compress_and_resize_image(self.image, max_dimensions=(1200, 1200), quality=82)
+            compress_and_resize_image(self.image)
         super().save(*args, **kwargs)
 
 

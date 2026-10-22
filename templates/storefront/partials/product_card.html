@@ -17,6 +17,8 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
                      alt="{{ feat_image.alt_text|default:product.title }}"
                      loading="lazy"
                      decoding="async"
+                     width="400"
+                     height="400"
                      class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105">
             {% else %}
                 <span class="product-emoji text-7xl sm:text-8xl leading-none transition-transform duration-300 ease-out group-hover:scale-110">

@@ -145,6 +145,176 @@ def developer_settings(request):
             messages.error(request, f"Failed to update menu visibility: {e}")
         return redirect('custom_admin:developer_settings')
 
+    # Handle Image Optimization Settings Update
+    if request.method == 'POST' and 'update_image_settings' in request.POST:
+        try:
+            img_format   = request.POST.get('img_format', 'WEBP').upper()
+            img_quality  = max(1, min(100, int(request.POST.get('img_quality', 82))))
+            img_max_w    = max(100, min(4000, int(request.POST.get('img_max_width', 1200))))
+            img_max_h    = max(100, min(4000, int(request.POST.get('img_max_height', 1200))))
+            img_thumb_w  = max(50,  min(1000, int(request.POST.get('img_thumb_width', 400))))
+            img_thumb_h  = max(50,  min(1000, int(request.POST.get('img_thumb_height', 400))))
+            img_hero_w   = max(400, min(4000, int(request.POST.get('img_hero_width', 1600))))
+            img_hero_h   = max(200, min(3000, int(request.POST.get('img_hero_height', 900))))
+            img_lazy     = request.POST.get('img_lazy_loading') == 'on'
+
+            if img_format not in ('WEBP', 'JPEG', 'PNG'):
+                img_format = 'WEBP'
+
+            site_settings_obj.img_format      = img_format
+            site_settings_obj.img_quality     = img_quality
+            site_settings_obj.img_max_width   = img_max_w
+            site_settings_obj.img_max_height  = img_max_h
+            site_settings_obj.img_thumb_width  = img_thumb_w
+            site_settings_obj.img_thumb_height = img_thumb_h
+            site_settings_obj.img_hero_width   = img_hero_w
+            site_settings_obj.img_hero_height  = img_hero_h
+            site_settings_obj.img_lazy_loading = img_lazy
+            site_settings_obj.save(update_fields=[
+                'img_format', 'img_quality',
+                'img_max_width', 'img_max_height',
+                'img_thumb_width', 'img_thumb_height',
+                'img_hero_width', 'img_hero_height',
+                'img_lazy_loading',
+            ])
+
+            from django.core.cache import cache
+            try:
+                cache.clear()
+            except Exception:
+                pass
+
+            ActivityLog.log(
+                request=request,
+                action='settings',
+                description=(
+                    f"Updated Image Optimization: format={img_format}, quality={img_quality}, "
+                    f"max={img_max_w}×{img_max_h}, thumb={img_thumb_w}×{img_thumb_h}, "
+                    f"hero={img_hero_w}×{img_hero_h}, lazy={img_lazy}."
+                ),
+                target_type='Developer Settings',
+            )
+            messages.success(request, 'Image optimization settings saved. New uploads will use these settings.')
+        except (ValueError, TypeError) as e:
+            messages.error(request, f'Invalid value in image settings: {e}')
+        except Exception as e:
+            logger.error(f"Failed to update image settings: {e}", exc_info=True)
+        return redirect('custom_admin:developer_settings')
+
+    # Handle Bulk Image Optimization Trigger
+    if request.method == 'POST' and 'bulk_optimize_images' in request.POST:
+        try:
+            from products.image_optimizer import bulk_optimize_all_media
+            stats = bulk_optimize_all_media()
+            saved_mb = round(stats['saved_bytes'] / (1024 * 1024), 2)
+            saved_kb = round(stats['saved_bytes'] / 1024, 1)
+
+            ActivityLog.log(
+                request=request,
+                action='settings',
+                description=(
+                    f"Bulk image optimization: {stats['processed']} optimized, "
+                    f"{stats['skipped']} skipped, {stats['errors']} errors, {saved_mb} MB saved."
+                ),
+                target_type='Developer Settings',
+            )
+
+            if stats['errors'] == 0:
+                messages.success(
+                    request,
+                    f"🎉 Successfully optimized {stats['processed']} image(s)! Saved {saved_mb} MB ({saved_kb} KB) of storage & bandwidth."
+                )
+            else:
+                messages.warning(
+                    request,
+                    f"Optimized {stats['processed']} images with {stats['errors']} error(s). Saved {saved_mb} MB."
+                )
+        except Exception as e:
+            logger.error(f"Bulk image optimization failed: {e}", exc_info=True)
+            messages.error(request, f"Bulk image optimization failed: {e}")
+        return redirect('custom_admin:developer_settings')
+
+    # Handle CDN Settings Update
+    if request.method == 'POST' and 'update_cdn_settings' in request.POST:
+        try:
+            enable_cdn = request.POST.get('enable_cdn') == 'on'
+            static_cdn_url = request.POST.get('static_cdn_url', '').strip()
+            media_cdn_url = request.POST.get('media_cdn_url', '').strip()
+            cf_zone_id = request.POST.get('cloudflare_zone_id', '').strip()
+            cf_api_token = request.POST.get('cloudflare_api_token', '').strip()
+
+            site_settings_obj.enable_cdn = enable_cdn
+            site_settings_obj.static_cdn_url = static_cdn_url or None
+            site_settings_obj.media_cdn_url = media_cdn_url or None
+            site_settings_obj.cloudflare_zone_id = cf_zone_id or None
+            if cf_api_token and not cf_api_token.startswith('•'):
+                site_settings_obj.cloudflare_api_token = cf_api_token
+
+            site_settings_obj.save(update_fields=[
+                'enable_cdn', 'static_cdn_url', 'media_cdn_url',
+                'cloudflare_zone_id', 'cloudflare_api_token',
+            ])
+
+            from django.core.cache import cache
+            try:
+                cache.clear()
+            except Exception:
+                pass
+
+            status_str = "ENABLED" if enable_cdn else "DISABLED"
+            ActivityLog.log(
+                request=request,
+                action='settings',
+                description=f"Updated CDN Settings: status={status_str}, static={static_cdn_url or 'local'}, media={media_cdn_url or 'local'}.",
+                target_type='Developer Settings',
+            )
+            messages.success(request, f"CDN configuration saved ({status_str}).")
+        except Exception as e:
+            logger.error(f"Failed to update CDN settings: {e}", exc_info=True)
+            messages.error(request, f"Failed to save CDN settings: {e}")
+        return redirect('custom_admin:developer_settings')
+
+    # Handle Cloudflare Cache Purge Action
+    if request.method == 'POST' and 'purge_cloudflare_cache' in request.POST:
+        from custom_admin.cloudflare import purge_cloudflare_cache
+        success, msg = purge_cloudflare_cache()
+        if success:
+            ActivityLog.log(
+                request=request,
+                action='settings',
+                description="Purged Cloudflare CDN cache globally.",
+                target_type='Developer Settings',
+            )
+            messages.success(request, f"🧹 {msg}")
+        else:
+            messages.error(request, f"Cloudflare Purge Failed: {msg}")
+        return redirect('custom_admin:developer_settings')
+
+    # Handle Run Collectstatic
+    if request.method == 'POST' and 'run_collectstatic' in request.POST:
+        from io import StringIO
+        from django.core.management import call_command
+        try:
+            out = StringIO()
+            call_command('collectstatic', interactive=False, verbosity=1, stdout=out)
+            output_msg = out.getvalue().strip()
+            summary_line = output_msg.splitlines()[-1] if output_msg else 'Static files collected.'
+
+            ActivityLog.log(
+                request=request,
+                action='settings',
+                description=f"Executed collectstatic from Developer Settings: {summary_line}",
+                target_type='Developer Settings',
+            )
+            messages.success(request, f"📦 {summary_line}")
+        except Exception as e:
+            logger.error(f"Collectstatic failed: {e}", exc_info=True)
+            messages.error(request, f"Collectstatic execution failed: {e}")
+        return redirect('custom_admin:developer_settings')
+
+
+
+
     log_file = getattr(settings, 'ERROR_LOG_FILE', settings.BASE_DIR / 'logs' / 'error.log')
 
     # Ensure log directory & file exists (safely handle permission errors)
@@ -209,6 +379,35 @@ def developer_settings(request):
     db_host = str(db_config.get('HOST') or '127.0.0.1')
     db_port = str(db_config.get('PORT') or '3306')
 
+    # Storage & Static/Media statistics
+    static_file_count, static_total_size = 0, 0
+    media_file_count, media_total_size = 0, 0
+    try:
+        static_dir = settings.BASE_DIR / 'static'
+        if static_dir.exists():
+            for root, _, files in os.walk(static_dir):
+                static_file_count += len(files)
+                for f in files:
+                    try:
+                        static_total_size += os.path.getsize(os.path.join(root, f))
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+
+    try:
+        media_dir = settings.BASE_DIR / 'media'
+        if media_dir.exists():
+            for root, _, files in os.walk(media_dir):
+                media_file_count += len(files)
+                for f in files:
+                    try:
+                        media_total_size += os.path.getsize(os.path.join(root, f))
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+
     context = {
         'python_version': sys.version.split()[0],
         'django_version': django.get_version(),
@@ -233,6 +432,30 @@ def developer_settings(request):
         'nav_menu_sections': ADMIN_NAV_SECTIONS,
         'hidden_menus': site_settings_obj.hidden_menu_list,
         'hidden_menu_count': len(site_settings_obj.hidden_menu_list),
+        # Image optimization settings
+        'img_format':       getattr(site_settings_obj, 'img_format', 'WEBP'),
+        'img_quality':      getattr(site_settings_obj, 'img_quality', 82),
+        'img_max_width':    getattr(site_settings_obj, 'img_max_width', 1200),
+        'img_max_height':   getattr(site_settings_obj, 'img_max_height', 1200),
+        'img_thumb_width':  getattr(site_settings_obj, 'img_thumb_width', 400),
+        'img_thumb_height': getattr(site_settings_obj, 'img_thumb_height', 400),
+        'img_hero_width':   getattr(site_settings_obj, 'img_hero_width', 1600),
+        'img_hero_height':  getattr(site_settings_obj, 'img_hero_height', 900),
+        'img_lazy_loading': getattr(site_settings_obj, 'img_lazy_loading', True),
+        # CDN & Static Storage settings
+        'enable_cdn':                  getattr(site_settings_obj, 'enable_cdn', False),
+        'static_cdn_url':              getattr(site_settings_obj, 'static_cdn_url', '') or '',
+        'media_cdn_url':               getattr(site_settings_obj, 'media_cdn_url', '') or '',
+        'cloudflare_zone_id':          getattr(site_settings_obj, 'cloudflare_zone_id', '') or getattr(settings, 'CLOUDFLARE_ZONE_ID', '') or '',
+        'has_cloudflare_token':        bool(getattr(site_settings_obj, 'cloudflare_api_token', None) or getattr(settings, 'CLOUDFLARE_API_TOKEN', None)),
+        'cloudflare_api_token_masked': '••••••••••••••••' if (getattr(site_settings_obj, 'cloudflare_api_token', None) or getattr(settings, 'CLOUDFLARE_API_TOKEN', None)) else '',
+        'static_file_count':           static_file_count,
+        'static_total_size':           _format_size(static_total_size),
+        'media_file_count':            media_file_count,
+        'media_total_size':            _format_size(media_total_size),
+        'whitenoise_active':           not getattr(settings, 'DEBUG', False),
+        'current_static_url':          getattr(settings, 'STATIC_URL', '/static/'),
+        'current_media_url':           getattr(settings, 'MEDIA_URL', '/media/'),
     }
     return render(request, 'custom_admin/settings/developer_settings.html', context)
 
