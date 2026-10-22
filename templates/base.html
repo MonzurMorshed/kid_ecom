@@ -44,6 +44,9 @@
     </script>
     {% endblock %}
 
+    <!-- Preload Critical Primary Font (DM Sans Latin Regular) to Prevent Layout Shift & FOIT -->
+    <link rel="preload" href="{% static 'vendor/fonts/storefront/store_3.woff2' %}" as="font" type="font/woff2" crossorigin>
+
     <!-- Compiled Tailwind CSS (Production Ready, Zero Runtime Penalty) -->
     <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
     <style>
@@ -62,11 +65,11 @@
     <!-- Font Awesome 6 Local -->
     <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
 
-    <!-- Alpine.js Local -->
+    <!-- Alpine.js Local (Deferred) -->
     <script defer src="{% static 'vendor/alpinejs/alpine.min.js' %}"></script>
 
-    <!-- HTMX Local (Django SPA Engine) -->
-    <script src="{% static 'vendor/htmx/htmx.min.js' %}"></script>
+    <!-- HTMX Local (Deferred for Non-Blocking Page Load) -->
+    <script defer src="{% static 'vendor/htmx/htmx.min.js' %}"></script>
 
     <style>
         :root {

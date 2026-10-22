@@ -58,6 +58,12 @@
 </script>
 {% endblock %}
 
+{% block extra_head %}
+{% if product.images.first %}
+<link rel="preload" as="image" href="{{ product.images.first.image.url }}" fetchpriority="high">
+{% endif %}
+{% endblock %}
+
 {% block content %}
 
 <!-- Breadcrumb -->

@@ -3,6 +3,12 @@
 
 {% block title %}Kidurabd — Big joy for little humans.{% endblock %}
 
+{% block extra_head %}
+{% if hero_slides and hero_slides.0.image %}
+<link rel="preload" as="image" href="{{ hero_slides.0.image.url }}" fetchpriority="high">
+{% endif %}
+{% endblock %}
+
 {% block content %}
 
 <!-- ══════════════════════════════════════════════════
