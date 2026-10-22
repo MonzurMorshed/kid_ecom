@@ -1,0 +1,12 @@
+{
+  "name": "kid_ecom",
+  "version": "1.0.0",
+  "description": "Kidurabd E-commerce Tailwind CSS build configuration",
+  "scripts": {
+    "build:css": "tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.min.css --minify",
+    "watch:css": "tailwindcss -i ./static/css/input.css -o ./static/css/tailwind.min.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

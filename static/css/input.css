@@ -1,1 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+@layer utilities {
+    /* Custom shadow utilities */
+    .shadow-toy {
+        box-shadow: 0 10px 25px rgba(25, 37, 59, 0.11);
+    }
+}

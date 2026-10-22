@@ -6,25 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Under Maintenance — {{ site_name|default:'Our Store' }}</title>
     <link rel="stylesheet" href="{% static 'vendor/fonts/storefront-fonts.css' %}">
-    <script src="{% static 'vendor/tailwindcss/tailwind.js' %}"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        ink:    '#19253b',
-                        coral:  '#ff6b4d',
-                        butter: '#f6c64d',
-                        cream:  '#fffaf2',
-                    },
-                    fontFamily: {
-                        sans:    ['DM Sans', 'sans-serif'],
-                        display: ['Fraunces', 'serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
     <style>
         @keyframes float {
             0%, 100% { transform: translateY(0px); }

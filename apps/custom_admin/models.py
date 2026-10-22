@@ -378,6 +378,39 @@ class SiteSettings(models.Model):
                     maintenance_msg='We are currently performing maintenance. Please check back soon.',
                 )
 
+    @staticmethod
+    def _hex_to_rgb(hex_code, default="255 107 77"):
+        if not hex_code:
+            return default
+        h = str(hex_code).lstrip('#').strip()
+        if len(h) == 3:
+            h = ''.join([c * 2 for c in h])
+        if len(h) == 6:
+            try:
+                r = int(h[0:2], 16)
+                g = int(h[2:4], 16)
+                b = int(h[4:6], 16)
+                return f"{r} {g} {b}"
+            except ValueError:
+                pass
+        return default
+
+    @property
+    def primary_color_rgb(self):
+        return self._hex_to_rgb(self.primary_color, "255 107 77")
+
+    @property
+    def secondary_color_rgb(self):
+        return self._hex_to_rgb(self.secondary_color, "246 198 77")
+
+    @property
+    def store_bg_color_rgb(self):
+        return self._hex_to_rgb(self.store_bg_color, "255 250 242")
+
+    @property
+    def text_color_rgb(self):
+        return self._hex_to_rgb(self.text_color, "25 37 59")
+
     @property
     def logo_url(self):
         try:

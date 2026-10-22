@@ -6,8 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Dashboard{% endblock %} — {{ site_settings.site_name|default:'Kidurabd' }} Admin</title>
-    <!-- Tailwind CSS Local Asset -->
-    <script src="{% static 'vendor/tailwindcss/tailwind.js' %}"></script>
+    <!-- Compiled Tailwind CSS -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
     <!-- Custom Alpine.js Components -->
     <script src="{% static 'js/main.js' %}"></script>
     <!-- Alpine.js Local Asset -->

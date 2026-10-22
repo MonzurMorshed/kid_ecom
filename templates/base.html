@@ -44,36 +44,17 @@
     </script>
     {% endblock %}
 
-    <!-- Tailwind CSS Local Asset -->
-    <script src="{% static 'vendor/tailwindcss/tailwind.js' %}"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        ink:      '{{ site_settings.text_color|default:"#19253b" }}',
-                        coral:    '{{ site_settings.primary_color|default:"#ff6b4d" }}',
-                        butter:   '{{ site_settings.secondary_color|default:"#f6c64d" }}',
-                        cream:    '{{ site_settings.store_bg_color|default:"#fffaf2" }}',
-                        mint:     '#e6f0e8',
-                        softmint: '#7ac9b3',
-                        peach:    '#f7c9bd',
-                        sky:      '#b8deeb',
-                        lavender: '#ded8f4',
-                        muted:    '#827f78',
-                    },
-                    fontFamily: {
-                        sans:    ['DM Sans', 'sans-serif'],
-                        display: ['Fraunces', 'serif'],
-                    },
-                    boxShadow: {
-                        toy:    '0 10px 25px rgba(25,37,59,.11)',
-                        button: '0 7px 0 {{ site_settings.primary_color|default:"#df543d" }}, 0 11px 18px rgba(0,0,0,.16)',
-                    },
-                }
-            }
+    <!-- Compiled Tailwind CSS (Production Ready, Zero Runtime Penalty) -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
+    <style>
+        :root {
+            --color-ink-rgb: {{ site_settings.text_color_rgb|default:"25 37 59" }};
+            --color-coral-rgb: {{ site_settings.primary_color_rgb|default:"255 107 77" }};
+            --color-butter-rgb: {{ site_settings.secondary_color_rgb|default:"246 198 77" }};
+            --color-cream-rgb: {{ site_settings.store_bg_color_rgb|default:"255 250 242" }};
+            --color-coral-dark: {{ site_settings.primary_color|default:"#df543d" }};
         }
-    </script>
+    </style>
 
     <!-- Local Fonts -->
     <link rel="stylesheet" href="{% static 'vendor/fonts/storefront-fonts.css' %}">
