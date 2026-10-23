@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
-from ..decorators import admin_required
+from ..decorators import admin_required, permission_required
 from ..models import ActivityLog, SiteSettings
 
 logger = logging.getLogger('django.request')
@@ -73,7 +73,7 @@ def _format_size(size_bytes):
         return "0 B"
 
 
-@admin_required
+@permission_required('developer')
 def developer_settings(request):
     """
     Developer Settings view:
@@ -479,7 +479,7 @@ def developer_settings(request):
     return render(request, 'custom_admin/settings/developer_settings.html', context)
 
 
-@admin_required
+@permission_required('developer')
 @require_POST
 def clear_error_log(request):
     """

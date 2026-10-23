@@ -8,19 +8,19 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.utils.text import slugify
 
-from apps.custom_admin.decorators import admin_required
+from custom_admin.decorators import admin_required, permission_required
 from .models import Category, Product, Brand, ProductOption, ProductOptionValue, ProductVariant, ProductImage
 
 # =========================================================
 # CATEGORY VIEWS
 # =========================================================
 
-@admin_required
+@permission_required('categories')
 def category_list(request):
     categories = Category.objects.select_related('parent').all().order_by('-created_at')
     return render(request, 'custom_admin/categories/category_list.html', {'categories': categories})
 
-@admin_required
+@permission_required('categories')
 def category_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -47,7 +47,7 @@ def category_create(request):
     parent_categories = Category.objects.filter(parent__isnull=True)
     return render(request, 'custom_admin/categories/category_form.html', {'parent_categories': parent_categories})
 
-@admin_required
+@permission_required('categories')
 def category_update(request, pk):
     category = get_object_or_404(Category, id=pk)
 
@@ -85,7 +85,7 @@ def category_update(request, pk):
 # PRODUCT VIEWS
 # =========================================================
 
-@admin_required
+@permission_required('products')
 def product_list(request):
     qs = (
         Product.objects
@@ -128,7 +128,7 @@ def product_list(request):
     }
     return render(request, 'custom_admin/products/product_list.html', context)
 
-@admin_required
+@permission_required('products')
 def product_create(request):
     categories = Category.objects.filter(is_active=True)
     brands = Brand.objects.filter(is_active=True)
@@ -261,7 +261,7 @@ def product_create(request):
     return render(request, 'custom_admin/products/product_create.html', context)
 
 
-@admin_required
+@permission_required('products')
 def product_details(request, pk):
     product = get_object_or_404(
         Product.objects.select_related('category', 'brand').prefetch_related(
@@ -276,7 +276,7 @@ def product_details(request, pk):
     return render(request, 'custom_admin/products/product_details.html', context)
 
 
-@admin_required
+@permission_required('products')
 def product_update(request, pk):
     product = get_object_or_404(
         Product.objects.select_related('category', 'brand').prefetch_related('images'),
@@ -368,7 +368,7 @@ def product_update(request, pk):
     return render(request, 'custom_admin/products/product_form.html', context)
 
 
-@admin_required
+@permission_required('products')
 def product_image_delete(request, image_pk):
     """Delete a single ProductImage."""
     img = get_object_or_404(ProductImage, pk=image_pk)
@@ -383,7 +383,7 @@ def product_image_delete(request, image_pk):
 # VARIANT VIEWS
 # =========================================================
 
-@admin_required
+@permission_required('products')
 def variant_add(request, pk):
     """Add a single variant to an existing product."""
     product = get_object_or_404(Product, pk=pk, is_deleted=False)
@@ -419,7 +419,7 @@ def variant_add(request, pk):
     return redirect('custom_admin:product_update', pk=pk)
 
 
-@admin_required
+@permission_required('products')
 def variant_delete(request, variant_pk):
     """Delete a single variant."""
     variant = get_object_or_404(ProductVariant, pk=variant_pk)
@@ -431,7 +431,7 @@ def variant_delete(request, variant_pk):
     return redirect('custom_admin:product_update', pk=product_pk)
 
 
-@admin_required
+@permission_required('products')
 def variant_update(request, variant_pk):
     """Inline update of a variant's price_override and stock."""
     from django.http import JsonResponse
@@ -467,7 +467,7 @@ def variant_update(request, variant_pk):
     return redirect('custom_admin:product_detail', pk=product_pk)
 
 
-@admin_required
+@permission_required('products')
 def variant_image_upload(request, variant_pk):
     """Upload or replace a variant's image."""
     variant = get_object_or_404(ProductVariant, pk=variant_pk)
@@ -483,7 +483,7 @@ def variant_image_upload(request, variant_pk):
     return redirect('custom_admin:product_detail', pk=product_pk)
 
 
-@admin_required
+@permission_required('categories')
 def category_toggle(request, pk):
     """AJAX toggle is_active for a category."""
     from django.http import JsonResponse
@@ -495,7 +495,7 @@ def category_toggle(request, pk):
     return JsonResponse({'ok': False}, status=405)
 
 
-@admin_required
+@permission_required('products')
 def image_alt_update(request, image_pk):
     """Inline update of a ProductImage alt_text."""
     from django.http import JsonResponse
@@ -511,7 +511,7 @@ def image_alt_update(request, image_pk):
     return redirect('custom_admin:product_detail', pk=product_pk)
 
 
-@admin_required
+@permission_required('products')
 def image_reorder(request, pk):
     """Accept ordered list of image IDs and update sort_order."""
     from django.http import JsonResponse
@@ -530,7 +530,7 @@ def image_reorder(request, pk):
 
 
 
-@admin_required
+@permission_required('products')
 def product_soft_delete(request, pk):
     """Soft-delete a product (sets is_deleted=True, does not remove from DB)."""
     product = get_object_or_404(Product, pk=pk, is_deleted=False)
@@ -540,7 +540,7 @@ def product_soft_delete(request, pk):
     return redirect('custom_admin:product_list')
 
 
-@admin_required
+@permission_required('products')
 def product_trash(request):
     """Recycle bin – list of soft-deleted products."""
     deleted_products = (
@@ -558,7 +558,7 @@ def product_trash(request):
     return render(request, 'custom_admin/products/product_trash.html', context)
 
 
-@admin_required
+@permission_required('products')
 def product_restore(request, pk):
     """Restore a soft-deleted product back to the active catalog."""
     product = get_object_or_404(Product, pk=pk, is_deleted=True)
@@ -568,7 +568,7 @@ def product_restore(request, pk):
     return redirect('custom_admin:product_trash')
 
 
-@admin_required
+@permission_required('products')
 def product_permanent_delete(request, pk):
     """Permanently remove a soft-deleted product from the database."""
     product = get_object_or_404(Product, pk=pk, is_deleted=True)
@@ -583,7 +583,7 @@ def product_permanent_delete(request, pk):
 # PRODUCT OPTION VIEWS
 # =========================================================
 
-@admin_required
+@permission_required('products')
 def option_add(request, pk):
     """Add a new option group (e.g. Size, Color) to a product."""
     product = get_object_or_404(Product, pk=pk, is_deleted=False)
@@ -600,7 +600,7 @@ def option_add(request, pk):
     return redirect('custom_admin:product_detail', pk=pk)
 
 
-@admin_required
+@permission_required('products')
 def option_delete(request, option_pk):
     """Delete an option group and all its values (cascades via FK)."""
     option = get_object_or_404(ProductOption, pk=option_pk)
@@ -612,7 +612,7 @@ def option_delete(request, option_pk):
     return redirect('custom_admin:product_detail', pk=product_pk)
 
 
-@admin_required
+@permission_required('products')
 def option_value_add(request, option_pk):
     """Add a new value (e.g. Small, Red) to an existing option group."""
     option = get_object_or_404(ProductOption, pk=option_pk)
@@ -630,7 +630,7 @@ def option_value_add(request, option_pk):
     return redirect('custom_admin:product_detail', pk=product_pk)
 
 
-@admin_required
+@permission_required('products')
 def option_value_delete(request, value_pk):
     """Delete a single option value."""
     value = get_object_or_404(ProductOptionValue, pk=value_pk)
@@ -703,7 +703,7 @@ def parse_specifications(raw_value):
     return result
 
 
-@admin_required
+@permission_required('products')
 def product_export(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="products_export.csv"'
@@ -777,7 +777,7 @@ def product_export(request):
 
     return response
 
-@admin_required
+@permission_required('products')
 def product_sample_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="sample_products_import.csv"'
@@ -822,7 +822,7 @@ def product_sample_csv(request):
 
     return response
 
-@admin_required
+@permission_required('products')
 def product_import(request):
     if request.method == 'POST' and request.FILES.get('csv_file'):
         uploaded_file = request.FILES['csv_file']

@@ -6,11 +6,13 @@ from django.http import StreamingHttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.utils import timezone
+from custom_admin.decorators import permission_required
 from .models import Order
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Order List
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_list(request):
     data = Order.objects.filter(is_deleted=False).select_related('user').prefetch_related('items').order_by('-created_at')
 
@@ -42,25 +44,28 @@ def order_list(request):
 
     if date_from:
         data = data.filter(created_at__date__gte=date_from)
+
     if date_to:
         data = data.filter(created_at__date__lte=date_to)
 
     paginator   = Paginator(data, 15)
-    page_number = request.GET.get('page', 1)
+    page_number = request.GET.get('page')
     page_obj    = paginator.get_page(page_number)
 
     context = {
         'orders':           page_obj,
+        'page_obj':         page_obj,
         'pending_count':    pending_count,
         'processing_count': processing_count,
         'confirmed_count':  confirmed_count,
         'delivered_count':  delivered_count,
         'cancelled_count':  cancelled_count,
-        # pass back to template so filter form stays populated
-        'q':         q,
-        'status':    status,
-        'date_from': date_from,
-        'date_to':   date_to,
+        'status_choices':   Order.STATUS_CHOICES,
+        'current_status':   status,
+        'q':                q,
+        'date_from':        date_from,
+        'date_to':          date_to,
+        'total_count':      data.count(),
     }
     return render(request, 'custom_admin/orders/order_list.html', context)
 
@@ -68,6 +73,7 @@ def order_list(request):
 # ──────────────────────────────────────────────────────────────────────────────
 # Order Detail
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_detail(request, pk):
     order = get_object_or_404(
         Order.objects.select_related('user').prefetch_related('items__product', 'items__variant__options'),
@@ -79,6 +85,7 @@ def order_detail(request, pk):
 # ──────────────────────────────────────────────────────────────────────────────
 # Order Invoice  (print-friendly)
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_invoice(request, pk):
     order = get_object_or_404(
         Order.objects.select_related('user').prefetch_related('items__product', 'items__variant__options'),
@@ -90,6 +97,7 @@ def order_invoice(request, pk):
 # ──────────────────────────────────────────────────────────────────────────────
 # Order Update  (status + customer info)
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_update(request, pk):
     order = get_object_or_404(Order, pk=pk, is_deleted=False)
 
@@ -119,6 +127,7 @@ def order_update(request, pk):
 # ──────────────────────────────────────────────────────────────────────────────
 # Order Cancel  (sets status to CANCELLED — not a soft delete)
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_cancel(request, pk):
     order = get_object_or_404(Order, pk=pk, is_deleted=False)
     if order.status not in ('CANCELLED', 'DELIVERED'):
@@ -135,6 +144,7 @@ def order_cancel(request, pk):
 # ──────────────────────────────────────────────────────────────────────────────
 # Order Soft Delete  (moves to trash)
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_soft_delete(request, pk):
     order = get_object_or_404(Order, pk=pk, is_deleted=False)
     order.soft_delete()
@@ -145,6 +155,7 @@ def order_soft_delete(request, pk):
 # ──────────────────────────────────────────────────────────────────────────────
 # Order Trash  (lists soft-deleted orders)
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_trash(request):
     data = Order.objects.filter(is_deleted=True).select_related('user').order_by('-deleted_at')
     paginator   = Paginator(data, 15)
@@ -156,6 +167,7 @@ def order_trash(request):
 # ──────────────────────────────────────────────────────────────────────────────
 # Order Restore
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_restore(request, pk):
     order = get_object_or_404(Order, pk=pk, is_deleted=True)
     order.restore()
@@ -166,6 +178,7 @@ def order_restore(request, pk):
 # ──────────────────────────────────────────────────────────────────────────────
 # Order Permanent Delete
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_permanent_delete(request, pk):
     order = get_object_or_404(Order, pk=pk, is_deleted=True)
     order_id = order.id
@@ -177,6 +190,7 @@ def order_permanent_delete(request, pk):
 # ──────────────────────────────────────────────────────────────────────────────
 # Export / Import / Sample CSV  (stubs — implement as needed)
 # ──────────────────────────────────────────────────────────────────────────────
+@permission_required('orders')
 def order_export(request):
     """
     Stream a CSV file of orders, optionally filtered by the same
@@ -242,9 +256,11 @@ def order_export(request):
     return response
 
 
+@permission_required('orders')
 def order_import(request):
     return render(request, 'custom_admin/orders/order_import.html')
 
 
+@permission_required('orders')
 def order_sample_csv(request):
     return render(request, 'custom_admin/orders/order_sample_csv.html')

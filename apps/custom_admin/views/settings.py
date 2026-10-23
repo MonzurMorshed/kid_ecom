@@ -3,14 +3,14 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
-from ..decorators import admin_required
+from ..decorators import admin_required, permission_required
 from ..forms import SiteSettingsForm, PaymentMethodForm, ThemeSettingsForm
 from ..models import SiteSettings, PaymentMethod
 
 
 # ── Site Settings ─────────────────────────────────────────────────────────────
 
-@admin_required
+@permission_required('settings')
 def site_settings(request):
     """Single-page settings hub — general info, currency, shipping, social."""
     import logging
@@ -57,7 +57,7 @@ def site_settings(request):
 
 # ── Theme Settings ────────────────────────────────────────────────────────────
 
-@admin_required
+@permission_required('settings')
 def theme_settings(request):
     """
     Dedicated visual theme customizer:
@@ -101,7 +101,7 @@ def theme_settings(request):
 
 # ── Payment Methods ───────────────────────────────────────────────────────────
 
-@admin_required
+@permission_required('payment_methods')
 def payment_method_list(request):
     """List all configured payment gateways."""
     methods = PaymentMethod.objects.all()
@@ -111,7 +111,7 @@ def payment_method_list(request):
     })
 
 
-@admin_required
+@permission_required('payment_methods')
 def payment_method_create(request):
     """Add a new payment gateway."""
     existing          = PaymentMethod.objects.values_list('gateway', flat=True)
@@ -133,7 +133,7 @@ def payment_method_create(request):
     })
 
 
-@admin_required
+@permission_required('payment_methods')
 def payment_method_edit(request, pk):
     """Edit an existing payment gateway configuration."""
     method = get_object_or_404(PaymentMethod, pk=pk)
@@ -154,7 +154,7 @@ def payment_method_edit(request, pk):
     })
 
 
-@admin_required
+@permission_required('payment_methods')
 @require_POST
 def payment_method_toggle(request, pk):
     """AJAX: toggle is_active for a payment method."""
@@ -164,7 +164,7 @@ def payment_method_toggle(request, pk):
     return JsonResponse({'status': 'ok', 'is_active': method.is_active})
 
 
-@admin_required
+@permission_required('payment_methods')
 @require_POST
 def payment_method_delete(request, pk):
     """Delete a payment method."""
@@ -175,7 +175,7 @@ def payment_method_delete(request, pk):
     return redirect('custom_admin:payment_method_list')
 
 
-@admin_required
+@permission_required('developer')
 @require_POST
 def clear_cache(request):
     """

@@ -5,12 +5,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
 from accounts.models import User
-from ..decorators import admin_required
+from ..decorators import permission_required
 
 
 # ── Customer Management ───────────────────────────────────────────────────────
 
-@admin_required
+@permission_required('customers')
 def customer_list(request):
     qs = (
         User.objects
@@ -58,7 +58,7 @@ def customer_list(request):
     return render(request, 'custom_admin/customers/customer_list.html', context)
 
 
-@admin_required
+@permission_required('customers')
 def customer_detail(request, pk):
     customer = get_object_or_404(
         User.objects.annotate(order_count=Count('orders')),
@@ -77,7 +77,7 @@ def customer_detail(request, pk):
     return render(request, 'custom_admin/customers/customer_detail.html', context)
 
 
-@admin_required
+@permission_required('customers')
 @require_POST
 def customer_block_toggle(request, pk):
     customer = get_object_or_404(User, pk=pk, is_staff=False, is_superuser=False)

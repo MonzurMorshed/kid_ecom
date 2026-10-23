@@ -81,6 +81,7 @@ TEMPLATES = [
                 'storefront.context_processors.cart_context',
                 'storefront.context_processors.site_settings',
                 'storefront.context_processors.footer_pages',
+                'custom_admin.context_processors.admin_permissions',
             ],
             **({
                 'loaders': [

@@ -9,7 +9,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from accounts.models import User
 from ..forms import AdminRegisterForm
-from ..models import ActivityLog
+from ..models import ActivityLog, AdminProfile
+from ..permissions import ALL_PERMISSION_IDS, DEFAULT_ROLE_PERMISSIONS
 
 _token_generator = PasswordResetTokenGenerator()
 
@@ -17,7 +18,7 @@ _token_generator = PasswordResetTokenGenerator()
 # ── Auth: Login / Register / Logout ──────────────────────────────────────────
 
 def admin_login(request):
-    if request.user.is_authenticated and request.user.is_superuser:
+    if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
         return redirect('custom_admin:dashboard')
 
     if request.method == 'POST':
@@ -26,19 +27,40 @@ def admin_login(request):
 
         user = authenticate(request, username=username_input, password=password_input)
         if user is not None:
-            if user.is_blocked:
+            if getattr(user, 'is_blocked', False):
                 messages.error(request, 'Your admin account has been temporarily blocked.')
                 return redirect('custom_admin:login')
+
+            if not user.is_active:
+                messages.error(request, 'Your account is currently disabled. Please contact the Super Admin.')
+                return redirect('custom_admin:login')
+
             if user.is_staff or user.is_superuser:
                 login(request, user)
-                ActivityLog.log(request, 'login', f'Admin logged in: {user.username}', target_type='User', target_id=user.pk)
-                messages.success(request, f'Welcome back, {user.username}! You have successfully logged in.')
+
+                # Ensure AdminProfile and role are synchronized
+                profile = AdminProfile.get_or_create_for(user)
+                if user.is_superuser and profile.role != 'superadmin':
+                    profile.role = 'superadmin'
+                    profile.permissions = list(ALL_PERMISSION_IDS)
+                    profile.save()
+                elif not profile.role:
+                    profile.role = 'staff'
+                    profile.permissions = list(DEFAULT_ROLE_PERMISSIONS['staff'])
+                    profile.save()
+
+                ActivityLog.log(
+                    request, 'login',
+                    f'Admin logged in: {user.username} ({profile.get_role_display()})',
+                    target_type='User', target_id=user.pk
+                )
+                messages.success(request, f'Welcome back, {user.username}! Logged in as {profile.get_role_display()}.')
                 next_url = request.GET.get('next')
                 if next_url:
                     return redirect(next_url)
                 return redirect('custom_admin:dashboard')
             else:
-                messages.error(request, 'Access denied. You do not have admin privileges.')
+                messages.error(request, 'Access denied. You do not have staff/admin privileges.')
         else:
             messages.error(request, 'Invalid username or password.')
 
@@ -46,7 +68,7 @@ def admin_login(request):
 
 
 def admin_register(request):
-    if request.user.is_authenticated and request.user.is_superuser:
+    if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
         return redirect('custom_admin:dashboard')
 
     if request.method == 'POST':
@@ -56,8 +78,24 @@ def admin_register(request):
             user.set_password(form.cleaned_data['password'])
             user.is_staff    = True
             user.is_customer = False
+            user.is_active   = True
             user.save()
-            messages.success(request, 'Admin account successfully created! Please log in.')
+
+            # Assign default 'staff' role with default staff permissions
+            profile = AdminProfile.get_or_create_for(user)
+            profile.role = 'staff'
+            profile.permissions = list(DEFAULT_ROLE_PERMISSIONS['staff'])
+            profile.save()
+
+            ActivityLog.log(
+                request, 'create',
+                f'New staff account registered: {user.username}',
+                actor=user, target_type='User', target_id=user.pk
+            )
+            messages.success(
+                request,
+                f'Staff account for "{user.username}" created successfully with default "Staff" role! Please log in.'
+            )
             return redirect('custom_admin:login')
     else:
         form = AdminRegisterForm()

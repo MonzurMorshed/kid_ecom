@@ -3,20 +3,20 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
-from ..decorators import admin_required
+from ..decorators import permission_required
 from ..forms import HeroSlideForm, BannerForm
 from ..models import HeroSlide, Banner
 
 
 # ── Hero Slider ───────────────────────────────────────────────────────────────
 
-@admin_required
+@permission_required('content')
 def slider_list(request):
     slides = HeroSlide.objects.all()
     return render(request, 'custom_admin/content/slider_list.html', {'slides': slides})
 
 
-@admin_required
+@permission_required('content')
 def slider_create(request):
     if request.method == 'POST':
         form = HeroSlideForm(request.POST, request.FILES)
@@ -32,7 +32,7 @@ def slider_create(request):
     })
 
 
-@admin_required
+@permission_required('content')
 def slider_edit(request, pk):
     slide = get_object_or_404(HeroSlide, pk=pk)
     if request.method == 'POST':
@@ -49,7 +49,7 @@ def slider_edit(request, pk):
     })
 
 
-@admin_required
+@permission_required('content')
 @require_POST
 def slider_toggle(request, pk):
     slide = get_object_or_404(HeroSlide, pk=pk)
@@ -58,7 +58,7 @@ def slider_toggle(request, pk):
     return JsonResponse({'status': 'ok', 'is_active': slide.is_active})
 
 
-@admin_required
+@permission_required('content')
 @require_POST
 def slider_delete(request, pk):
     slide = get_object_or_404(HeroSlide, pk=pk)
@@ -70,7 +70,7 @@ def slider_delete(request, pk):
 
 # ── Banners ───────────────────────────────────────────────────────────────────
 
-@admin_required
+@permission_required('content')
 def banner_list(request):
     banners = Banner.objects.all()
     return render(request, 'custom_admin/content/banner_list.html', {
@@ -79,7 +79,7 @@ def banner_list(request):
     })
 
 
-@admin_required
+@permission_required('content')
 def banner_create(request):
     if request.method == 'POST':
         form = BannerForm(request.POST, request.FILES)
@@ -95,7 +95,7 @@ def banner_create(request):
     })
 
 
-@admin_required
+@permission_required('content')
 def banner_edit(request, pk):
     banner = get_object_or_404(Banner, pk=pk)
     if request.method == 'POST':
@@ -112,7 +112,7 @@ def banner_edit(request, pk):
     })
 
 
-@admin_required
+@permission_required('content')
 @require_POST
 def banner_toggle(request, pk):
     banner = get_object_or_404(Banner, pk=pk)
@@ -121,7 +121,7 @@ def banner_toggle(request, pk):
     return JsonResponse({'status': 'ok', 'is_active': banner.is_active})
 
 
-@admin_required
+@permission_required('content')
 @require_POST
 def banner_delete(request, pk):
     banner = get_object_or_404(Banner, pk=pk)

@@ -3,7 +3,7 @@
 {% block page_title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl">
+<div class="max-w-4xl" x-data="adminPermissionManager()">
 
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-xs text-slate-400 mb-6">
@@ -13,30 +13,52 @@
     </nav>
 
     <!-- User identity strip -->
-    <div class="flex items-center gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl mb-5">
-        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-violet-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-            {{ target.username|first|upper }}
+    <div class="flex items-center gap-4 p-5 bg-slate-900 border border-slate-800 rounded-2xl mb-6 shadow-sm">
+        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-lg shadow-sky-500/10">
+            {% if target.admin_profile.avatar %}
+                <img src="{{ target.admin_profile.avatar.url }}" class="w-14 h-14 rounded-full object-cover" alt="">
+            {% else %}
+                {{ target.username|first|upper }}
+            {% endif %}
         </div>
-        <div>
-            <p class="font-semibold text-white">{{ target.username }}</p>
-            <p class="text-xs text-slate-400">
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <p class="font-bold text-white text-base">{{ target.username }}</p>
+                <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full
+                    {% if target.admin_profile.role == 'superadmin' %}bg-amber-500/15 border border-amber-500/30 text-amber-400
+                    {% elif target.admin_profile.role == 'manager' %}bg-violet-500/15 border border-violet-500/30 text-violet-400
+                    {% else %}bg-sky-500/15 border border-sky-500/30 text-sky-400{% endif %}">
+                    {{ target.admin_profile.get_role_display }}
+                </span>
+                {% if target.is_superuser %}
+                <span class="px-2 py-0.5 text-[11px] font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full">Superuser</span>
+                {% endif %}
+            </div>
+            <p class="text-xs text-slate-400 mt-1">
+                {% if target.email %}{{ target.email }} · {% endif %}
                 Joined {{ target.date_joined|date:"M d, Y" }}
                 {% if target.last_login %} · Last login {{ target.last_login|timesince }} ago{% endif %}
             </p>
         </div>
-        {% if target.is_superuser %}
-        <span class="ml-auto px-2.5 py-1 text-xs font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full">Superuser</span>
-        {% endif %}
+        <div class="text-right flex-shrink-0">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {% if target.is_active %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% else %}bg-rose-500/10 text-rose-400 border border-rose-500/20{% endif %}">
+                <span class="w-1.5 h-1.5 rounded-full {% if target.is_active %}bg-emerald-400 animate-pulse{% else %}bg-rose-400{% endif %}"></span>
+                {% if target.is_active %}Active Account{% else %}Disabled{% endif %}
+            </span>
+        </div>
     </div>
 
-    <form method="post" enctype="multipart/form-data" novalidate class="space-y-5">
+    <form method="post" enctype="multipart/form-data" novalidate class="space-y-6">
         {% csrf_token %}
 
         <!-- ── Account Info ─────────────────────────────────────────────── -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account Information</h2>
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Account Information</h2>
+                <span class="text-xs text-slate-500">Basic personal & login credentials</span>
+            </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1.5">First Name</label>
                     {{ user_form.first_name }}
@@ -53,44 +75,156 @@
                 {% if user_form.email.errors %}<p class="text-rose-400 text-xs mt-1">{{ user_form.email.errors.0 }}</p>{% endif %}
             </div>
 
-            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+            <div class="flex items-center justify-between p-4 bg-slate-800/40 rounded-xl border border-slate-700/80">
                 <div>
-                    <p class="text-sm font-medium text-white">Account Active</p>
-                    <p class="text-xs text-slate-400">Disable to prevent this admin from logging in</p>
+                    <p class="text-sm font-semibold text-white">Account Status</p>
+                    <p class="text-xs text-slate-400">If unchecked, this admin user will not be able to log in to the admin portal.</p>
                 </div>
                 {{ user_form.is_active }}
             </div>
         </div>
 
-        <!-- ── Role & Permissions ───────────────────────────────────────── -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Role & Permissions</h2>
-
-            <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1.5">Role</label>
-                {{ profile_form.role }}
-                <div class="grid grid-cols-3 gap-2 mt-3">
-                    <div class="p-2.5 bg-amber-500/5 border border-amber-500/15 rounded-lg">
-                        <p class="text-[10px] font-bold text-amber-400 mb-0.5">Super Admin</p>
-                        <p class="text-[10px] text-slate-500">Full access to all features</p>
-                    </div>
-                    <div class="p-2.5 bg-violet-500/5 border border-violet-500/15 rounded-lg">
-                        <p class="text-[10px] font-bold text-violet-400 mb-0.5">Manager</p>
-                        <p class="text-[10px] text-slate-500">Products, orders, customers</p>
-                    </div>
-                    <div class="p-2.5 bg-slate-800 border border-slate-700 rounded-lg">
-                        <p class="text-[10px] font-bold text-slate-400 mb-0.5">Staff</p>
-                        <p class="text-[10px] text-slate-500">Read-only, limited actions</p>
-                    </div>
+        <!-- ── Role Assignment ─────────────────────────────────────────── -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Role Assignment</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Primary role determines the default permission preset</p>
                 </div>
+                <span class="text-xs px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 font-medium">
+                    Current: <strong x-text="roleLabel(currentRole)"></strong>
+                </span>
             </div>
 
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1.5">Avatar</label>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">Assigned Role</label>
+                <select name="role" id="id_role" x-model="currentRole" @change="onRoleChange()"
+                        class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 transition text-sm">
+                    {% if is_requester_super %}
+                    <option value="superadmin">Super Admin (Full Unrestricted Access)</option>
+                    {% endif %}
+                    <option value="manager">Manager (Operations, Catalog & Sales)</option>
+                    <option value="staff">Staff (Operational & Process Orders)</option>
+                </select>
+
+                <!-- Role Explanation Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+                    <div @click="setRole('superadmin')"
+                         class="cursor-pointer p-3.5 rounded-xl border transition"
+                         :class="currentRole === 'superadmin' ? 'bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30' : 'bg-slate-800/30 border-slate-800 hover:border-slate-700'">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-amber-400">Super Admin</span>
+                            <i class="fa-solid fa-crown text-amber-400 text-xs"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">Unrestricted access to all store modules, settings, and team roles.</p>
+                    </div>
+
+                    <div @click="setRole('manager')"
+                         class="cursor-pointer p-3.5 rounded-xl border transition"
+                         :class="currentRole === 'manager' ? 'bg-violet-500/10 border-violet-500/40 ring-1 ring-violet-500/30' : 'bg-slate-800/30 border-slate-800 hover:border-slate-700'">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-violet-400">Manager</span>
+                            <i class="fa-solid fa-user-tie text-violet-400 text-xs"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">Manages catalog, orders, customer records, and storefront banners.</p>
+                    </div>
+
+                    <div @click="setRole('staff')"
+                         class="cursor-pointer p-3.5 rounded-xl border transition"
+                         :class="currentRole === 'staff' ? 'bg-sky-500/10 border-sky-500/40 ring-1 ring-sky-500/30' : 'bg-slate-800/30 border-slate-800 hover:border-slate-700'">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-sky-400">Staff</span>
+                            <i class="fa-solid fa-user-check text-sky-400 text-xs"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">Order fulfillment, view products, and status updates.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Dynamic Module Permissions ───────────────────────────────── -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Dynamic Module Permissions</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Toggle specific modules this staff or manager is permitted to view & operate</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="selectAll()"
+                            class="px-2.5 py-1 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition border border-slate-700">
+                        Select All
+                    </button>
+                    <button type="button" @click="applyRolePreset()"
+                            class="px-2.5 py-1 text-xs font-medium bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 rounded-lg transition border border-sky-500/20">
+                        Reset to <span x-text="currentRole"></span> Preset
+                    </button>
+                    <button type="button" @click="clearAll()"
+                            class="px-2.5 py-1 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg transition border border-slate-700">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Super Admin Notice -->
+            <div x-show="currentRole === 'superadmin'" class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                <i class="fa-solid fa-shield-halved text-amber-400 text-lg mt-0.5"></i>
+                <div>
+                    <p class="text-sm font-semibold text-amber-400">Super Admin Has Full Privileges</p>
+                    <p class="text-xs text-amber-200/70 mt-0.5">Super Admins automatically bypass permission limits and have full access to every module across the administration panel.</p>
+                </div>
+            </div>
+
+            <!-- Permission Groups -->
+            <div class="space-y-6">
+                {% for group_name, perms in permission_groups.items %}
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ group_name }}</h3>
+                        </div>
+                        <button type="button" @click="toggleGroup(['{% for p in perms %}{{ p.id }}'{% if not forloop.last %},{% endif %}{% endfor %}'])"
+                                class="text-[11px] text-slate-500 hover:text-sky-400 transition">
+                            Toggle Group
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {% for perm in perms %}
+                        <label class="relative flex items-start gap-3.5 p-3.5 rounded-xl border cursor-pointer transition select-none"
+                               :class="isSelected('{{ perm.id }}') ? 'bg-sky-500/10 border-sky-500/30 shadow-sm' : 'bg-slate-800/30 border-slate-800/80 hover:bg-slate-800/60 hover:border-slate-700'">
+                            <input type="checkbox"
+                                   name="permissions"
+                                   value="{{ perm.id }}"
+                                   x-model="selectedPerms"
+                                   class="mt-1 h-4 w-4 rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-sky-500/20 transition cursor-pointer">
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <i class="{{ perm.icon }} text-xs text-sky-400 w-4"></i>
+                                    <p class="text-xs font-semibold text-white">{{ perm.name }}</p>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1 leading-normal">{{ perm.description }}</p>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ── Avatar & Notes ───────────────────────────────────────────── -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-3">Avatar & Internal Notes</h2>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">Profile Photo</label>
                 {% if target.admin_profile.avatar %}
-                <div class="mb-2 flex items-center gap-3 p-2 bg-slate-800 border border-slate-700 rounded-lg">
-                    <img src="{{ target.admin_profile.avatar.url }}" class="w-10 h-10 rounded-full object-cover" alt="">
-                    <span class="text-xs text-slate-400">Current avatar</span>
+                <div class="mb-3 flex items-center gap-3 p-2.5 bg-slate-800 border border-slate-700 rounded-xl">
+                    <img src="{{ target.admin_profile.avatar.url }}" class="w-12 h-12 rounded-full object-cover" alt="">
+                    <span class="text-xs text-slate-400">Current avatar image</span>
                 </div>
                 {% endif %}
                 {{ profile_form.avatar }}
@@ -99,16 +233,16 @@
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1.5">Internal Notes</label>
                 {{ profile_form.notes }}
-                <p class="text-xs text-slate-500 mt-1">Not shown to the user</p>
+                <p class="text-xs text-slate-500 mt-1">Private administrative notes (only visible to Super Admins)</p>
             </div>
         </div>
 
         <!-- ── Actions ─────────────────────────────────────────────────── -->
-        <div class="flex items-center gap-3 pb-4">
+        <div class="flex items-center gap-3 pt-2 pb-6">
             <button type="submit"
                     class="inline-flex items-center gap-2 px-6 py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm rounded-xl transition shadow-lg shadow-sky-500/20">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Save Changes
+                Save Role & Permissions
             </button>
             <a href="{% url 'custom_admin:admin_reset_password' target.pk %}"
                class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 text-sm font-medium rounded-xl transition">
@@ -122,4 +256,66 @@
         </div>
     </form>
 </div>
+
+<script>
+function adminPermissionManager() {
+    const presets = {{ default_role_presets|safe }};
+    const current = {{ current_permissions|safe }};
+    return {
+        currentRole: '{{ profile_form.instance.role|default:"staff" }}',
+        selectedPerms: current || [],
+        presets: presets,
+
+        isSelected(id) {
+            return this.currentRole === 'superadmin' || this.selectedPerms.includes(id);
+        },
+
+        setRole(role) {
+            this.currentRole = role;
+            this.onRoleChange();
+        },
+
+        onRoleChange() {
+            if (this.currentRole === 'superadmin') {
+                this.selectedPerms = [...(this.presets['superadmin'] || [])];
+            } else if (this.presets[this.currentRole]) {
+                this.selectedPerms = [...this.presets[this.currentRole]];
+            }
+        },
+
+        applyRolePreset() {
+            if (this.presets[this.currentRole]) {
+                this.selectedPerms = [...this.presets[this.currentRole]];
+            }
+        },
+
+        selectAll() {
+            this.selectedPerms = [...(this.presets['superadmin'] || [])];
+        },
+
+        clearAll() {
+            this.selectedPerms = [];
+        },
+
+        toggleGroup(groupIds) {
+            const allSelected = groupIds.every(id => this.selectedPerms.includes(id));
+            if (allSelected) {
+                this.selectedPerms = this.selectedPerms.filter(id => !groupIds.includes(id));
+            } else {
+                groupIds.forEach(id => {
+                    if (!this.selectedPerms.includes(id)) {
+                        this.selectedPerms.push(id);
+                    }
+                });
+            }
+        },
+
+        roleLabel(role) {
+            if (role === 'superadmin') return 'Super Admin';
+            if (role === 'manager') return 'Manager';
+            return 'Staff';
+        }
+    };
+}
+</script>
 {% endblock %}

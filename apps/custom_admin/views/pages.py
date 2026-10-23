@@ -2,14 +2,14 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
-from ..decorators import admin_required
+from ..decorators import permission_required
 from ..forms import PageForm
 from ..models import Page, ActivityLog
 
 
 # ── Page Builder Views ────────────────────────────────────────────────────────
 
-@admin_required
+@permission_required('content')
 def page_list(request):
     pages = Page.objects.all()
     suggestions = [
@@ -22,7 +22,7 @@ def page_list(request):
     })
 
 
-@admin_required
+@permission_required('content')
 def page_create(request):
     if request.method == 'POST':
         form = PageForm(request.POST)
@@ -36,7 +36,7 @@ def page_create(request):
     return render(request, 'custom_admin/pages/page_form.html', {'form': form, 'action': 'Create'})
 
 
-@admin_required
+@permission_required('content')
 def page_edit(request, pk):
     page = get_object_or_404(Page, pk=pk)
     if request.method == 'POST':
@@ -51,7 +51,7 @@ def page_edit(request, pk):
     return render(request, 'custom_admin/pages/page_form.html', {'form': form, 'action': 'Edit', 'page': page})
 
 
-@admin_required
+@permission_required('content')
 @require_POST
 def page_toggle(request, pk):
     page = get_object_or_404(Page, pk=pk)
@@ -62,7 +62,7 @@ def page_toggle(request, pk):
     return redirect('custom_admin:page_list')
 
 
-@admin_required
+@permission_required('content')
 @require_POST
 def page_delete(request, pk):
     page = get_object_or_404(Page, pk=pk)

@@ -175,7 +175,7 @@
 
         <!-- Navigation Menu -->
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            {% if 'dashboard' not in site_settings.hidden_menu_list %}
+            {% if 'dashboard' in user_permissions and 'dashboard' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:dashboard' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'dashboard' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -188,7 +188,7 @@
             </a>
             {% endif %}
 
-            {% if 'categories' not in site_settings.hidden_menu_list %}
+            {% if 'categories' in user_permissions and 'categories' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:category_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'category_create' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -201,7 +201,7 @@
             </a>
             {% endif %}
 
-            {% if 'products' not in site_settings.hidden_menu_list %}
+            {% if 'products' in user_permissions and 'products' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:product_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'product_list' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -213,7 +213,7 @@
             </a>
             {% endif %}
 
-            {% if 'trash' not in site_settings.hidden_menu_list %}
+            {% if 'products' in user_permissions and 'trash' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:product_trash' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'product_trash' %} bg-rose-500/10 text-rose-400 border border-rose-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -226,7 +226,7 @@
             </a>
             {% endif %}
 
-            {% if 'orders' not in site_settings.hidden_menu_list %}
+            {% if 'orders' in user_permissions and 'orders' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:order_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'order_list' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -238,7 +238,7 @@
             </a>
             {% endif %}
 
-            {% if 'customers' not in site_settings.hidden_menu_list %}
+            {% if 'customers' in user_permissions and 'customers' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:customer_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if request.resolver_match.url_name == 'customer_list' or request.resolver_match.url_name == 'customer_detail' %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -252,6 +252,7 @@
             {% endif %}
 
             <!-- Content Group -->
+            {% if 'content' in user_permissions %}
             {% if 'slider' not in site_settings.hidden_menu_list or 'banners' not in site_settings.hidden_menu_list or 'pages' not in site_settings.hidden_menu_list %}
             <div class="mt-2 pt-2 border-t border-slate-800/60">
                 <p class="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Content</p>
@@ -295,14 +296,16 @@
             </a>
             {% endif %}
             {% endif %}
+            {% endif %}
 
             <!-- Settings Group -->
+            {% if 'settings' in user_permissions or 'payment_methods' in user_permissions %}
             {% if 'site_settings' not in site_settings.hidden_menu_list or 'theme_settings' not in site_settings.hidden_menu_list or 'payment_methods' not in site_settings.hidden_menu_list %}
             <div class="mt-2 pt-2 border-t border-slate-800/60">
                 <p class="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Settings</p>
             </div>
 
-            {% if 'site_settings' not in site_settings.hidden_menu_list %}
+            {% if 'settings' in user_permissions and 'site_settings' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:site_settings' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'site_settings' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -316,7 +319,7 @@
             </a>
             {% endif %}
 
-            {% if 'theme_settings' not in site_settings.hidden_menu_list %}
+            {% if 'settings' in user_permissions and 'theme_settings' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:theme_settings' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'theme_settings' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -325,7 +328,7 @@
             </a>
             {% endif %}
 
-            {% if 'payment_methods' not in site_settings.hidden_menu_list %}
+            {% if 'payment_methods' in user_permissions and 'payment_methods' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:payment_method_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'payment_method' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -338,13 +341,15 @@
             </a>
             {% endif %}
             {% endif %}
+            {% endif %}
 
             <!-- Administration Group -->
+            {% if 'admin_users' in user_permissions or 'activity_log' in user_permissions or 'security' in user_permissions %}
             <div class="mt-2 pt-2 border-t border-slate-800/60">
                 <p class="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Administration</p>
             </div>
 
-            {% if 'admin_users' not in site_settings.hidden_menu_list %}
+            {% if 'admin_users' in user_permissions and 'admin_users' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:admin_user_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'admin_user' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -357,7 +362,7 @@
             </a>
             {% endif %}
 
-            {% if 'activity_log' not in site_settings.hidden_menu_list %}
+            {% if 'activity_log' in user_permissions and 'activity_log' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:activity_log' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'activity_log' in request.resolver_match.url_name %} bg-sky-500/10 text-sky-400 border border-sky-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -370,7 +375,7 @@
             </a>
             {% endif %}
 
-            {% if 'locked_users' not in site_settings.hidden_menu_list %}
+            {% if 'security' in user_permissions and 'locked_users' not in site_settings.hidden_menu_list %}
             <a href="{% url 'custom_admin:locked_users_list' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'locked_users' in request.resolver_match.url_name %} bg-rose-500/10 text-rose-400 border border-rose-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -381,6 +386,7 @@
                 </svg>
                 Locked Accounts
             </a>
+            {% endif %}
             {% endif %}
 
             {% if 'change_password' not in site_settings.hidden_menu_list %}
@@ -396,6 +402,7 @@
             </a>
             {% endif %}
 
+            {% if 'developer' in user_permissions %}
             <a href="{% url 'custom_admin:developer_settings' %}"
                 class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                       {% if 'developer' in request.resolver_match.url_name %} bg-amber-500/10 text-amber-400 border border-amber-500/20 {% else %} text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 {% endif %}">
@@ -405,26 +412,33 @@
                 </svg>
                 Developer Settings
             </a>
+            {% endif %}
         </nav>
-
-
-
 
         <!-- Sidebar Footer -->
         <div class="p-4 border-t border-slate-800">
             <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800">
                 <div class="flex items-center gap-3 overflow-hidden">
                     <div
-                        class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-semibold text-slate-300 text-sm">
-                        {{ request.user.username|slice:":1"|upper }}
+                        class="w-9 h-9 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-sm flex-shrink-0 shadow-inner">
+                        {% if admin_profile.avatar %}
+                            <img src="{{ admin_profile.avatar.url }}" class="w-9 h-9 rounded-full object-cover" alt="">
+                        {% else %}
+                            {{ request.user.username|slice:":1"|upper }}
+                        {% endif %}
                     </div>
                     <div class="truncate">
                         <p class="text-xs font-semibold text-white truncate">{{ request.user.username }}</p>
-                        <p class="text-[10px] text-slate-400">Administrator</p>
+                        <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-0.5
+                            {% if is_superadmin %}text-amber-400 bg-amber-500/15 border border-amber-500/30
+                            {% elif is_manager %}text-violet-400 bg-violet-500/15 border border-violet-500/30
+                            {% else %}text-sky-400 bg-sky-500/15 border border-sky-500/30{% endif %}">
+                            {{ admin_profile.get_role_display|default:'Staff' }}
+                        </span>
                     </div>
                 </div>
                 <a href="{% url 'custom_admin:logout' %}" title="Logout"
-                    class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition">
+                    class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">

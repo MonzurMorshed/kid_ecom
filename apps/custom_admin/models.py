@@ -649,7 +649,7 @@ class Banner(models.Model):
 # ── Admin Profile (roles) ─────────────────────────────────────────────────────
 
 class AdminProfile(models.Model):
-    """Extends the built-in staff/superuser with a named role."""
+    """Extends the built-in staff/superuser with a named role and dynamic permissions."""
 
     ROLE_CHOICES = [
         ('superadmin', 'Super Admin'),
@@ -657,16 +657,21 @@ class AdminProfile(models.Model):
         ('staff',      'Staff'),
     ]
 
-    user       = models.OneToOneField(
+    user        = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='admin_profile',
     )
-    role       = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
-    avatar     = models.ImageField(upload_to='admin_avatars/', blank=True, null=True)
-    notes      = models.TextField(blank=True, help_text='Internal notes about this admin')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    role        = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
+    permissions = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of granted module IDs (e.g. products, orders, settings)'
+    )
+    avatar      = models.ImageField(upload_to='admin_avatars/', blank=True, null=True)
+    notes       = models.TextField(blank=True, help_text='Internal notes about this admin')
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name        = 'Admin Profile'
@@ -677,8 +682,41 @@ class AdminProfile(models.Model):
 
     @classmethod
     def get_or_create_for(cls, user):
-        profile, _ = cls.objects.get_or_create(user=user)
+        profile, created = cls.objects.get_or_create(user=user)
+        # Ensure superusers always have superadmin role
+        if user.is_superuser and profile.role != 'superadmin':
+            profile.role = 'superadmin'
+            profile.save(update_fields=['role'])
         return profile
+
+    def has_module_permission(self, module_name):
+        """
+        Check if user has access to a specific admin module.
+        Superadmin / superuser always has full access.
+        """
+        if self.user.is_superuser or self.role == 'superadmin':
+            return True
+
+        # If custom permissions are explicitly saved on this profile
+        if isinstance(self.permissions, list) and len(self.permissions) > 0:
+            return module_name in self.permissions
+
+        # Otherwise fallback to default role permissions
+        from .permissions import DEFAULT_ROLE_PERMISSIONS
+        default_perms = DEFAULT_ROLE_PERMISSIONS.get(self.role, [])
+        return module_name in default_perms
+
+    def get_effective_permissions(self):
+        """Return full list of permission IDs currently effective for this profile."""
+        if self.user.is_superuser or self.role == 'superadmin':
+            from .permissions import ALL_PERMISSION_IDS
+            return ALL_PERMISSION_IDS
+
+        if isinstance(self.permissions, list) and len(self.permissions) > 0:
+            return self.permissions
+
+        from .permissions import DEFAULT_ROLE_PERMISSIONS
+        return DEFAULT_ROLE_PERMISSIONS.get(self.role, [])
 
 
 # ── Activity Log ──────────────────────────────────────────────────────────────

@@ -59,10 +59,21 @@
                         <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full
                             {% if role == 'superadmin' %}bg-amber-500/15 border border-amber-500/30 text-amber-400
                             {% elif role == 'manager' %}bg-violet-500/15 border border-violet-500/30 text-violet-400
-                            {% else %}bg-slate-700 border border-slate-600 text-slate-400{% endif %}">
-                            {{ admin.admin_profile.get_role_display }}
+                            {% else %}bg-sky-500/15 border border-sky-500/30 text-sky-400{% endif %}">
+                            {{ admin.admin_profile.get_role_display|default:'Staff' }}
                         </span>
                         {% endwith %}
+
+                        <!-- Dynamic permissions badge -->
+                        {% if admin.is_superuser or admin.admin_profile.role == 'superadmin' %}
+                        <span class="px-2 py-0.5 text-[10px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center gap-1">
+                            <i class="fa-solid fa-crown text-[8px]"></i> Full Access
+                        </span>
+                        {% else %}
+                        <span class="px-2 py-0.5 text-[10px] font-medium bg-slate-800 border border-slate-700 text-slate-300 rounded-full flex items-center gap-1">
+                            <i class="fa-solid fa-key text-[8px] text-sky-400"></i> {{ admin.admin_profile.get_effective_permissions|length }} Modules
+                        </span>
+                        {% endif %}
 
                         {% if admin.is_superuser %}
                         <span class="px-2 py-0.5 text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full">Superuser</span>

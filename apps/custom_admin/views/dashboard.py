@@ -9,12 +9,12 @@ from django.utils import timezone as tz
 from accounts.models import User
 from orders.models import Order, OrderItem
 from products.models import Product
-from ..decorators import admin_required
+from ..decorators import admin_required, permission_required
 
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 
-@admin_required
+@permission_required('dashboard')
 def dashboard(request):
     # Active orders queryset (exclude soft-deleted)
     orders_qs = Order.objects.filter(is_deleted=False)
@@ -72,7 +72,7 @@ def dashboard(request):
     return render(request, 'custom_admin/dashboard.html', context)
 
 
-@admin_required
+@permission_required('dashboard')
 def revenue_chart_data(request):
     start_date_str = request.GET.get('start_date')
     end_date_str   = request.GET.get('end_date')
