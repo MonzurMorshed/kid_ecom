@@ -16,28 +16,35 @@
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p class="text-xs text-slate-400 mb-1">Total Admins</p>
-            <p class="text-2xl font-bold text-white">{{ admins|length }}</p>
+            <p class="text-xs text-slate-400 mb-1">Total Staff / Admins</p>
+            <p class="text-2xl font-bold text-white">{{ total_count|default:admins|length }}</p>
         </div>
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p class="text-xs text-slate-400 mb-1">Active</p>
-            <p class="text-2xl font-bold text-emerald-400">
-                {% for a in admins %}{% if a.is_active %}·{% endif %}{% endfor %}
-            </p>
+            <p class="text-xs text-slate-400 mb-1">Active Accounts</p>
+            <p class="text-2xl font-bold text-emerald-400">{{ active_count }}</p>
+        </div>
+        <div class="bg-slate-900 border {% if pending_count > 0 %}border-amber-500/40 bg-amber-500/5{% else %}border-slate-800{% endif %} rounded-xl p-4">
+            <div class="flex items-center justify-between">
+                <p class="text-xs {% if pending_count > 0 %}text-amber-400 font-semibold{% else %}text-slate-400{% endif %} mb-1">Pending Approval</p>
+                {% if pending_count > 0 %}
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">Action Required</span>
+                {% endif %}
+            </div>
+            <p class="text-2xl font-bold {% if pending_count > 0 %}text-amber-400{% else %}text-slate-500{% endif %}">{{ pending_count }}</p>
         </div>
     </div>
 
     <!-- Table -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-800">
-            <h2 class="text-sm font-semibold text-slate-300">All Admin Accounts</h2>
+            <h2 class="text-sm font-semibold text-slate-300">All Admin & Staff Accounts</h2>
         </div>
 
         <div class="divide-y divide-slate-800">
             {% for admin in admins %}
-            <div class="flex items-center gap-4 px-5 py-4 hover:bg-slate-800/30 transition"
+            <div class="flex items-center gap-4 px-5 py-4 hover:bg-slate-800/30 transition {% if not admin.is_active %}bg-amber-500/[0.02]{% endif %}"
                  x-data="{ active: {{ admin.is_active|yesno:'true,false' }} }">
 
                 <!-- Avatar / Initial -->
@@ -75,6 +82,14 @@
                         </span>
                         {% endif %}
 
+                        <!-- Active / Pending status badge -->
+                        <span x-show="active" class="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Active
+                        </span>
+                        <span x-show="!active" class="px-2 py-0.5 text-[10px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300 rounded-full flex items-center gap-1">
+                            <i class="fa-solid fa-clock text-[8px]"></i> Pending Activation
+                        </span>
+
                         {% if admin.is_superuser %}
                         <span class="px-2 py-0.5 text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full">Superuser</span>
                         {% endif %}
@@ -85,15 +100,31 @@
                     </div>
                     <div class="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
                         {% if admin.email %}<span>{{ admin.email }}</span>{% endif %}
-                        <span>Joined {{ admin.date_joined|date:"M d, Y" }}</span>
+                        {% if admin.phone_number %}<span>{{ admin.phone_number }}</span>{% endif %}
+                        <span>Registered {{ admin.date_joined|date:"M d, Y h:i A" }}</span>
                         {% if admin.last_login %}<span>Last login {{ admin.last_login|timesince }} ago</span>{% endif %}
                     </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="flex items-center gap-2 flex-shrink-0">
-                    <!-- Active toggle (cannot disable own account) -->
+                    <!-- 1-Click Activate Button for Pending Accounts -->
                     {% if admin != request.user %}
+                    <button x-show="!active" @click="
+                        fetch('{% url 'custom_admin:admin_user_toggle' admin.pk %}', {
+                            method: 'POST',
+                            headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                        }).then(r => r.json()).then(d => {
+                            if (d.error) { alert(d.error); return; }
+                            active = d.is_active;
+                        })
+                    " type="button"
+                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                        <span>Activate</span>
+                    </button>
+
+                    <!-- Active toggle switch -->
                     <button @click="
                         fetch('{% url 'custom_admin:admin_user_toggle' admin.pk %}', {
                             method: 'POST',
@@ -111,9 +142,9 @@
                     </button>
                     {% endif %}
 
-                    <!-- Edit -->
+                    <!-- Edit (Role & Permissions) -->
                     <a href="{% url 'custom_admin:admin_user_edit' admin.pk %}"
-                       class="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition" title="Edit">
+                       class="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition" title="Edit Role & Permissions">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     </a>
 

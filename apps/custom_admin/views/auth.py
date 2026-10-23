@@ -62,6 +62,19 @@ def admin_login(request):
             else:
                 messages.error(request, 'Access denied. You do not have staff/admin privileges.')
         else:
+            # Check if user credentials match an inactive staff account awaiting Super Admin activation
+            potential_user = User.objects.filter(username=username_input).first() or User.objects.filter(email=username_input).first()
+            if potential_user and potential_user.check_password(password_input):
+                if not potential_user.is_active:
+                    messages.warning(
+                        request,
+                        f'Staff account "{potential_user.username}" is pending Super Admin review & activation. '
+                        f'You will be able to log in as soon as the administrator reviews and activates your account.'
+                    )
+                    return redirect('custom_admin:login')
+                if getattr(potential_user, 'is_blocked', False):
+                    messages.error(request, 'Your admin account has been temporarily blocked.')
+                    return redirect('custom_admin:login')
             messages.error(request, 'Invalid username or password.')
 
     return render(request, 'custom_admin/login.html')
@@ -78,7 +91,7 @@ def admin_register(request):
             user.set_password(form.cleaned_data['password'])
             user.is_staff    = True
             user.is_customer = False
-            user.is_active   = True
+            user.is_active   = False  # Inactive until reviewed & activated by Super Admin
             user.save()
 
             # Assign default 'staff' role with default staff permissions
@@ -87,14 +100,19 @@ def admin_register(request):
             profile.permissions = list(DEFAULT_ROLE_PERMISSIONS['staff'])
             profile.save()
 
+            # Send email alert to Super Admins
+            from ..emails import send_new_staff_registration_alert
+            send_new_staff_registration_alert(user, request)
+
             ActivityLog.log(
                 request, 'create',
-                f'New staff account registered: {user.username}',
+                f'New staff account registered (pending Super Admin activation): {user.username}',
                 actor=user, target_type='User', target_id=user.pk
             )
             messages.success(
                 request,
-                f'Staff account for "{user.username}" created successfully with default "Staff" role! Please log in.'
+                f'Registration successful! Staff account for "{user.username}" has been submitted for review. '
+                f'The Super Admin has been notified by email and will activate your account soon.'
             )
             return redirect('custom_admin:login')
     else:

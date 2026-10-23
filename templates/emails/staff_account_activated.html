@@ -1,0 +1,38 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subject %}🎉 Your Staff Account has been Activated — {{ site_name }}{% endblock %}
+
+{% block body %}
+<h1>🎉 Account Activated</h1>
+<p>Hello <strong>{{ staff_user.username }}</strong>,</p>
+<p>Great news! Your staff account on <strong>{{ site_name }}</strong> has been reviewed and activated by the administrator.</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <span class="info-label">Username</span>
+    <span class="info-value"><strong>{{ staff_user.username }}</strong></span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Assigned Role</span>
+    <span class="info-value" style="color:#38bdf8;font-weight:600;">{{ role_name }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Status</span>
+    <span class="info-value"><span class="status-badge status-DELIVERED">Active & Approved</span></span>
+  </div>
+</div>
+
+<p style="margin-top:20px;margin-bottom:20px;">
+  You can now access the admin dashboard using your registered username and password.
+</p>
+
+<div style="text-align:center;margin:28px 0;">
+  <a href="{{ login_url }}" class="btn" style="color:#ffffff;display:inline-block;padding:12px 28px;text-decoration:none;border-radius:8px;font-weight:600;">
+    Log In to Admin Panel &rarr;
+  </a>
+</div>
+
+<p style="font-size:12px;color:#64748b;margin-top:24px;border-top:1px solid #334155;padding-top:16px;">
+  Admin login URL: <a href="{{ login_url }}" style="color:#38bdf8;word-break:break-all;">{{ login_url }}</a>
+</p>
+{% endblock %}

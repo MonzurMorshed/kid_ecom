@@ -27,16 +27,24 @@ from ..permissions import (
 @permission_required('admin_users')
 def admin_user_list(request):
     """List all staff/superuser accounts with their roles."""
-    admins = User.objects.filter(is_staff=True).select_related('admin_profile').order_by('username')
-    for u in admins:
+    admins_qs = User.objects.filter(is_staff=True).select_related('admin_profile').order_by('username')
+    for u in admins_qs:
         p = AdminProfile.get_or_create_for(u)
         if u.is_superuser and p.role != 'superadmin':
             p.role = 'superadmin'
             p.permissions = list(ALL_PERMISSION_IDS)
             p.save()
-    admins = User.objects.filter(is_staff=True).select_related('admin_profile').order_by('username')
+
+    admins = list(User.objects.filter(is_staff=True).select_related('admin_profile').order_by('-date_joined'))
+    total_count = len(admins)
+    active_count = sum(1 for a in admins if a.is_active)
+    pending_count = sum(1 for a in admins if not a.is_active)
+
     return render(request, 'custom_admin/admin_users/user_list.html', {
         'admins': admins,
+        'total_count': total_count,
+        'active_count': active_count,
+        'pending_count': pending_count,
         'all_permissions_count': len(AVAILABLE_PERMISSIONS),
     })
 
@@ -48,6 +56,7 @@ def admin_user_edit(request, pk):
     """Edit name, email, active status, role, and dynamic module permissions."""
     target  = get_object_or_404(User, pk=pk, is_staff=True)
     profile = AdminProfile.get_or_create_for(target)
+    was_inactive = not target.is_active
 
     # Protection: only superadmins can edit superadmin accounts or superusers
     is_requester_super = request.user.is_superuser or (
@@ -80,6 +89,12 @@ def admin_user_edit(request, pk):
                 profile.permissions = [p for p in selected_perms if p in ALL_PERMISSION_IDS]
 
             profile.save()
+
+            target.refresh_from_db(fields=['is_active'])
+            if was_inactive and target.is_active:
+                from ..emails import send_staff_activation_notification
+                send_staff_activation_notification(target, request)
+
             ActivityLog.log(
                 request, 'update',
                 f'Updated admin account: {target.username} (Role: {profile.get_role_display()}, Permissions: {len(profile.permissions)})',
@@ -119,8 +134,14 @@ def admin_user_toggle(request, pk):
     if (target.is_superuser or target_profile.role == 'superadmin') and not is_requester_super:
         return JsonResponse({'error': 'Only Super Admins can toggle Super Admin accounts.'}, status=403)
 
+    was_inactive = not target.is_active
     target.is_active = not target.is_active
     target.save(update_fields=['is_active'])
+
+    if was_inactive and target.is_active:
+        from ..emails import send_staff_activation_notification
+        send_staff_activation_notification(target, request)
+
     ActivityLog.log(
         request, 'toggle',
         f'Admin account {"enabled" if target.is_active else "disabled"}: {target.username}',

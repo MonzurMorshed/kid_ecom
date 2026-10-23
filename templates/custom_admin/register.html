@@ -28,9 +28,11 @@
         </div>
 
         <!-- Role notice badge -->
-        <div class="mb-6 p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-xl text-xs text-sky-300 flex items-center gap-2.5">
-            <i class="fa-solid fa-circle-info text-sky-400 text-sm flex-shrink-0"></i>
-            <span>New accounts are assigned the default <strong>Staff</strong> role. Super Admins can update roles & access permissions from the admin panel.</span>
+        <div class="mb-6 p-3.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs text-amber-300 flex items-start gap-2.5">
+            <i class="fa-solid fa-clock text-amber-400 text-sm mt-0.5 flex-shrink-0"></i>
+            <div>
+                <strong class="text-amber-200">Pending Approval:</strong> Newly registered accounts are submitted for Super Admin review. The Super Admin will receive an email notification to inspect, assign permissions, and activate the account before login is permitted.
+            </div>
         </div>
 
         <!-- Non field errors with Alpine.js -->
