@@ -73,7 +73,8 @@ jobs:
             
             # 6. Run database migrations (only if DB is configured)
             echo "🗄️ Running migrations..."
-            python manage.py migrate --noinput || { echo "⚠️ Migration had issues, retrying with traceback..."; python manage.py migrate --traceback || true; }
+            python manage.py sync_migrations || true
+            python manage.py migrate --noinput
             
             # 7. Collect static files
             echo "🎨 Collecting static files..."
