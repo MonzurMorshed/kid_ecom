@@ -32,34 +32,36 @@
         <div class="group bg-white rounded-3xl shadow-toy border border-ink/5 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col"
              x-data="{ removing: false }">
 
-            <!-- Image -->
-            <a href="{% url 'storefront:product_detail' product.slug %}" class="block relative overflow-hidden bg-[#faf6ee] aspect-[4/3]">
-                {% if product.images.first %}
-                    <img src="{{ product.images.first.image.url }}"
-                         alt="{{ product.title }}"
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                {% else %}
-                    <div class="w-full h-full flex items-center justify-center text-4xl text-slate-300">
-                        <i class="fa-solid fa-shapes" aria-hidden="true"></i>
-                    </div>
-                {% endif %}
+            <!-- Image & overlay -->
+            <div class="relative aspect-[4/3] bg-[#faf6ee] overflow-hidden">
+                <a href="{% url 'storefront:product_detail' product.slug %}" class="block w-full h-full">
+                    {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}"
+                             alt="{{ product.title }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-4xl text-slate-300">
+                            <i class="fa-solid fa-shapes" aria-hidden="true"></i>
+                        </div>
+                    {% endif %}
 
-                <!-- Badges -->
-                <div class="absolute top-3 left-3 flex flex-col gap-1.5">
-                    {% if product.is_new %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500 text-white uppercase tracking-wide">New</span>
-                    {% endif %}
-                    {% if product.is_bestseller %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-white uppercase tracking-wide">Best Seller</span>
-                    {% endif %}
-                    {% if product.compare_price %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-coral text-white uppercase tracking-wide">Sale</span>
-                    {% endif %}
-                </div>
+                    <!-- Badges -->
+                    <div class="absolute top-3 left-3 flex flex-col gap-1.5">
+                        {% if product.is_new %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500 text-white uppercase tracking-wide">New</span>
+                        {% endif %}
+                        {% if product.is_bestseller %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-white uppercase tracking-wide">Best Seller</span>
+                        {% endif %}
+                        {% if product.compare_price %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-coral text-white uppercase tracking-wide">Sale</span>
+                        {% endif %}
+                    </div>
+                </a>
 
                 <!-- Remove wishlist button overlay -->
                 <form method="post" action="{% url 'accounts:wishlist_toggle' %}"
-                      class="absolute top-3 right-3"
+                      class="absolute top-3 right-3 z-10"
                       x-on:submit.prevent="
                         removing = true;
                         fetch('{% url 'accounts:wishlist_toggle' %}', {
@@ -103,7 +105,7 @@
                         <i class="fa-solid fa-heart text-sm" aria-hidden="true"></i>
                     </button>
                 </form>
-            </a>
+            </div>
 
             <!-- Info -->
             <div class="p-4 flex flex-col flex-1">

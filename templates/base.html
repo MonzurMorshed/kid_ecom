@@ -1417,6 +1417,10 @@
                     b.classList.toggle('text-coral', isWishlisted);
                 });
 
+                window.dispatchEvent(new CustomEvent('wishlist-updated', {
+                    detail: { productId: String(productId), wishlisted: isWishlisted, count: newCount }
+                }));
+
                 updateWishlistBadges(newCount);
 
                 toast(isWishlisted ? 'Saved to wishlist ♥' : 'Removed from wishlist');
@@ -1447,11 +1451,12 @@
             if (!btn) return;
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
             const productId = btn.dataset.productId;
             if (productId) {
                 toggleWishlist(productId, btn);
             }
-        });
+        }, true);
 
         document.addEventListener('submit', async (e) => {
             const form = e.target.closest('#newsletterForm');

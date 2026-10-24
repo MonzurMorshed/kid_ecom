@@ -7,49 +7,51 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
 <article class="product-card group relative rounded-2xl border border-ink/5 bg-white overflow-hidden hover:shadow-toy transition-shadow">
 
     <!-- Image / visual panel -->
-    <a href="{{ product.get_absolute_url }}" class="block" tabindex="-1" aria-hidden="true">
-        <div class="product-visual relative aspect-square w-full flex items-center justify-center overflow-hidden"
-             style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }};">
+    <div class="relative">
+        <a href="{{ product.get_absolute_url }}" class="block" tabindex="-1" aria-hidden="true">
+            <div class="product-visual relative aspect-square w-full flex items-center justify-center overflow-hidden"
+                 style="background-color: {{ product.category.theme_color|default:'#e6f0e8' }};">
 
-            {% with feat_image=product.primary_image %}
-            {% if feat_image and feat_image.image %}
-                <img src="{{ feat_image.image.url }}"
-                     alt="{{ feat_image.alt_text|default:product.title }}"
-                     loading="lazy"
-                     decoding="async"
-                     width="400"
-                     height="400"
-                     class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105">
-            {% else %}
-                <span class="product-emoji text-7xl sm:text-8xl leading-none transition-transform duration-300 ease-out group-hover:scale-110">
-                    {{ product.category.emoji|default:"🧸" }}
-                </span>
-            {% endif %}
-            {% endwith %}
+                {% with feat_image=product.primary_image %}
+                {% if feat_image and feat_image.image %}
+                    <img src="{{ feat_image.image.url }}"
+                         alt="{{ feat_image.alt_text|default:product.title }}"
+                         loading="lazy"
+                         decoding="async"
+                         width="400"
+                         height="400"
+                         class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105">
+                {% else %}
+                    <span class="product-emoji text-7xl sm:text-8xl leading-none transition-transform duration-300 ease-out group-hover:scale-110">
+                        {{ product.category.emoji|default:"🧸" }}
+                    </span>
+                {% endif %}
+                {% endwith %}
 
-            <!-- Badges -->
-            <div class="absolute left-3 top-3 flex flex-col gap-1 z-10">
-                {% if product.is_new %}
-                <span class="rounded-full bg-softmint px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-ink">New</span>
-                {% endif %}
-                {% if product.is_bestseller %}
-                <span class="rounded-full bg-butter px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-ink">Best seller</span>
-                {% endif %}
-                {% if product.compare_price %}
-                <span class="rounded-full bg-coral px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">Sale</span>
-                {% endif %}
+                <!-- Badges -->
+                <div class="absolute left-3 top-3 flex flex-col gap-1 z-10">
+                    {% if product.is_new %}
+                    <span class="rounded-full bg-softmint px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-ink">New</span>
+                    {% endif %}
+                    {% if product.is_bestseller %}
+                    <span class="rounded-full bg-butter px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-ink">Best seller</span>
+                    {% endif %}
+                    {% if product.compare_price %}
+                    <span class="rounded-full bg-coral px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">Sale</span>
+                    {% endif %}
+                </div>
             </div>
+        </a>
 
-            <!-- Favorite button -->
-            <button type="button"
-                    class="toggle-favorite absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm {% if product.id in wishlist_ids %}text-coral{% else %}text-ink/40{% endif %} hover:text-coral transition-colors shadow-sm focus:outline-none"
-                    data-product-id="{{ product.id }}"
-                    data-active="{% if product.id in wishlist_ids %}true{% else %}false{% endif %}"
-                    aria-label="Save {{ product.title }} to wishlist">
-                <i class="{% if product.id in wishlist_ids %}fa-solid fa-heart text-coral{% else %}fa-regular fa-heart{% endif %} text-xs" aria-hidden="true"></i>
-            </button>
-        </div>
-    </a>
+        <!-- Favorite button -->
+        <button type="button"
+                class="toggle-favorite absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm {% if product.id in wishlist_ids %}text-coral{% else %}text-ink/40{% endif %} hover:text-coral transition-colors shadow-sm focus:outline-none"
+                data-product-id="{{ product.id }}"
+                data-active="{% if product.id in wishlist_ids %}true{% else %}false{% endif %}"
+                aria-label="Save {{ product.title }} to wishlist">
+            <i class="{% if product.id in wishlist_ids %}fa-solid fa-heart text-coral{% else %}fa-regular fa-heart{% endif %} text-xs" aria-hidden="true"></i>
+        </button>
+    </div>
 
     <!-- Card body -->
     <div class="p-4">

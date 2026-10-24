@@ -313,45 +313,20 @@
                             <span>Out of Stock</span>
                         {% endif %}
 
-                        <!-- Wishlist — server-side toggle -->
+                        <!-- Wishlist toggle -->
                         <div x-data="{ wishlisted: {{ is_wishlisted|yesno:'true,false' }} }"
+                             @wishlist-updated.window="if ($event.detail.productId === '{{ product.id }}') wishlisted = $event.detail.wishlisted"
                              class="shrink-0">
-                            <form method="post" action="{% url 'accounts:wishlist_toggle' %}"
-                                  @submit.prevent="
-                                    {% if user.is_authenticated %}
-                                    fetch('{% url 'accounts:wishlist_toggle' %}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRFToken': '{{ csrf_token }}',
-                                            'X-Requested-With': 'XMLHttpRequest'
-                                        },
-                                        body: new URLSearchParams({ product_id: '{{ product.id }}' })
-                                    }).then(r => r.json()).then(data => {
-                                        if (data && data.success) {
-                                            wishlisted = data.wishlisted;
-                                            if (typeof window.updateWishlistBadges === 'function') {
-                                                window.updateWishlistBadges(data.count);
-                                            }
-                                            if (typeof toast === 'function') {
-                                                toast(data.wishlisted ? 'Saved to wishlist ♥' : 'Removed from wishlist');
-                                            }
-                                        }
-                                    }).catch(() => {});
-                                    {% else %}
-                                    window.location = '{% url 'accounts:login' %}?next={{ request.path }}';
-                                    {% endif %}
-                                  ">
-                                {% csrf_token %}
-                                <input type="hidden" name="product_id" value="{{ product.id }}">
-                                <button type="submit"
-                                        :title="wishlisted ? 'Remove from wishlist' : 'Save to wishlist'"
-                                        :aria-pressed="wishlisted"
-                                        :class="wishlisted
-                                            ? 'h-12 w-12 shrink-0 place-items-center rounded-2xl border border-coral bg-coral/10 text-coral text-lg transition-colors shadow-sm grid'
-                                            : 'h-12 w-12 shrink-0 place-items-center rounded-2xl border border-ink/15 text-lg hover:border-coral hover:text-coral transition-colors shadow-sm grid'">
-                                    <i :class="wishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true"></i>
-                                </button>
-                            </form>
+                            <button type="button"
+                                    @click.prevent.stop="toggleWishlist('{{ product.id }}', $el)"
+                                    :title="wishlisted ? 'Remove from wishlist' : 'Save to wishlist'"
+                                    :aria-pressed="wishlisted"
+                                    :class="wishlisted
+                                        ? 'h-12 w-12 shrink-0 place-items-center rounded-2xl border border-coral bg-coral/10 text-coral text-lg transition-colors shadow-sm grid'
+                                        : 'h-12 w-12 shrink-0 place-items-center rounded-2xl border border-ink/15 text-lg hover:border-coral hover:text-coral transition-colors shadow-sm grid'"
+                                    aria-label="Wishlist">
+                                <i :class="wishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true"></i>
+                            </button>
                         </div>
                     </div>
 
