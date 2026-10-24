@@ -31,10 +31,10 @@ class CustomerRegisterForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': _INPUT, 'placeholder': 'Phone number (optional)'})
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': _INPUT, 'placeholder': 'Create a password', 'id': 'id_password'})
+        widget=forms.PasswordInput(attrs={'class': _INPUT + ' pr-10', 'placeholder': 'Create a password', 'id': 'id_password'})
     )
     password_confirm = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': _INPUT, 'placeholder': 'Confirm password', 'id': 'id_password_confirm'})
+        widget=forms.PasswordInput(attrs={'class': _INPUT + ' pr-10', 'placeholder': 'Confirm password', 'id': 'id_password_confirm'})
     )
 
     class Meta:
@@ -84,7 +84,7 @@ class CustomerLoginForm(forms.Form):
         widget=forms.EmailInput(attrs={'class': _INPUT, 'placeholder': 'Email address', 'autofocus': True})
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': _INPUT, 'placeholder': 'Password'})
+        widget=forms.PasswordInput(attrs={'class': _INPUT + ' pr-10', 'placeholder': 'Password', 'id': 'id_password'})
     )
     remember_me = forms.BooleanField(required=False)
 

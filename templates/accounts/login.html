@@ -18,9 +18,17 @@
 
                 <!-- Logo & heading -->
                 <div class="text-center mb-8">
-                    <a href="{% url 'storefront:index' %}" class="inline-flex items-center gap-2 mb-6">
-                        <span class="grid h-9 w-9 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-xl shadow-[3px_3px_0_#19253b] font-bold">K</span>
-                        <span class="text-[24px] font-bold tracking-[-.075em]">Kidurabd<span class="text-coral">.</span></span>
+                    <a href="{% url 'storefront:index' %}" class="inline-flex items-center gap-2.5 mb-6 group">
+                        {% if site_settings and site_settings.site_logo %}
+                        <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                             class="h-9 sm:h-10 w-auto max-h-12 object-contain transition-transform group-hover:scale-105 duration-200">
+                        <span class="text-[24px] font-bold tracking-[-.075em] font-display">
+                            {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                        </span>
+                        {% else %}
+                        <span class="grid h-9 w-9 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-xl shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200 text-ink">{{ site_settings.site_name|default:'Kidurabd'|first|default:'K' }}</span>
+                        <span class="text-[24px] font-bold tracking-[-.075em] font-display">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                        {% endif %}
                     </a>
                     <h1 class="text-2xl font-bold text-ink">Welcome back</h1>
                     <p class="mt-1.5 text-sm text-ink/50">Sign in to your account</p>
@@ -73,9 +81,9 @@
                             </div>
                             <div class="relative">
                                 {{ form.password }}
-                                <button type="button" id="togglePw"
-                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition text-sm"
-                                        aria-label="Show/hide password"><i class="fa-regular fa-eye"></i></button>
+                                <button type="button" id="togglePw" data-toggle-target="id_password"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition text-sm p-1.5 focus:outline-none"
+                                        aria-label="Show/hide password"><i class="fa-solid fa-eye"></i></button>
                             </div>
                             {% if form.password.errors %}
                             <p class="mt-1.5 text-xs text-rose-600">{{ form.password.errors|join:", " }}</p>
@@ -125,15 +133,33 @@
 
 {% block extra_scripts %}
 <script>
-    // Toggle password visibility
-    const togglePw = document.getElementById('togglePw');
-    const pwField  = document.querySelector('#loginForm input[type="password"]');
-    if (togglePw && pwField) {
-        togglePw.addEventListener('click', () => {
+(function() {
+    function initLoginToggle() {
+        const toggleBtn = document.getElementById('togglePw');
+        const pwField = document.getElementById('id_password') || document.querySelector('#loginForm input[type="password"], #loginForm input[type="text"]');
+        if (!toggleBtn || !pwField) return;
+
+        // Check if already bound
+        if (toggleBtn.dataset.bound) return;
+        toggleBtn.dataset.bound = 'true';
+
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
             const isText = pwField.type === 'text';
             pwField.type = isText ? 'password' : 'text';
-            togglePw.innerHTML = isText ? '<i class="fa-regular fa-eye"></i>' : '<i class="fa-regular fa-eye-slash"></i>';
+            const icon = toggleBtn.querySelector('i');
+            if (icon) {
+                icon.className = isText ? 'fa-solid fa-eye text-ink/40' : 'fa-solid fa-eye-slash text-coral';
+            }
         });
     }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLoginToggle);
+    } else {
+        initLoginToggle();
+    }
+    document.addEventListener('htmx:afterSettle', initLoginToggle);
+})();
 </script>
 {% endblock %}

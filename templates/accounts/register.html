@@ -15,9 +15,19 @@
 
                 <!-- Heading -->
                 <div class="text-center mb-8">
-                    <a href="{% url 'storefront:index' %}" class="inline-flex items-center gap-2 mb-6">
-                        <span class="grid h-9 w-9 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-xl shadow-[3px_3px_0_#19253b] font-bold">K</span>
-                        <span class="text-[24px] font-bold tracking-[-.075em]">Kidurabd<span class="text-coral">.</span></span>
+                    <a href="{% url 'storefront:index' %}" class="inline-flex items-center gap-2.5 mb-6 group">
+                        {% if site_settings and site_settings.site_logo %}
+                        <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                             class="h-9 sm:h-10 w-auto max-h-12 object-contain transition-transform group-hover:scale-105 duration-200">
+                        <span class="text-[24px] font-bold tracking-[-.075em] font-display">
+                            {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                        </span>
+                        {% else %}
+                        <span
+                            class="grid h-9 w-9 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-xl shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200 text-ink">{{ site_settings.site_name|default:'Kidurabd'|first|default:'K' }}</span>
+                        <span class="text-[24px] font-bold tracking-[-.075em] font-display">{{ site_settings.site_name|default:'Kidurabd' }}<span
+                                class="text-coral">.</span></span>
+                        {% endif %}
                     </a>
                     <h1 class="text-2xl font-bold text-ink">Create your account</h1>
                     <p class="mt-1.5 text-sm text-ink/50">Join thousands of happy parents</p>
@@ -43,11 +53,14 @@
                 {% endif %}
 
                 {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser %}
-                <div class="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3">
+                <div
+                    class="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3">
                     <i class="fa-solid fa-circle-info text-amber-500 text-base mt-0.5 shrink-0"></i>
                     <div>
                         <p class="font-bold">You are currently logged in as Admin ({{ user.username }}).</p>
-                        <p class="mt-0.5 text-amber-800">Creating and submitting a new account here will sign you in as that customer, or you can <a href="{% url 'custom_admin:dashboard' %}" class="font-bold underline hover:text-amber-950">return to Admin Dashboard</a>.</p>
+                        <p class="mt-0.5 text-amber-800">Creating and submitting a new account here will sign you in as
+                            that customer, or you can <a href="{% url 'custom_admin:dashboard' %}"
+                                class="font-bold underline hover:text-amber-950">return to Admin Dashboard</a>.</p>
                     </div>
                 </div>
                 {% endif %}
@@ -60,62 +73,93 @@
                         <!-- Name row -->
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label for="id_first_name" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">First Name <span class="text-coral">*</span></label>
+                                <label for="id_first_name"
+                                    class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">First
+                                    Name <span class="text-coral">*</span></label>
                                 {{ form.first_name }}
-                                {% if form.first_name.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.first_name.errors|join:", " }}</p>{% endif %}
+                                {% if form.first_name.errors %}<p class="mt-1 text-xs text-rose-600">{{
+                                    form.first_name.errors|join:", " }}</p>{% endif %}
                             </div>
                             <div>
-                                <label for="id_last_name" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Last Name</label>
+                                <label for="id_last_name"
+                                    class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Last
+                                    Name</label>
                                 {{ form.last_name }}
-                                {% if form.last_name.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.last_name.errors|join:", " }}</p>{% endif %}
+                                {% if form.last_name.errors %}<p class="mt-1 text-xs text-rose-600">{{
+                                    form.last_name.errors|join:", " }}</p>{% endif %}
                             </div>
                         </div>
 
                         <!-- Email -->
                         <div>
-                            <label for="id_email" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Email <span class="text-coral">*</span></label>
+                            <label for="id_email"
+                                class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Email
+                                <span class="text-coral">*</span></label>
                             {{ form.email }}
-                            {% if form.email.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.email.errors|join:", " }}</p>{% endif %}
+                            {% if form.email.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.email.errors|join:",
+                                " }}</p>{% endif %}
                         </div>
 
                         <!-- Phone -->
                         <div>
-                            <label for="id_phone_number" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Phone Number</label>
+                            <label for="id_phone_number"
+                                class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Phone
+                                Number</label>
                             {{ form.phone_number }}
-                            {% if form.phone_number.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.phone_number.errors|join:", " }}</p>{% endif %}
+                            {% if form.phone_number.errors %}<p class="mt-1 text-xs text-rose-600">{{
+                                form.phone_number.errors|join:", " }}</p>{% endif %}
                         </div>
 
                         <!-- Password -->
                         <div>
-                            <label for="id_password" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Password <span class="text-coral">*</span></label>
+                            <label for="id_password"
+                                class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Password
+                                <span class="text-coral">*</span></label>
                             <div class="relative">
                                 {{ form.password }}
-                                <button type="button" id="togglePw"
-                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition text-sm"
-                                        aria-label="Show/hide password"><i class="fa-regular fa-eye"></i></button>
+                                <button type="button" id="togglePw" data-toggle-target="id_password"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition text-sm p-1.5 focus:outline-none"
+                                    aria-label="Show or hide password"><i class="fa-solid fa-eye"></i></button>
                             </div>
                             <!-- Strength bar -->
-                            <div class="mt-2 flex gap-1" id="strengthBars">
-                                <div class="h-1 flex-1 rounded-full bg-ink/10" id="bar1"></div>
-                                <div class="h-1 flex-1 rounded-full bg-ink/10" id="bar2"></div>
-                                <div class="h-1 flex-1 rounded-full bg-ink/10" id="bar3"></div>
-                                <div class="h-1 flex-1 rounded-full bg-ink/10" id="bar4"></div>
+                            <div class="flex gap-1.5 mt-4" id="strengthBars" aria-hidden="true">
+                                <div class="h-1.5 flex-1 rounded-full bg-ink/10 transition-all duration-300" id="bar1">
+                                </div>
+                                <div class="h-1.5 flex-1 rounded-full bg-ink/10 transition-all duration-300" id="bar2">
+                                </div>
+                                <div class="h-1.5 flex-1 rounded-full bg-ink/10 transition-all duration-300" id="bar3">
+                                </div>
+                                <div class="h-1.5 flex-1 rounded-full bg-ink/10 transition-all duration-300" id="bar4">
+                                </div>
                             </div>
-                            <p class="mt-1 text-xs text-ink/40" id="strengthLabel">Min. 8 characters</p>
-                            {% if form.password.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.password.errors|join:", " }}</p>{% endif %}
+                            <div class="mt-1.5 flex items-center justify-between text-xs">
+                                <span class="text-ink/40 font-medium" id="strengthLabel">Min. 8 characters</span>
+                                <span class="text-ink/35 text-[11px]" id="strengthRule">Use 8+ characters</span>
+                            </div>
+                            {% if form.password.errors %}<p class="mt-1 text-xs text-rose-600">{{
+                                form.password.errors|join:", " }}</p>{% endif %}
                         </div>
 
                         <!-- Confirm Password -->
                         <div>
-                            <label for="id_password_confirm" class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Confirm Password <span class="text-coral">*</span></label>
-                            {{ form.password_confirm }}
-                            {% if form.password_confirm.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.password_confirm.errors|join:", " }}</p>{% endif %}
+                            <label for="id_password_confirm"
+                                class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Confirm
+                                Password <span class="text-coral">*</span></label>
+                            <div class="relative">
+                                {{ form.password_confirm }}
+                                <button type="button" id="togglePwConfirm" data-toggle-target="id_password_confirm"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink transition text-sm p-1.5 focus:outline-none"
+                                    aria-label="Show or hide confirm password"><i class="fa-solid fa-eye"></i></button>
+                            </div>
+                            <p class="mt-1.5 text-xs hidden" id="passwordMatchMessage"></p>
+                            {% if form.password_confirm.errors %}<p class="mt-1 text-xs text-rose-600">{{
+                                form.password_confirm.errors|join:", " }}</p>{% endif %}
                         </div>
 
                     </div>
 
                     <button type="submit"
-                            class="mt-6 w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm
+                        class="mt-6 w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm
                                    shadow-button hover:bg-coral/90 transition-all active:translate-y-1 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-user-plus"></i>
                         <span>Create Account</span>
@@ -135,7 +179,7 @@
                 </div>
 
                 <a href="{% url 'accounts:login' %}"
-                   class="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl border-2 border-ink/15 text-ink font-bold text-sm text-center hover:border-coral hover:text-coral transition-all">
+                    class="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl border-2 border-ink/15 text-ink font-bold text-sm text-center hover:border-coral hover:text-coral transition-all">
                     <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
                     <span>Sign In</span>
                 </a>
@@ -148,41 +192,133 @@
 
 {% block extra_scripts %}
 <script>
-    // Password visibility toggle
-    const togglePw = document.getElementById('togglePw');
-    const pwField  = document.getElementById('id_password');
-    if (togglePw && pwField) {
-        togglePw.addEventListener('click', () => {
-            const isText = pwField.type === 'text';
-            pwField.type = isText ? 'password' : 'text';
-            togglePw.innerHTML = isText ? '<i class="fa-regular fa-eye"></i>' : '<i class="fa-regular fa-eye-slash"></i>';
-        });
-    }
+    (function () {
+        function calculateStrength(val) {
+            if (!val || val.length === 0) return { score: 0, label: 'Min. 8 characters', hint: 'Use 8+ characters', color: 'bg-ink/10', text: 'text-ink/40' };
 
-    // Password strength meter
-    const bars   = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
-    const label  = document.getElementById('strengthLabel');
-    const colors = ['bg-rose-400', 'bg-amber-400', 'bg-yellow-400', 'bg-emerald-400'];
-    const labels = ['Too short', 'Weak', 'Fair', 'Strong'];
+            const len = val.length;
+            const hasUpper = /[A-Z]/.test(val);
+            const hasLower = /[a-z]/.test(val);
+            const hasNumber = /[0-9]/.test(val);
+            const hasSpecial = /[^A-Za-z0-9]/.test(val);
+            const variety = (hasUpper ? 1 : 0) + (hasLower ? 1 : 0) + (hasNumber ? 1 : 0) + (hasSpecial ? 1 : 0);
 
-    function scorePassword(pw) {
-        if (pw.length < 6) return 0;
-        let score = 0;
-        if (pw.length >= 8) score++;
-        if (/[A-Z]/.test(pw)) score++;
-        if (/[0-9]/.test(pw)) score++;
-        if (/[^A-Za-z0-9]/.test(pw)) score++;
-        return Math.min(score, 4);
-    }
+            if (len < 6) {
+                return { score: 1, label: 'Too short', hint: 'Min. 8 characters needed', color: 'bg-rose-500', text: 'text-rose-500 font-semibold' };
+            }
+            if (len < 8) {
+                return { score: 1, label: 'Weak', hint: `${8 - len} more char${8 - len === 1 ? '' : 's'} to meet min. length`, color: 'bg-rose-500', text: 'text-rose-500 font-semibold' };
+            }
 
-    if (pwField) {
-        pwField.addEventListener('input', () => {
-            const score = scorePassword(pwField.value);
-            bars.forEach((bar, i) => {
-                bar.className = 'h-1 flex-1 rounded-full ' + (i < score ? colors[score - 1] : 'bg-ink/10');
+            // len >= 8
+            if (variety <= 1) {
+                return { score: 2, label: 'Fair', hint: 'Add mix of letters & numbers', color: 'bg-amber-500', text: 'text-amber-600 font-semibold' };
+            }
+            if (variety === 2 && len < 10) {
+                return { score: 2, label: 'Fair', hint: 'Add symbols or numbers for strength', color: 'bg-amber-500', text: 'text-amber-600 font-semibold' };
+            }
+            if (variety >= 3 && (hasSpecial || len >= 10)) {
+                return { score: 4, label: 'Strong password 💪', hint: 'Great and secure password', color: 'bg-emerald-500', text: 'text-emerald-600 font-semibold' };
+            }
+            return { score: 3, label: 'Good', hint: 'Add special symbol (@, #, $) for strong', color: 'bg-yellow-400', text: 'text-yellow-600 font-semibold' };
+        }
+
+        function updateStrengthMeter() {
+            const pw = document.getElementById('id_password');
+            const bar1 = document.getElementById('bar1');
+            const bar2 = document.getElementById('bar2');
+            const bar3 = document.getElementById('bar3');
+            const bar4 = document.getElementById('bar4');
+            const label = document.getElementById('strengthLabel');
+            const hint = document.getElementById('strengthRule');
+
+            if (!pw || !bar1 || !bar2 || !bar3 || !bar4 || !label) return;
+
+            const bars = [bar1, bar2, bar3, bar4];
+            const res = calculateStrength(pw.value);
+
+            bars.forEach((bar, idx) => {
+                if (idx < res.score) {
+                    bar.className = 'h-1.5 flex-1 rounded-full transition-all duration-300 ' + res.color;
+                } else {
+                    bar.className = 'h-1.5 flex-1 rounded-full bg-ink/10 transition-all duration-300';
+                }
             });
-            label.textContent = pwField.value.length === 0 ? 'Min. 8 characters' : labels[score - 1] || 'Too short';
-        });
-    }
+
+            label.textContent = res.label;
+            label.className = 'text-xs ' + res.text;
+            if (hint) hint.textContent = res.hint;
+
+            checkPasswordMatch();
+        }
+
+        function checkPasswordMatch() {
+            const pw = document.getElementById('id_password');
+            const confirm = document.getElementById('id_password_confirm');
+            const msg = document.getElementById('passwordMatchMessage');
+            if (!pw || !confirm || !msg) return;
+
+            if (!confirm.value) {
+                msg.className = 'mt-1.5 text-xs hidden';
+                msg.textContent = '';
+                return;
+            }
+
+            msg.classList.remove('hidden');
+            if (pw.value === confirm.value) {
+                msg.className = 'mt-1.5 text-xs text-emerald-600 font-medium flex items-center gap-1.5';
+                msg.innerHTML = '<i class="fa-solid fa-circle-check text-[11px]"></i> <span>Passwords match</span>';
+            } else {
+                msg.className = 'mt-1.5 text-xs text-rose-500 font-medium flex items-center gap-1.5';
+                msg.innerHTML = '<i class="fa-solid fa-circle-xmark text-[11px]"></i> <span>Passwords do not match</span>';
+            }
+        }
+
+        // Attach delegated events once to document to survive HTMX page swaps
+        if (!window.__kidRegisterEventsAttached) {
+            window.__kidRegisterEventsAttached = true;
+
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('#togglePw, #togglePwConfirm, [data-toggle-target]');
+                if (!btn) return;
+                e.preventDefault();
+
+                const targetId = btn.getAttribute('data-toggle-target') || (btn.id === 'togglePwConfirm' ? 'id_password_confirm' : 'id_password');
+                const input = document.getElementById(targetId);
+                if (!input) return;
+
+                const isText = input.type === 'text';
+                input.type = isText ? 'password' : 'text';
+
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    if (isText) {
+                        icon.className = 'fa-solid fa-eye text-ink/40';
+                        btn.setAttribute('aria-label', 'Show password');
+                    } else {
+                        icon.className = 'fa-solid fa-eye-slash text-coral';
+                        btn.setAttribute('aria-label', 'Hide password');
+                    }
+                }
+            });
+
+            document.addEventListener('input', function (e) {
+                if (!e.target) return;
+                if (e.target.id === 'id_password') {
+                    updateStrengthMeter();
+                } else if (e.target.id === 'id_password_confirm') {
+                    checkPasswordMatch();
+                }
+            });
+        }
+
+        // Trigger on current DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateStrengthMeter);
+        } else {
+            updateStrengthMeter();
+        }
+        document.addEventListener('htmx:afterSettle', updateStrengthMeter);
+    })();
 </script>
 {% endblock %}
