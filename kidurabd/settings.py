@@ -79,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'storefront.context_processors.nav_categories',
                 'storefront.context_processors.cart_context',
+                'storefront.context_processors.wishlist_context',
                 'storefront.context_processors.site_settings',
                 'storefront.context_processors.footer_pages',
                 'custom_admin.context_processors.admin_permissions',

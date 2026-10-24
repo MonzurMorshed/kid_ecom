@@ -11,7 +11,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
             <h1 class="text-2xl sm:text-3xl font-black text-ink">My Wishlist</h1>
-            <p class="text-sm text-ink/50 mt-1">
+            <p id="wishlistPageCount" class="text-sm text-ink/50 mt-1">
                 {% if wishlist_items %}
                     {{ wishlist_items|length }} saved item{{ wishlist_items|length|pluralize }}
                 {% else %}
@@ -25,9 +25,8 @@
         </a>
     </div>
 
-    {% if wishlist_items %}
     <!-- Wishlist Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div id="wishlistGrid" class="{% if not wishlist_items %}hidden {% endif %}grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {% for item in wishlist_items %}
         {% with product=item.product %}
         <div class="group bg-white rounded-3xl shadow-toy border border-ink/5 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col"
@@ -68,14 +67,39 @@
                           headers: {'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest'},
                           body: new URLSearchParams({product_id: '{{ product.id }}'})
                         }).then(r => r.json()).then(data => {
-                          $el.closest('.group').remove();
-                        });
+                          const card = $el.closest('.group');
+                          if (card) {
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => {
+                              card.remove();
+                              if (typeof window.updateWishlistBadges === 'function') {
+                                window.updateWishlistBadges(data.count || 0);
+                              }
+                              const countEl = document.getElementById('wishlistPageCount');
+                              if (countEl) {
+                                countEl.textContent = (data.count && data.count > 0) ? `${data.count} saved item${data.count === 1 ? '' : 's'}` : 'Your wishlist is empty';
+                              }
+                              if (!data.count || data.count === 0) {
+                                const grid = document.getElementById('wishlistGrid');
+                                const cta = document.getElementById('wishlistCta');
+                                const emptyState = document.getElementById('wishlistEmptyState');
+                                if (grid) grid.classList.add('hidden');
+                                if (cta) cta.classList.add('hidden');
+                                if (emptyState) emptyState.classList.remove('hidden');
+                              }
+                              if (typeof toast === 'function') {
+                                toast('Removed from wishlist');
+                              }
+                            }, 200);
+                          }
+                        }).catch(() => { removing = false; });
                       ">
                     {% csrf_token %}
                     <input type="hidden" name="product_id" value="{{ product.id }}">
                     <button type="submit"
                             title="Remove from wishlist"
-                            class="w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center text-coral hover:bg-rose-50 transition border border-ink/8">
+                            class="w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center text-coral hover:bg-rose-50 transition border border-ink/8 cursor-pointer">
                         <i class="fa-solid fa-heart text-sm" aria-hidden="true"></i>
                     </button>
                 </form>
@@ -115,7 +139,7 @@
                         <input type="hidden" name="qty" value="1">
                         <input type="hidden" name="next" value="{% url 'accounts:wishlist' %}">
                         <button type="submit"
-                                class="px-3 py-2 rounded-xl bg-coral text-white text-xs font-bold hover:bg-coral/90 transition flex items-center gap-1.5 shadow-button">
+                                class="px-3 py-2 rounded-xl bg-coral text-white text-xs font-bold hover:bg-coral/90 transition flex items-center gap-1.5 shadow-button cursor-pointer">
                             <i class="fa-solid fa-bag-shopping text-[10px]" aria-hidden="true"></i>
                             <span>Add to Bag</span>
                         </button>
@@ -143,7 +167,7 @@
     </div>
 
     <!-- Browse more CTA -->
-    <div class="mt-10 text-center">
+    <div id="wishlistCta" class="mt-10 text-center {% if not wishlist_items %}hidden{% endif %}">
         <a href="{% url 'storefront:shop' %}"
            class="inline-flex items-center gap-2 rounded-2xl border-2 border-coral/30 bg-coral/5 px-6 py-3 text-sm font-bold text-coral hover:bg-coral hover:text-white transition-all">
             <i class="fa-solid fa-store text-xs" aria-hidden="true"></i>
@@ -151,9 +175,8 @@
         </a>
     </div>
 
-    {% else %}
     <!-- Empty state -->
-    <div class="py-24 text-center">
+    <div id="wishlistEmptyState" class="{% if wishlist_items %}hidden {% endif %}py-24 text-center">
         <div class="w-24 h-24 rounded-full bg-coral/10 text-coral text-4xl flex items-center justify-center mx-auto mb-6 shadow-inner">
             <i class="fa-regular fa-heart" aria-hidden="true"></i>
         </div>
@@ -167,7 +190,6 @@
             <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
         </a>
     </div>
-    {% endif %}
 
 </div>
 </section>

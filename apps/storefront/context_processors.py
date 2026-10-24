@@ -82,3 +82,30 @@ def footer_pages(request):
             pages = []
     return {"footer_pages": pages}
 
+
+def wishlist_context(request):
+    """
+    Inject wishlist_count and wishlist_ids for the current user into template context.
+    Cached on request object so no duplicate queries occur during template rendering.
+    """
+    if not hasattr(request, 'user') or not request.user.is_authenticated:
+        return {
+            'wishlist_count': 0,
+            'wishlist_ids': set(),
+        }
+
+    if not hasattr(request, '_wishlist_ids_cache'):
+        from accounts.models import Wishlist
+        try:
+            ids = set(Wishlist.objects.filter(user=request.user).values_list('product_id', flat=True))
+            request._wishlist_ids_cache = ids
+            request._wishlist_count_cache = len(ids)
+        except Exception:
+            request._wishlist_ids_cache = set()
+            request._wishlist_count_cache = 0
+
+    return {
+        'wishlist_count': request._wishlist_count_cache,
+        'wishlist_ids': request._wishlist_ids_cache,
+    }
+

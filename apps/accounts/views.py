@@ -363,14 +363,15 @@ def wishlist_page(request):
 def wishlist_toggle(request):
     """
     Toggle a product in/out of the authenticated customer's wishlist.
-    Returns JSON: {wishlisted: bool, count: int}
+    Returns JSON: {wishlisted: bool, count: int, success: bool}
     If the user is not authenticated, redirects or returns 401 for AJAX.
     """
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.headers.get('Accept') == 'application/json'
 
-    if not request.user.is_authenticated or request.user.is_staff or request.user.is_superuser:
+    if not request.user.is_authenticated:
+        login_url = '/accounts/login/?next=' + (request.POST.get('next') or request.META.get('HTTP_REFERER') or '/')
         if is_ajax:
-            return JsonResponse({'error': 'login_required'}, status=401)
+            return JsonResponse({'error': 'login_required', 'login_url': login_url}, status=401)
         messages.info(request, 'Please log in to save items to your wishlist.')
         return redirect('accounts:login')
 
@@ -387,7 +388,12 @@ def wishlist_toggle(request):
     count = Wishlist.objects.filter(user=request.user).count()
 
     if is_ajax:
-        return JsonResponse({'wishlisted': wishlisted, 'count': count})
+        return JsonResponse({
+            'success': True,
+            'wishlisted': wishlisted,
+            'count': count,
+            'message': f'"{product.title}" added to your wishlist.' if wishlisted else f'"{product.title}" removed from your wishlist.'
+        })
 
     if wishlisted:
         messages.success(request, f'"{product.title}" added to your wishlist.')

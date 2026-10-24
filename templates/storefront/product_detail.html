@@ -327,7 +327,15 @@
                                         },
                                         body: new URLSearchParams({ product_id: '{{ product.id }}' })
                                     }).then(r => r.json()).then(data => {
-                                        wishlisted = data.wishlisted;
+                                        if (data && data.success) {
+                                            wishlisted = data.wishlisted;
+                                            if (typeof window.updateWishlistBadges === 'function') {
+                                                window.updateWishlistBadges(data.count);
+                                            }
+                                            if (typeof toast === 'function') {
+                                                toast(data.wishlisted ? 'Saved to wishlist ♥' : 'Removed from wishlist');
+                                            }
+                                        }
                                     }).catch(() => {});
                                     {% else %}
                                     window.location = '{% url 'accounts:login' %}?next={{ request.path }}';

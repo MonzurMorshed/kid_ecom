@@ -41,10 +41,12 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
             </div>
 
             <!-- Favorite button -->
-            <button class="toggle-favorite absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm text-ink/40 hover:text-coral transition-colors shadow-sm"
-                    data-active="false"
+            <button type="button"
+                    class="toggle-favorite absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/80 backdrop-blur-sm {% if product.id in wishlist_ids %}text-coral{% else %}text-ink/40{% endif %} hover:text-coral transition-colors shadow-sm focus:outline-none"
+                    data-product-id="{{ product.id }}"
+                    data-active="{% if product.id in wishlist_ids %}true{% else %}false{% endif %}"
                     aria-label="Save {{ product.title }} to wishlist">
-                <i class="fa-regular fa-heart text-xs" aria-hidden="true"></i>
+                <i class="{% if product.id in wishlist_ids %}fa-solid fa-heart text-coral{% else %}fa-regular fa-heart{% endif %} text-xs" aria-hidden="true"></i>
             </button>
         </div>
     </a>
