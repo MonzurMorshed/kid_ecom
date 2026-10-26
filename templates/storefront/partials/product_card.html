@@ -91,7 +91,8 @@ Usage: {% include "storefront/partials/product_card.html" with product=product %
                 {% endif %}
             </div>
             <!-- Quick add-to-cart -->
-            <button class="add-to-cart flex h-8 w-8 items-center justify-center rounded-xl bg-coral text-white hover:bg-coral/90 transition-colors text-xs shadow-sm"
+            <button type="button"
+                    class="add-to-cart flex h-8 w-8 items-center justify-center rounded-xl bg-coral text-white hover:bg-coral/90 transition-all text-xs shadow-sm active:scale-95"
                     data-product-id="{{ product.id }}"
                     aria-label="Add {{ product.title }} to bag">
                 <i class="fa-solid fa-plus" aria-hidden="true"></i>

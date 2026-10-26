@@ -290,7 +290,7 @@
                         <!-- Add to bag button (AJAX) -->
                         {% if product.stock > 0 %}
                         <button type="button"
-                                @click="addToCart({{ product.id }}, qty, selectedVariant)"
+                                @click="addToCart({{ product.id }}, qty, selectedVariant, $el)"
                                 class="flex-1 min-w-[140px] flex items-center justify-center gap-2 rounded-2xl bg-coral px-5 py-3.5 text-sm font-bold text-white shadow-button hover:bg-coral/90 active:translate-y-0.5 transition-all"
                                 aria-label="Add {{ product.title }} to bag">
                             <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
