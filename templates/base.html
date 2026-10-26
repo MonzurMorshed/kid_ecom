@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="en" x-data="{ mobileMenuOpen: false, cartDrawerOpen: false }">
+<html lang="en" style="background-color: {{ site_settings.store_bg_color|default:'#fffaf2' }};" x-data="{ mobileMenuOpen: false, cartDrawerOpen: false }">
 
 <head>
     <meta charset="UTF-8">
@@ -99,23 +99,37 @@
             width: 0%;
             height: 3.5px;
             background: linear-gradient(90deg, #ff6b4d, #f6c64d, #38bdf8);
-            z-index: 999999;
-            box-shadow: 0 0 12px rgba(255, 107, 77, 0.8), 0 0 6px rgba(246, 198, 77, 0.6);
+            z-index: 9999999;
+            box-shadow: 0 0 14px rgba(255, 107, 77, 0.9), 0 0 6px rgba(246, 198, 77, 0.7);
             opacity: 0;
             pointer-events: none;
-            transition: width 0.2s ease, opacity 0.25s ease;
+            transition: width 0.2s ease, opacity 0.2s ease;
         }
         #spa-progress-bar::after {
             content: '';
             position: absolute;
             right: 0;
-            top: -3px;
-            bottom: -3px;
-            width: 80px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9));
-            box-shadow: 0 0 14px #ff6b4d, 0 0 6px #f6c64d;
+            top: -2px;
+            bottom: -2px;
+            width: 90px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95));
+            box-shadow: 0 0 16px #ff6b4d, 0 0 8px #f6c64d;
             border-radius: 50%;
-            opacity: 0.9;
+            opacity: 0.95;
+        }
+
+        /* Page Smooth Enter Transition (Zero Layout Shift) */
+        @keyframes pageFadeIn {
+            from { opacity: 0.95; }
+            to   { opacity: 1; }
+        }
+        main, [role="main"] {
+            animation: pageFadeIn 0.15s ease-out;
+        }
+
+        /* Tactile click micro-interaction */
+        button:active:not(:disabled), .btn:active:not(:disabled), a.button:active {
+            transform: scale(0.98);
         }
 
         .product-card {
@@ -161,8 +175,17 @@
       hx-boost="true"
       hx-indicator="#spa-progress-bar">
 
-    <!-- Top SPA Progress Indicator -->
+    <!-- Top SPA Progress Indicator & Loading Badge -->
     <div id="spa-progress-bar" aria-hidden="true"></div>
+    <div id="spa-loading-indicator" aria-hidden="true" class="fixed top-3.5 right-4 z-[9999999] pointer-events-none opacity-0 transition-opacity duration-200">
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ink/90 text-white backdrop-blur-md shadow-lg text-xs font-medium">
+            <svg class="animate-spin h-3.5 w-3.5 text-coral" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-[11px] font-semibold tracking-wide">Loading...</span>
+        </div>
+    </div>
 
     <!-- ── Announcement strip ────────────────────────────── -->
     {% if site_settings.announcement_enabled %}
@@ -1255,51 +1278,90 @@
 
         // Continuous Trickle Progress Bar Controller (YouTube / Turbo / Next.js style)
         const ProgressBar = {
-            el: document.getElementById('spa-progress-bar'),
             timer: null,
+            timeoutTimer: null,
             progress: 0,
+            active: false,
+            getBar() {
+                return document.getElementById('spa-progress-bar');
+            },
+            getPill() {
+                return document.getElementById('spa-loading-indicator');
+            },
             start() {
-                if (!this.el) this.el = document.getElementById('spa-progress-bar');
-                if (!this.el) return;
+                const bar = this.getBar();
+                const pill = this.getPill();
+                if (!bar) return;
+                this.active = true;
                 clearInterval(this.timer);
-                this.progress = 18;
-                this.el.style.transition = 'width 0.2s ease, opacity 0.2s ease';
-                this.el.style.opacity = '1';
-                this.el.style.width = '18%';
+                clearTimeout(this.timeoutTimer);
+
+                this.progress = 24;
+                bar.style.transition = 'width 0.2s ease, opacity 0.2s ease';
+                bar.style.opacity = '1';
+                bar.style.width = '24%';
+                if (pill) pill.style.opacity = '1';
 
                 this.timer = setInterval(() => {
                     if (this.progress < 85) {
                         const step = Math.max(1, (85 - this.progress) * 0.15);
                         this.progress += step;
-                        this.el.style.width = `${Math.min(85, this.progress)}%`;
+                        const b = this.getBar();
+                        if (b) b.style.width = `${Math.min(85, this.progress)}%`;
                     }
-                }, 100);
+                }, 120);
+
+                // Safety fallback: reset after 8s in case navigation is cancelled
+                this.timeoutTimer = setTimeout(() => {
+                    if (this.active) this.done();
+                }, 8000);
             },
             done() {
-                if (!this.el) return;
                 clearInterval(this.timer);
+                clearTimeout(this.timeoutTimer);
                 this.progress = 100;
-                this.el.style.transition = 'width 0.18s ease-out, opacity 0.3s ease 0.12s';
-                this.el.style.width = '100%';
+                const bar = this.getBar();
+                const pill = this.getPill();
+                if (bar) {
+                    bar.style.transition = 'width 0.18s ease-out, opacity 0.25s ease 0.12s';
+                    bar.style.width = '100%';
+                }
                 setTimeout(() => {
-                    this.el.style.opacity = '0';
+                    if (bar) bar.style.opacity = '0';
+                    if (pill) pill.style.opacity = '0';
                     setTimeout(() => {
-                        this.el.style.width = '0%';
-                        this.progress = 0;
+                        const b2 = this.getBar();
+                        if (b2) {
+                            b2.style.width = '0%';
+                            this.progress = 0;
+                            this.active = false;
+                        }
                     }, 300);
                 }, 180);
             },
             reset() {
                 clearInterval(this.timer);
-                if (this.el) {
-                    this.el.style.opacity = '0';
-                    this.el.style.width = '0%';
+                clearTimeout(this.timeoutTimer);
+                const bar = this.getBar();
+                const pill = this.getPill();
+                if (bar) {
+                    bar.style.opacity = '0';
+                    bar.style.width = '0%';
                 }
+                if (pill) pill.style.opacity = '0';
                 this.progress = 0;
+                this.active = false;
             }
         };
+        window.ProgressBar = ProgressBar;
 
-        // HTMX SPA Lifecycle & CSRF Configuration
+        // HTMX SPA Lifecycle, CSRF & View Transitions Configuration
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.htmx && window.htmx.config) {
+                window.htmx.config.globalViewTransitions = true;
+            }
+        });
+
         document.addEventListener('htmx:configRequest', function(evt) {
             const token = getCookie('csrftoken') || '{{ csrf_token }}';
             if (token) {
@@ -1309,8 +1371,8 @@
 
         document.addEventListener('htmx:beforeRequest', function(evt) {
             const reqPath = evt.detail.pathInfo?.requestPath || '';
-            // Force normal browser navigation for admin, django-admin, and logout
-            if (reqPath.startsWith('/admin') || reqPath.startsWith('/django-admin') || reqPath.includes('/logout')) {
+            // Force normal browser navigation for admin, custom_admin, django-admin, and logout
+            if (reqPath.startsWith('/admin') || reqPath.startsWith('/custom_admin') || reqPath.startsWith('/django-admin') || reqPath.includes('/logout')) {
                 evt.preventDefault();
                 window.location.href = reqPath;
                 return;
@@ -1327,25 +1389,55 @@
             toast('Network connection error.');
         });
 
-        // Trigger progress bar immediately on any link click
+        // Trigger progress bar immediately on any valid link click
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a');
-            if (
-                link &&
-                link.href &&
-                !link.target &&
-                !link.href.startsWith('javascript:') &&
-                !link.href.includes('#') &&
-                !e.ctrlKey &&
-                !e.metaKey &&
-                !e.shiftKey &&
-                !e.altKey
-            ) {
+            if (link) {
+                const href = link.getAttribute('href');
+                if (
+                    href &&
+                    !href.startsWith('#') &&
+                    !href.startsWith('javascript:') &&
+                    !href.startsWith('mailto:') &&
+                    !href.startsWith('tel:') &&
+                    link.target !== '_blank' &&
+                    !e.ctrlKey &&
+                    !e.metaKey &&
+                    !e.shiftKey &&
+                    !e.altKey
+                ) {
+                    ProgressBar.start();
+                }
+                return;
+            }
+
+            // Also trigger on submit button clicks
+            const submitBtn = e.target.closest('button[type="submit"], input[type="submit"]');
+            if (submitBtn) {
+                const form = submitBtn.form || submitBtn.closest('form');
+                if (form && (!form.checkValidity || form.checkValidity())) {
+                    ProgressBar.start();
+                }
+            }
+        });
+
+        // Trigger progress bar on any form submission
+        document.addEventListener('submit', function(e) {
+            if (!e.defaultPrevented) {
                 ProgressBar.start();
             }
         });
 
+        // Trigger progress bar on standard page unload
+        window.addEventListener('beforeunload', function() {
+            ProgressBar.start();
+        });
+
+        // Reset progress bar on pageshow / DOM ready
         window.addEventListener('pageshow', function() {
+            ProgressBar.done();
+        });
+        document.addEventListener('DOMContentLoaded', function() {
             ProgressBar.done();
         });
 

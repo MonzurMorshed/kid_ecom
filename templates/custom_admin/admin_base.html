@@ -1,28 +1,44 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark bg-slate-950 text-slate-100" style="background-color: #020617; color-scheme: dark;">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020617">
     <title>{% block title %}Dashboard{% endblock %} — {{ site_settings.site_name|default:'Kidurabd' }} Admin</title>
+
+    <style>
+        /* Instant Dark Canvas Lock - Prevents White Flash / FOUC on Slow Network */
+        html, body {
+            background-color: #020617 !important;
+            color: #f8fafc;
+        }
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+
+    <!-- Preload Primary Admin Font to Prevent Layout Shift -->
+    <link rel="preload" href="{% static 'vendor/fonts/inter/inter_4.woff2' %}" as="font" type="font/woff2" crossorigin>
+
     <!-- Compiled Tailwind CSS -->
     <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
-    <!-- Custom Alpine.js Components -->
-    <script src="{% static 'js/main.js' %}"></script>
-    <!-- Alpine.js Local Asset -->
+    <!-- Custom Alpine.js Components (Deferred) -->
+    <script defer src="{% static 'js/main.js' %}"></script>
+    <!-- Alpine.js Local Asset (Deferred) -->
     <script defer src="{% static 'vendor/alpinejs/alpine.min.js' %}"></script>
 
     <!-- Local Inter Font -->
     <link rel="stylesheet" href="{% static 'vendor/fonts/inter.css' %}">
 
-    <!-- Chart.js Local Asset -->
-    <script src="{% static 'vendor/chartjs/chart.min.js' %}"></script>
+    <!-- Chart.js Local Asset (Deferred for Non-Blocking Initial Paint) -->
+    <script defer src="{% static 'vendor/chartjs/chart.min.js' %}"></script>
     <!-- Font Awesome 6 Local Asset -->
     <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
 
-    <!-- CKEditor 5 Local Asset -->
-    <script src="{% static 'vendor/ckeditor5/ckeditor.js' %}"></script>
+    <!-- CKEditor 5 Local Asset (Deferred for Non-Blocking Initial Paint) -->
+    <script defer src="{% static 'vendor/ckeditor5/ckeditor.js' %}"></script>
     <style>
         /* CKEditor 5 Custom Dark Theme for Admin */
         .ck.ck-editor {
@@ -136,6 +152,47 @@
             color: #475569 !important;
             /* slate-600 */
         }
+
+        /* Top Navigation Progress Indicator (YouTube / Turbo / Next.js style) */
+        #admin-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3.5px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #34d399);
+            z-index: 9999999;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.9), 0 0 6px rgba(129, 140, 248, 0.7);
+            opacity: 0;
+            pointer-events: none;
+            transition: width 0.2s ease, opacity 0.2s ease;
+        }
+        #admin-progress-bar::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -2px;
+            bottom: -2px;
+            width: 90px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95));
+            box-shadow: 0 0 16px #38bdf8, 0 0 8px #818cf8;
+            border-radius: 50%;
+            opacity: 0.95;
+        }
+
+        /* Admin Page Smooth Enter Transition (Zero Layout Shift) */
+        @keyframes adminPageFadeIn {
+            from { opacity: 0.95; }
+            to   { opacity: 1; }
+        }
+        main {
+            animation: adminPageFadeIn 0.15s ease-out;
+        }
+
+        /* Tactile click micro-interaction for admin buttons */
+        button:active:not(:disabled), .btn:active:not(:disabled), a.button:active {
+            transform: scale(0.98);
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -143,8 +200,20 @@
 <body x-data="{ sidebarOpen: false }"
     class="bg-slate-950 font-['Inter'] text-slate-100 min-h-screen flex flex-col md:flex-row">
 
+    <!-- Top Navigation Progress Indicator & Loading Badge -->
+    <div id="admin-progress-bar" aria-hidden="true"></div>
+    <div id="admin-loading-indicator" aria-hidden="true" class="fixed top-3.5 right-4 z-[9999999] pointer-events-none opacity-0 transition-opacity duration-200">
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/95 border border-slate-700/80 text-white backdrop-blur-md shadow-xl text-xs font-medium">
+            <svg class="animate-spin h-3.5 w-3.5 text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-[11px] font-semibold tracking-wide text-slate-200">Loading...</span>
+        </div>
+    </div>
+
     <!-- Mobile Sidebar Backdrop -->
-    <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition:enter="transition ease-out duration-200"
+    <div x-cloak x-show="sidebarOpen" @click="sidebarOpen = false" x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 md:hidden"></div>
@@ -555,6 +624,141 @@
                     });
             });
         });
+    </script>
+
+    <!-- Admin Navigation & Transition Progress Controller -->
+    <script>
+        (function() {
+            const AdminProgressBar = {
+                timer: null,
+                timeoutTimer: null,
+                progress: 0,
+                active: false,
+                getBar() {
+                    return document.getElementById('admin-progress-bar');
+                },
+                getPill() {
+                    return document.getElementById('admin-loading-indicator');
+                },
+                start() {
+                    const bar = this.getBar();
+                    const pill = this.getPill();
+                    if (!bar) return;
+                    this.active = true;
+                    clearInterval(this.timer);
+                    clearTimeout(this.timeoutTimer);
+
+                    this.progress = 24;
+                    bar.style.transition = 'width 0.2s ease, opacity 0.2s ease';
+                    bar.style.opacity = '1';
+                    bar.style.width = '24%';
+                    if (pill) pill.style.opacity = '1';
+
+                    this.timer = setInterval(() => {
+                        if (this.progress < 85) {
+                            const step = Math.max(1, (85 - this.progress) * 0.15);
+                            this.progress += step;
+                            const b = this.getBar();
+                            if (b) b.style.width = `${Math.min(85, this.progress)}%`;
+                        }
+                    }, 120);
+
+                    // Safety fallback: reset after 8s in case navigation is cancelled
+                    this.timeoutTimer = setTimeout(() => {
+                        if (this.active) this.done();
+                    }, 8000);
+                },
+                done() {
+                    clearInterval(this.timer);
+                    clearTimeout(this.timeoutTimer);
+                    this.progress = 100;
+                    const bar = this.getBar();
+                    const pill = this.getPill();
+                    if (bar) {
+                        bar.style.transition = 'width 0.18s ease-out, opacity 0.25s ease 0.12s';
+                        bar.style.width = '100%';
+                    }
+                    setTimeout(() => {
+                        if (bar) bar.style.opacity = '0';
+                        if (pill) pill.style.opacity = '0';
+                        setTimeout(() => {
+                            const b2 = this.getBar();
+                            if (b2) {
+                                b2.style.width = '0%';
+                                this.progress = 0;
+                                this.active = false;
+                            }
+                        }, 300);
+                    }, 180);
+                },
+                reset() {
+                    clearInterval(this.timer);
+                    clearTimeout(this.timeoutTimer);
+                    const bar = this.getBar();
+                    const pill = this.getPill();
+                    if (bar) {
+                        bar.style.opacity = '0';
+                        bar.style.width = '0%';
+                    }
+                    if (pill) pill.style.opacity = '0';
+                    this.progress = 0;
+                    this.active = false;
+                }
+            };
+            window.AdminProgressBar = AdminProgressBar;
+
+            // Trigger progress bar immediately on any valid link click
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (link) {
+                    const href = link.getAttribute('href');
+                    if (
+                        href &&
+                        !href.startsWith('#') &&
+                        !href.startsWith('javascript:') &&
+                        !href.startsWith('mailto:') &&
+                        !href.startsWith('tel:') &&
+                        link.target !== '_blank' &&
+                        !e.ctrlKey &&
+                        !e.metaKey &&
+                        !e.shiftKey &&
+                        !e.altKey
+                    ) {
+                        AdminProgressBar.start();
+                    }
+                    return;
+                }
+
+                // Also trigger on submit button clicks
+                const submitBtn = e.target.closest('button[type="submit"], input[type="submit"]');
+                if (submitBtn) {
+                    const form = submitBtn.form || submitBtn.closest('form');
+                    if (form && (!form.checkValidity || form.checkValidity())) {
+                        AdminProgressBar.start();
+                    }
+                }
+            });
+
+            // Trigger progress bar on any form submission
+            document.addEventListener('submit', function(e) {
+                if (!e.defaultPrevented) {
+                    AdminProgressBar.start();
+                }
+            });
+
+            // Trigger progress bar on standard page unload
+            window.addEventListener('beforeunload', function() {
+                AdminProgressBar.start();
+            });
+
+            // Reset progress bar on pageshow / DOM ready
+            window.addEventListener('pageshow', function() {
+                AdminProgressBar.done();
+            });
+            document.addEventListener('DOMContentLoaded', function() {
+                AdminProgressBar.done();
+            });
+        })();
     </script>
     {% block extra_js %}{% endblock %}
     {% block extra_scripts %}{% endblock %}
