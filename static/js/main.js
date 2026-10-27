@@ -24,7 +24,9 @@ document.addEventListener('alpine:init', () => {
         autoSlug: !initialData.slug,
         imagePreview: initialData.imageUrl || null,
         bannerPreview: initialData.bannerUrl || null,
+        hasInitialBanner: !!initialData.bannerUrl,
         removeBanner: false,
+        newBannerSelected: false,
 
         generateSlug() {
             if (this.autoSlug) {
@@ -52,12 +54,19 @@ document.addEventListener('alpine:init', () => {
             const file = event.target.files[0];
             if (file) {
                 this.removeBanner = false;
+                this.newBannerSelected = true;
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.bannerPreview = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
+        },
+
+        cancelNewBanner(inputEl) {
+            if (inputEl) inputEl.value = '';
+            this.newBannerSelected = false;
+            this.bannerPreview = initialData.bannerUrl || null;
         }
     }));
 

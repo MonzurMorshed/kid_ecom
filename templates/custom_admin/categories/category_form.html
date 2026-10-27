@@ -104,44 +104,98 @@
         </div>
 
         <!-- Category Page Banner Field -->
-        <div class="pt-2 border-t border-slate-800">
-            <div class="flex items-center justify-between mb-2">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Category Page Banner</label>
-                <span class="text-[11px] text-slate-400">Wide banner shown at the top of this category's page</span>
+        <div class="pt-4 border-t border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Category Page Banner</label>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Top showcase banner on this category's storefront page</p>
+                </div>
+                {% if category and category.banner %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/10 text-violet-300 border border-violet-500/20">
+                    <i class="fa-solid fa-panorama text-[9px]"></i> Banner Active
+                </span>
+                {% endif %}
             </div>
 
-            <div class="p-4 bg-slate-950/60 border border-dashed border-slate-700 rounded-xl space-y-4">
-                <!-- Banner Preview -->
-                <template x-if="bannerPreview && !removeBanner">
-                    <div class="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-900 h-36 sm:h-44 group">
-                        <img :src="bannerPreview" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                            <span class="text-xs text-white bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-700">Preview</span>
-                            <button type="button" @click="removeBanner = true; bannerPreview = null"
-                                    class="text-xs text-rose-300 bg-rose-500/20 hover:bg-rose-500/30 px-3 py-1.5 rounded-lg border border-rose-500/30 transition">
-                                <i class="fa-solid fa-trash-can mr-1"></i> Remove Banner
-                            </button>
+            <div class="p-5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-4">
+                {% if category and category.banner %}
+                <!-- Current Banner Display -->
+                <div class="space-y-3" :class="{ 'opacity-40 grayscale': removeBanner }">
+                    <div class="relative rounded-xl overflow-hidden border border-slate-700 bg-slate-900 h-36 sm:h-48 shadow-inner">
+                        <img src="{{ category.banner.url }}" alt="Category Banner" class="w-full h-full object-cover">
+                        <div class="absolute top-2 left-2 bg-slate-950/85 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-semibold text-white border border-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-panorama text-sky-400"></i> Current Banner
                         </div>
                     </div>
-                </template>
-
-                <template x-if="!bannerPreview || removeBanner">
-                    <div class="h-28 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center text-slate-500">
-                        <i class="fa-solid fa-panorama text-2xl mb-1.5 opacity-40"></i>
-                        <span class="text-xs">No banner set for this category</span>
-                    </div>
-                </template>
-
-                <input type="hidden" name="remove_banner" :value="removeBanner ? '1' : '0'">
-
-                <div class="flex-1 space-y-2">
-                    <input type="file" name="banner" id="banner" accept="image/*"
-                           @change="handleBannerChange($event)"
-                           class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-violet-500/10 file:text-violet-400 hover:file:bg-violet-500/20 file:cursor-pointer transition">
-                    <p class="text-xs text-slate-500">
-                        Recommended size: 1600×500 px. Supported formats: JPG, PNG, WEBP.
-                    </p>
                 </div>
+
+                <!-- Explicit Removal Control -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-rose-500/10 border border-rose-500/25 rounded-xl">
+                    <label class="flex items-center gap-3 cursor-pointer text-xs font-semibold text-rose-300 hover:text-rose-200 select-none">
+                        <input type="checkbox" name="remove_banner" id="remove_banner" value="1"
+                               x-model="removeBanner"
+                               class="w-5 h-5 accent-rose-500 rounded border-slate-700 bg-slate-950 focus:ring-rose-500 cursor-pointer">
+                        <span><i class="fa-solid fa-trash-can mr-1"></i> Remove / Delete this banner from category</span>
+                    </label>
+                    <span class="text-[11px] text-rose-400 font-medium" x-show="removeBanner" x-cloak>
+                        ⚠️ Marked for deletion on save
+                    </span>
+                </div>
+                {% endif %}
+
+                <!-- New Banner Upload / Replace -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="banner" class="block text-xs font-medium text-slate-300">
+                            {% if category and category.banner %}Upload New Banner (Replaces Current){% else %}Upload Banner Image{% endif %}
+                        </label>
+                        <span class="text-[10px] text-slate-500">Recommended: 1600×500 px (WEBP, JPG, PNG)</span>
+                    </div>
+
+                    <input type="file" name="banner" id="banner" accept="image/*"
+                           x-ref="bannerInput"
+                           @change="handleBannerChange($event)"
+                           class="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-violet-500/15 file:text-violet-300 hover:file:bg-violet-500/25 file:cursor-pointer transition bg-slate-900 border border-slate-800 rounded-xl">
+                </div>
+
+                <!-- Live Preview of Newly Selected File -->
+                <div x-show="newBannerSelected && bannerPreview" x-cloak class="p-3 bg-slate-900 rounded-xl border border-sky-500/30 space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-sky-400 font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-sparkles"></i> New Banner Preview
+                        </span>
+                        <button type="button" @click="cancelNewBanner($refs.bannerInput)"
+                                class="text-slate-400 hover:text-rose-400 text-xs underline">
+                            Cancel this file
+                        </button>
+                    </div>
+                    <div class="rounded-lg overflow-hidden border border-slate-700 h-32 sm:h-40">
+                        <img :src="bannerPreview" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                {% if linked_banners %}
+                <!-- Marketing Banners Linked to this Category -->
+                <div class="mt-4 pt-3 border-t border-slate-800">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Marketing Banners Linked via Content &gt; Banners</h3>
+                    <div class="space-y-2">
+                        {% for b in linked_banners %}
+                        <div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <img src="{{ b.image.url }}" class="w-12 h-7 object-cover rounded border border-slate-700">
+                                <div>
+                                    <p class="text-slate-200 font-medium">{{ b.title }}</p>
+                                    <span class="text-[10px] text-slate-500">{{ b.get_position_display }} · {% if b.is_active %}<span class="text-emerald-400">Active</span>{% else %}<span class="text-slate-500">Inactive</span>{% endif %}</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'custom_admin:banner_edit' b.pk %}" class="text-sky-400 hover:text-sky-300 text-xs underline font-medium">
+                                Edit Marketing Banner
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 

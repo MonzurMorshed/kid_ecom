@@ -63,7 +63,7 @@ def category_update(request, pk):
         is_active = request.POST.get('is_active') == 'on' or request.POST.get('is_active') == 'true'
         image = request.FILES.get('image')
         banner = request.FILES.get('banner')
-        remove_banner = request.POST.get('remove_banner') == '1'
+        remove_banner = request.POST.get('remove_banner') in ['1', 'true', 'True', 'on', 'yes']
 
         parent = Category.objects.filter(id=parent_id).exclude(id=pk).first() if parent_id else None
 
@@ -74,18 +74,34 @@ def category_update(request, pk):
         if image:
             category.image = image
         if remove_banner:
+            if category.banner:
+                try:
+                    category.banner.delete(save=False)
+                except Exception:
+                    pass
             category.banner = None
         elif banner:
             category.banner = banner
         category.save()
 
+        try:
+            from django.core.cache import cache
+            cache.delete("nav_categories_cache")
+            cache.delete(f"cat_{category.id}_top_banner_v2")
+            cache.delete(f"banner_category_{category.id}")
+            cache.delete("banner_category_top")
+        except Exception:
+            pass
+
         messages.success(request, "Category updated successfully.")
         return redirect('custom_admin:category_list')
 
     parent_categories = Category.objects.filter(parent__isnull=True).exclude(id=pk)
+    linked_banners = category.banners.all() if hasattr(category, 'banners') else []
     return render(request, 'custom_admin/categories/category_form.html', {
         'parent_categories': parent_categories,
-        'category': category
+        'category': category,
+        'linked_banners': linked_banners,
     })
 
 
