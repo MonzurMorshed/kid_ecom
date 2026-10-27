@@ -72,7 +72,7 @@ def slider_delete(request, pk):
 
 @permission_required('content')
 def banner_list(request):
-    banners = Banner.objects.all()
+    banners = Banner.objects.select_related('category').all()
     return render(request, 'custom_admin/content/banner_list.html', {
         'banners':          banners,
         'position_choices': Banner.POSITION_CHOICES,

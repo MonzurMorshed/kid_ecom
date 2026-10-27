@@ -18,28 +18,61 @@
 <!-- ══════════════════════════════════════════════════
      PROMOTIONAL CATEGORY BANNER (If set)
 ══════════════════════════════════════════════════ -->
-{% if category_top_banner %}
-<section class="py-6 bg-cream border-b border-ink/5" aria-label="Category promotion">
+{% if category_top_banner and category_top_banner.image %}
+<section class="pt-4 pb-2 bg-cream border-b border-ink/5" aria-label="Category promotion">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <a href="{{ category_top_banner.link_url|default:'#' }}"
-           class="group relative block overflow-hidden rounded-3xl bg-cover bg-center min-h-[160px] sm:min-h-[200px] shadow-sm transition-all hover:shadow-md"
-           style="background-image: url('{{ category_top_banner.image.url }}');">
+        {% if category_top_banner.link_url %}
+        <a href="{{ category_top_banner.link_url }}"
+           class="group relative block overflow-hidden rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300">
+        {% else %}
+        <div class="group relative block overflow-hidden rounded-3xl shadow-sm">
+        {% endif %}
+
+            <img src="{{ category_top_banner.image.url }}"
+                 alt="{{ category_top_banner.title|default:selected_category.name }}"
+                 loading="lazy"
+                 class="w-full h-44 sm:h-56 md:h-64 lg:h-72 object-cover group-hover:scale-[1.01] transition-transform duration-500">
+
+            {% if category_top_banner.title or category_top_banner.subtitle or category_top_banner.badge_text %}
             <div class="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/40 to-transparent flex items-center p-6 sm:p-10">
-                <div class="max-w-md text-white">
+                <div class="max-w-lg text-white">
                     {% if category_top_banner.badge_text %}
-                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-coral text-white mb-2">
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase 
+                        {% if category_top_banner.badge_color == 'rose' %}bg-rose-500
+                        {% elif category_top_banner.badge_color == 'emerald' %}bg-emerald-500
+                        {% elif category_top_banner.badge_color == 'amber' %}bg-amber-500
+                        {% elif category_top_banner.badge_color == 'violet' %}bg-violet-500
+                        {% else %}bg-coral{% endif %} text-white mb-2 shadow-sm">
                         {{ category_top_banner.badge_text }}
                     </span>
                     {% endif %}
-                    <h2 class="text-2xl sm:text-3xl font-bold font-display text-white group-hover:text-butter transition-colors">
+
+                    {% if category_top_banner.title %}
+                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold font-display text-white group-hover:text-butter transition-colors">
                         {{ category_top_banner.title }}
                     </h2>
+                    {% endif %}
+
                     {% if category_top_banner.subtitle %}
-                    <p class="mt-1 text-xs sm:text-sm text-white/80">{{ category_top_banner.subtitle }}</p>
+                    <p class="mt-1 text-xs sm:text-sm text-white/85 max-w-md">{{ category_top_banner.subtitle }}</p>
+                    {% endif %}
+
+                    {% if category_top_banner.link_text %}
+                    <div class="mt-3">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white text-ink shadow group-hover:bg-butter transition-colors">
+                            {{ category_top_banner.link_text }} <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
+
+        {% if category_top_banner.link_url %}
         </a>
+        {% else %}
+        </div>
+        {% endif %}
     </div>
 </section>
 {% endif %}

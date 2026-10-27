@@ -26,6 +26,12 @@ class Category(models.Model):
         blank=True,
         null=True,
     )
+    banner = models.ImageField(
+        upload_to="categories/banners/",
+        blank=True,
+        null=True,
+        help_text="Wide promotional banner image shown at the top of this category page.",
+    )
 
     # Storefront display fields
     description = models.CharField(max_length=255, blank=True, default="")
@@ -65,18 +71,28 @@ class Category(models.Model):
         if self.image and not getattr(self.image, '_committed', True):
             from .image_optimizer import compress_and_resize_image
             compress_and_resize_image(self.image, use_thumb=True)  # uses img_thumb_width/height from SiteSettings
+        if self.banner and not getattr(self.banner, '_committed', True):
+            from .image_optimizer import compress_and_resize_image
+            compress_and_resize_image(self.banner, use_hero=True)
         super().save(*args, **kwargs)
         try:
             from django.core.cache import cache
             cache.delete("nav_categories_cache")
+            if self.pk:
+                cache.delete(f"cat_{self.pk}_top_banner_v2")
+                cache.delete(f"banner_category_{self.pk}")
         except Exception:
             pass
 
     def delete(self, *args, **kwargs):
+        pk = self.pk
         super().delete(*args, **kwargs)
         try:
             from django.core.cache import cache
             cache.delete("nav_categories_cache")
+            if pk:
+                cache.delete(f"cat_{pk}_top_banner_v2")
+                cache.delete(f"banner_category_{pk}")
         except Exception:
             pass
 

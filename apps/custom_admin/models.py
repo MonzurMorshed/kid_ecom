@@ -589,6 +589,14 @@ class Banner(models.Model):
     link_text   = models.CharField(max_length=80, blank=True)
 
     position    = models.CharField(max_length=30, choices=POSITION_CHOICES, default='home_top')
+    category    = models.ForeignKey(
+        'products.Category',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='banners',
+        help_text='Specific category this banner belongs to. Leave empty for all categories.',
+    )
     size        = models.CharField(max_length=10, choices=SIZE_CHOICES, default='full')
 
     # Optional badge label (e.g. "NEW", "SALE", "50% OFF")
@@ -622,7 +630,8 @@ class Banner(models.Model):
 
     def __str__(self):
         status = '✓' if self.is_active else '✗'
-        return f'[{status}] {self.title} ({self.get_position_display()})'
+        cat_suffix = f' — {self.category.name}' if self.category else ''
+        return f'[{status}] {self.title} ({self.get_position_display()}{cat_suffix})'
 
     def save(self, *args, **kwargs):
         if self.image:
@@ -633,15 +642,22 @@ class Banner(models.Model):
             from django.core.cache import cache
             cache.delete('home_banners_dict')
             cache.delete('banner_category_top')
+            if self.category_id:
+                cache.delete(f'cat_{self.category_id}_top_banner_v2')
+                cache.delete(f'banner_category_{self.category_id}')
         except Exception:
             pass
 
     def delete(self, *args, **kwargs):
+        cat_id = self.category_id
         super().delete(*args, **kwargs)
         try:
             from django.core.cache import cache
             cache.delete('home_banners_dict')
             cache.delete('banner_category_top')
+            if cat_id:
+                cache.delete(f'cat_{cat_id}_top_banner_v2')
+                cache.delete(f'banner_category_{cat_id}')
         except Exception:
             pass
 

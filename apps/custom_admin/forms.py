@@ -280,7 +280,7 @@ class BannerForm(forms.ModelForm):
         fields = [
             'title', 'subtitle', 'image',
             'link_url', 'link_text',
-            'position', 'size',
+            'position', 'category', 'size',
             'badge_text', 'badge_color',
             'is_active', 'sort_order',
             'start_date', 'end_date',
@@ -291,6 +291,7 @@ class BannerForm(forms.ModelForm):
             'link_url': _input('/category/summer/ or https://...'),
             'link_text': _input('e.g. Explore Now'),
             'position':    _select(),
+            'category':    _select(),
             'size':        _select(),
             'badge_text':  _input('e.g. SALE, NEW, 50% OFF'),
             'badge_color': _select(),
@@ -313,6 +314,14 @@ class BannerForm(forms.ModelForm):
                 'type': 'datetime-local',
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'category' in self.fields:
+            self.fields['category'].empty_label = 'All Categories (Global / Sitewide)'
+            self.fields['category'].required = False
+            from products.models import Category
+            self.fields['category'].queryset = Category.objects.filter(is_active=True).order_by('name')
 
 # ── Admin User Edit Form ───────────────────────────────────────────────────────
 class AdminEditForm(forms.ModelForm):

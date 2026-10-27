@@ -292,10 +292,37 @@ class ShopView:
             most_loved = hl["most_loved"]
             new_in = hl["new_in"]
 
-        category_top_banner = cache.get("banner_category_top")
-        if category_top_banner is None:
-            category_top_banner = Banner.objects.filter(is_active=True, position="category_top").first()
-            cache.set("banner_category_top", category_top_banner, 600)
+        banner_cache_key = f"cat_{selected.id}_top_banner_v2"
+        cached_banner = cache.get(banner_cache_key)
+        if cached_banner is not None:
+            category_top_banner = cached_banner if cached_banner is not False else None
+        else:
+            # 1. Look for active Banner specifically targeted to this category
+            category_top_banner = Banner.objects.filter(
+                is_active=True,
+                position="category_top",
+                category=selected
+            ).first()
+
+            # 2. Fallback to category's own banner image if uploaded directly on Category
+            if not category_top_banner and selected.banner:
+                category_top_banner = {
+                    'image': selected.banner,
+                    'title': selected.name,
+                    'subtitle': selected.description or '',
+                    'link_url': '',
+                    'badge_text': '',
+                }
+
+            # 3. Fallback to sitewide / global category banner (category is null / all)
+            if not category_top_banner:
+                category_top_banner = Banner.objects.filter(
+                    is_active=True,
+                    position="category_top",
+                    category__isnull=True
+                ).first()
+
+            cache.set(banner_cache_key, category_top_banner if category_top_banner else False, 600)
 
         selected_brand = None
         if filter_state["brand_slug"]:

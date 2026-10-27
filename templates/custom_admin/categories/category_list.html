@@ -1,4 +1,4 @@
-﻿{% extends 'custom_admin/admin_base.html' %}
+{% extends 'custom_admin/admin_base.html' %}
 
 {% block title %}Category List{% endblock %}
 {% block page_title %}Category Management{% endblock %}
@@ -49,7 +49,16 @@
                             {% endif %}
                         </td>
 
-                        <td class="px-6 py-4 font-semibold text-white">{{ category.name }}</td>
+                        <td class="px-6 py-4 font-semibold text-white">
+                            <div class="flex items-center gap-2">
+                                <span>{{ category.name }}</span>
+                                {% if category.banner %}
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20" title="Has category page banner">
+                                    <i class="fa-solid fa-panorama text-[9px]"></i> Banner
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
                         <td class="px-6 py-4 text-slate-400 font-mono text-xs">{{ category.slug }}</td>
                         <td class="px-6 py-4">
                             {% if category.parent %}

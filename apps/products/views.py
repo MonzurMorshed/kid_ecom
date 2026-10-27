@@ -31,6 +31,7 @@ def category_create(request):
         parent_id = request.POST.get('parent')
         is_active = request.POST.get('is_active') == 'on' or request.POST.get('is_active') == 'true'
         image = request.FILES.get('image')
+        banner = request.FILES.get('banner')
 
         parent = Category.objects.filter(id=parent_id).first() if parent_id else None
 
@@ -39,6 +40,7 @@ def category_create(request):
             slug=slug,
             parent=parent,
             image=image,
+            banner=banner,
             is_active=is_active
         )
         messages.success(request, "Category created successfully.")
@@ -60,6 +62,8 @@ def category_update(request, pk):
         parent_id = request.POST.get('parent')
         is_active = request.POST.get('is_active') == 'on' or request.POST.get('is_active') == 'true'
         image = request.FILES.get('image')
+        banner = request.FILES.get('banner')
+        remove_banner = request.POST.get('remove_banner') == '1'
 
         parent = Category.objects.filter(id=parent_id).exclude(id=pk).first() if parent_id else None
 
@@ -69,6 +73,10 @@ def category_update(request, pk):
         category.is_active = is_active
         if image:
             category.image = image
+        if remove_banner:
+            category.banner = None
+        elif banner:
+            category.banner = banner
         category.save()
 
         messages.success(request, "Category updated successfully.")

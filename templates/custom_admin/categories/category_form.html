@@ -28,7 +28,8 @@
           x-data="categoryForm({ 
               name: '{{ category.name|escapejs|default:'' }}', 
               slug: '{{ category.slug|escapejs|default:'' }}', 
-              imageUrl: '{% if category.image %}{{ category.image.url }}{% endif %}' 
+              imageUrl: '{% if category.image %}{{ category.image.url }}{% endif %}',
+              bannerUrl: '{% if category.banner %}{{ category.banner.url }}{% endif %}'
           })">
         {% csrf_token %}
 
@@ -68,9 +69,9 @@
             </select>
         </div>
 
-        <!-- Image Upload Field -->
+        <!-- Image Upload Field (Thumbnail / Icon) -->
         <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Category Image</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Category Thumbnail / Icon</label>
             
             <div class="flex items-center gap-6 p-4 bg-slate-950/60 border border-dashed border-slate-700 rounded-xl">
                 <!-- Preview Thumbnail -->
@@ -93,10 +94,52 @@
                            class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-500/10 file:text-sky-400 hover:file:bg-sky-500/20 file:cursor-pointer transition">
                     <p class="text-xs text-slate-500">
                         {% if category and category.image %}
-                        Selecting a new image will replace the current one.
+                        Selecting a new image will replace the current icon.
                         {% else %}
-                        Supported formats: JPG, PNG, WEBP (Max 5MB)
+                        Used in navigation menus & square cards. (JPG, PNG, WEBP)
                         {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Page Banner Field -->
+        <div class="pt-2 border-t border-slate-800">
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Category Page Banner</label>
+                <span class="text-[11px] text-slate-400">Wide banner shown at the top of this category's page</span>
+            </div>
+
+            <div class="p-4 bg-slate-950/60 border border-dashed border-slate-700 rounded-xl space-y-4">
+                <!-- Banner Preview -->
+                <template x-if="bannerPreview && !removeBanner">
+                    <div class="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-900 h-36 sm:h-44 group">
+                        <img :src="bannerPreview" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                            <span class="text-xs text-white bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-700">Preview</span>
+                            <button type="button" @click="removeBanner = true; bannerPreview = null"
+                                    class="text-xs text-rose-300 bg-rose-500/20 hover:bg-rose-500/30 px-3 py-1.5 rounded-lg border border-rose-500/30 transition">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Remove Banner
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="!bannerPreview || removeBanner">
+                    <div class="h-28 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center text-slate-500">
+                        <i class="fa-solid fa-panorama text-2xl mb-1.5 opacity-40"></i>
+                        <span class="text-xs">No banner set for this category</span>
+                    </div>
+                </template>
+
+                <input type="hidden" name="remove_banner" :value="removeBanner ? '1' : '0'">
+
+                <div class="flex-1 space-y-2">
+                    <input type="file" name="banner" id="banner" accept="image/*"
+                           @change="handleBannerChange($event)"
+                           class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-violet-500/10 file:text-violet-400 hover:file:bg-violet-500/20 file:cursor-pointer transition">
+                    <p class="text-xs text-slate-500">
+                        Recommended size: 1600×500 px. Supported formats: JPG, PNG, WEBP.
                     </p>
                 </div>
             </div>
