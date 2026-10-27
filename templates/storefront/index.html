@@ -306,7 +306,7 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div class="home-products-grid">
             {% for product in featured_products %}
             {% include "storefront/partials/product_card.html" with product=product %}
             {% endfor %}
@@ -337,7 +337,7 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div class="home-products-grid">
             {% for product in bestsellers %}
             {% include "storefront/partials/product_card.html" with product=product %}
             {% endfor %}
@@ -368,7 +368,7 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div class="home-products-grid">
             {% for product in recent_products %}
             {% include "storefront/partials/product_card.html" with product=product %}
             {% endfor %}

@@ -190,6 +190,55 @@
             box-shadow: 0 15px 28px rgba(25,37,59,.1);
         }
 
+        /* 6-Column Responsive Product Grid for Homepage */
+        .home-products-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.75rem !important;
+        }
+        @media (min-width: 640px) {
+            .home-products-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 0.875rem !important;
+            }
+        }
+        @media (min-width: 768px) {
+            .home-products-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                gap: 1rem !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            .home-products-grid {
+                grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+                gap: 1rem !important;
+            }
+        }
+
+        /* Compact, Proportional Category Hero Banner */
+        .category-hero-banner {
+            position: relative !important;
+            width: 100% !important;
+            height: 160px !important;
+            overflow: hidden !important;
+        }
+        @media (min-width: 640px) {
+            .category-hero-banner {
+                height: 190px !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            .category-hero-banner {
+                height: 220px !important;
+            }
+        }
+        .category-hero-banner img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+        }
+
         .search-field { width: 38px; transition: width .2s ease, background .2s ease; }
         .search-field:focus-within { width: 205px; background: rgba(0,0,0,0.05); }
         .search-field input { width: 0; transition: width .2s ease; }

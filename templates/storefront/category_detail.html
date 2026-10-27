@@ -22,7 +22,7 @@
 <!-- ── Banner Variant: When Banner is Set ── -->
 <section class="relative w-full overflow-hidden bg-slate-900 border-b border-ink/5" aria-label="{{ selected_category.name }}">
     <!-- Banner Image (Compact & Proportional Height) -->
-    <div class="relative w-full h-[140px] sm:h-[180px] md:h-[210px] lg:h-[230px] overflow-hidden">
+    <div class="category-hero-banner">
         <img src="{{ category_top_banner.image.url }}"
              alt="{{ category_top_banner.title|default:selected_category.name }}"
              class="w-full h-full object-cover object-center">
