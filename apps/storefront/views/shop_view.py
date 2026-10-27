@@ -308,8 +308,8 @@ class ShopView:
             if not category_top_banner and selected.banner:
                 category_top_banner = {
                     'image': selected.banner,
-                    'title': selected.name,
-                    'subtitle': selected.description or '',
+                    'title': '',
+                    'subtitle': '',
                     'link_url': '',
                     'badge_text': '',
                 }
