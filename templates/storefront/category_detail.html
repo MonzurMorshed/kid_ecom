@@ -21,14 +21,14 @@
 {% if category_top_banner and category_top_banner.image %}
 <!-- ── Banner Variant: When Banner is Set ── -->
 <section class="relative w-full overflow-hidden bg-slate-900 border-b border-ink/5" aria-label="{{ selected_category.name }}">
-    <!-- Banner Image -->
-    <div class="relative w-full h-[180px] sm:h-[240px] md:h-[300px] lg:h-[340px] overflow-hidden">
+    <!-- Banner Image (Compact & Proportional Height) -->
+    <div class="relative w-full h-[140px] sm:h-[180px] md:h-[210px] lg:h-[230px] overflow-hidden">
         <img src="{{ category_top_banner.image.url }}"
              alt="{{ category_top_banner.title|default:selected_category.name }}"
-             class="w-full h-full object-cover">
+             class="w-full h-full object-cover object-center">
 
-        <!-- Subtle Top & Bottom Gradient for contrast -->
-        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/25 pointer-events-none"></div>
+        <!-- Subtle Top & Bottom Gradient -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/15 pointer-events-none"></div>
 
         <!-- Optional Full Banner Link (if link_url is provided) -->
         {% if category_top_banner.link_url %}
@@ -36,10 +36,10 @@
         {% endif %}
 
         <!-- Floating Elements Container -->
-        <div class="absolute inset-0 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col justify-between pointer-events-none z-20">
+        <div class="absolute inset-0 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col justify-between pointer-events-none z-20">
             <!-- Breadcrumb Placed on Top Right of Banner -->
             <div class="flex justify-end self-end pointer-events-auto">
-                <nav aria-label="Breadcrumb" class="text-xs text-ink bg-white/85 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/50 shadow-sm transition hover:bg-white">
+                <nav aria-label="Breadcrumb" class="text-xs text-ink bg-white/95 backdrop-blur-md px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl border border-white/80 shadow-md transition hover:bg-white">
                     <ol class="flex items-center gap-1.5 flex-wrap">
                         <li><a href="{% url 'storefront:index' %}" class="hover:text-coral transition-colors font-medium">Home</a></li>
                         <li aria-hidden="true" class="text-ink/40">/</li>
@@ -50,43 +50,42 @@
                 </nav>
             </div>
 
-            <!-- Optional Text / Badge Overlay -->
-            {% if category_top_banner.title or category_top_banner.badge_text or category_top_banner.subtitle %}
-            <div class="max-w-xl text-white pointer-events-auto">
-                {% if category_top_banner.badge_text %}
-                <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase 
-                    {% if category_top_banner.badge_color == 'rose' %}bg-rose-500
-                    {% elif category_top_banner.badge_color == 'emerald' %}bg-emerald-500
-                    {% elif category_top_banner.badge_color == 'amber' %}bg-amber-500
-                    {% elif category_top_banner.badge_color == 'violet' %}bg-violet-500
-                    {% else %}bg-coral{% endif %} text-white mb-2 shadow-sm">
-                    {{ category_top_banner.badge_text }}
-                </span>
-                {% endif %}
-
-                {% if category_top_banner.title %}
-                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold font-display text-white drop-shadow-md">
-                    {{ category_top_banner.title }}
-                </h1>
-                {% else %}
-                <h1 class="sr-only">{{ selected_category.name }}</h1>
-                {% endif %}
-
-                {% if category_top_banner.subtitle %}
-                <p class="mt-1 text-xs sm:text-sm text-white/90 drop-shadow-sm max-w-lg leading-relaxed">{{ category_top_banner.subtitle }}</p>
-                {% endif %}
-
-                {% if category_top_banner.link_text and category_top_banner.link_url %}
-                <div class="mt-2.5">
-                    <a href="{{ category_top_banner.link_url }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white text-ink shadow hover:bg-butter transition-colors">
-                        {{ category_top_banner.link_text }} <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </a>
+            <!-- Focused Category Title Badge (Bottom Left - High Contrast) -->
+            <div class="pointer-events-auto self-start">
+                <div class="inline-flex flex-col bg-white/95 backdrop-blur-md px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl border border-white/80 shadow-md max-w-lg">
+                    <div class="flex items-center gap-2 mb-0.5">
+                        {% if selected_category.emoji %}
+                        <span class="text-base sm:text-lg leading-none">{{ selected_category.emoji }}</span>
+                        {% endif %}
+                        <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-coral leading-none">
+                            Category
+                        </span>
+                        {% if category_top_banner.badge_text %}
+                        <span class="inline-block px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold tracking-wider uppercase 
+                            {% if category_top_banner.badge_color == 'rose' %}bg-rose-500
+                            {% elif category_top_banner.badge_color == 'emerald' %}bg-emerald-500
+                            {% elif category_top_banner.badge_color == 'amber' %}bg-amber-500
+                            {% elif category_top_banner.badge_color == 'violet' %}bg-violet-500
+                            {% else %}bg-coral{% endif %} text-white shadow-xs">
+                            {{ category_top_banner.badge_text }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h1 class="text-lg sm:text-xl lg:text-2xl font-bold font-display text-ink leading-tight">
+                        {% if category_top_banner.title %}{{ category_top_banner.title }}{% else %}{{ selected_category.name }}{% endif %}
+                    </h1>
+                    {% if category_top_banner.subtitle %}
+                    <p class="mt-0.5 text-xs text-ink/70 leading-relaxed max-w-md line-clamp-1 sm:line-clamp-none">{{ category_top_banner.subtitle }}</p>
+                    {% endif %}
+                    {% if category_top_banner.link_text and category_top_banner.link_url %}
+                    <div class="mt-2">
+                        <a href="{{ category_top_banner.link_url }}" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-coral text-white shadow hover:bg-coral/90 transition-colors">
+                            {{ category_top_banner.link_text }} <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
-            {% else %}
-            <h1 class="sr-only">{{ selected_category.name }}</h1>
-            {% endif %}
         </div>
     </div>
 </section>

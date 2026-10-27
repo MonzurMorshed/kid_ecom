@@ -48,20 +48,20 @@ class HomeView:
                 Product.objects.filter(is_active=True, is_deleted=False, is_featured=True)
                 .select_related("category")
                 .prefetch_related("images")
-                [:8]
+                [:12]
             )
             bestsellers = list(
                 Product.objects.filter(is_active=True, is_deleted=False, is_bestseller=True)
                 .select_related("category")
                 .prefetch_related("images")
-                [:4]
+                [:12]
             )
             recent_products = list(
                 Product.objects.filter(is_active=True, is_deleted=False)
                 .select_related("category")
                 .prefetch_related("images")
                 .order_by("-created_at")
-                [:8]
+                [:12]
             )
             home_products = {
                 "featured": featured_products,
