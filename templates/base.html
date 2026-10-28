@@ -1023,7 +1023,7 @@
         <div id="cartDrawerPanel"
              hx-get="{% url 'storefront:cart_drawer' %}"
              hx-trigger="open-cart-drawer from:body, refresh-cart-drawer from:body"
-             hx-swap="innerHTML"
+             hx-swap="innerHTML scroll:none"
              x-transition:enter="transition ease-out duration-250"
              x-transition:enter-start="translate-x-full"
              x-transition:enter-end="translate-x-0"
