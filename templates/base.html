@@ -1626,8 +1626,16 @@
                     if (data && data.mobileMenuOpen) data.mobileMenuOpen = false;
                 } catch(e) {}
             }
-            // Scroll to top on fresh page navigation
-            if (!window.location.hash) {
+            // Scroll to top on fresh page navigation only
+            // Skip scroll for partial/drawer swaps (cart, wishlist, etc.)
+            const swappedEl = evt.detail.elt;
+            const skipScrollIds = ['cartDrawerPanel', 'wishlist-panel', 'mini-cart'];
+            const isPartialSwap = swappedEl && (
+                skipScrollIds.some(id => swappedEl.id === id) ||
+                swappedEl.closest('#cartDrawerPanel') ||
+                swappedEl.hasAttribute('hx-swap-oob')
+            );
+            if (!isPartialSwap && !window.location.hash) {
                 window.scrollTo({ top: 0, behavior: 'instant' });
             }
         });
