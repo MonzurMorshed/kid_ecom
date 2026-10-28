@@ -36,20 +36,7 @@
         {% endif %}
         <!-- Floating Elements Container -->
         <div class="absolute inset-0 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col justify-between pointer-events-none z-20">
-            <!-- Breadcrumb Placed on Top Right of Banner -->
-            <div class="flex justify-end self-end pointer-events-auto">
-                <nav aria-label="Breadcrumb" class="text-xs text-ink bg-white/95 backdrop-blur-md px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl border border-white/80 shadow-md transition hover:bg-white">
-                    <ol class="flex items-center gap-1.5 flex-wrap">
-                        <li><a href="{% url 'storefront:index' %}" class="hover:text-coral transition-colors font-medium">Home</a></li>
-                        <li aria-hidden="true" class="text-ink/40">/</li>
-                        <li><a href="{% url 'storefront:shop' %}" class="hover:text-coral transition-colors font-medium">Shop</a></li>
-                        <li aria-hidden="true" class="text-ink/40">/</li>
-                        <li class="font-bold text-ink" aria-current="page">{{ selected_category.name }}</li>
-                    </ol>
-                </nav>
-            </div>
-
-            <!-- Focused Category Title Badge (Bottom Left - High Contrast) -->
+            <!-- Focused Category Title Badge (Top Left - High Contrast) -->
             <div class="pointer-events-auto self-start">
                 <div class="inline-flex flex-col bg-white/95 backdrop-blur-md px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl border border-white/80 shadow-md max-w-lg">
                     <div class="flex items-center gap-2 mb-0.5">
@@ -85,7 +72,21 @@
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Breadcrumb Placed on Bottom Right of Banner -->
+            <div class="flex justify-end self-end pointer-events-auto">
+                <nav aria-label="Breadcrumb" class="text-xs text-ink bg-white/95 backdrop-blur-md px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl border border-white/80 shadow-md transition hover:bg-white">
+                    <ol class="flex items-center gap-1.5 flex-wrap">
+                        <li><a href="{% url 'storefront:index' %}" class="hover:text-coral transition-colors font-medium">Home</a></li>
+                        <li aria-hidden="true" class="text-ink/40">/</li>
+                        <li><a href="{% url 'storefront:shop' %}" class="hover:text-coral transition-colors font-medium">Shop</a></li>
+                        <li aria-hidden="true" class="text-ink/40">/</li>
+                        <li class="font-bold text-ink" aria-current="page">{{ selected_category.name }}</li>
+                    </ol>
+                </nav>
+            </div>
         </div>
+
     </div>
 </section>
 
