@@ -8,6 +8,7 @@ from storefront.views.cart_view import (
     checkout, order_success,
 )
 from storefront.views.contact_view import contact_view
+from storefront.views.search_suggest_view import search_suggestions
 from storefront.views.newsletter_view import newsletter_subscribe
 
 app_name = "storefront"
@@ -36,4 +37,7 @@ urlpatterns = [
     # ── Contact & Newsletter ──────────────────────────────────────────────────
     path("contact/",           contact_view,         name="contact"),
     path("newsletter/subscribe/", newsletter_subscribe, name="newsletter_subscribe"),
+
+    # ── Live Search Autocomplete ───────────────────────────────────────────────
+    path("search/suggestions/", search_suggestions, name="search_suggestions"),
 ]

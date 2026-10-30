@@ -166,7 +166,7 @@ def admin_forgot_password(request):
             ActivityLog.log(
                 request, 'password',
                 f'Password reset requested for: {user.username} ({user.email})',
-                target_type='User', target_id=user.pk
+                actor=user, target_type='User', target_id=user.pk
             )
 
         messages.success(request, success_msg)
@@ -209,7 +209,7 @@ def admin_reset_password(request, uidb64, token):
         ActivityLog.log(
             request, 'password',
             f'Password reset completed for: {user.username}',
-            target_type='User', target_id=user.pk
+            actor=user, target_type='User', target_id=user.pk
         )
         messages.success(request, f'Password for "{user.username}" has been reset. Please log in.')
         return redirect('custom_admin:login')

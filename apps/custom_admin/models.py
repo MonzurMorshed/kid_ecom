@@ -778,10 +778,11 @@ class ActivityLog(models.Model):
         return f'[{self.action}] {actor}: {self.description[:60]}'
 
     @classmethod
-    def log(cls, request, action, description, target_type='', target_id=None):
+    def log(cls, request, action, description, target_type='', target_id=None, actor=None, **kwargs):
         """Convenience method to write a log entry."""
         try:
-            actor = request.user if request and getattr(request.user, 'is_authenticated', False) and getattr(request.user, 'pk', None) else None
+            if actor is None:
+                actor = request.user if request and getattr(request.user, 'is_authenticated', False) and getattr(request.user, 'pk', None) else None
             ip    = cls._get_ip(request)
             return cls.objects.create(
                 actor=actor,

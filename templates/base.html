@@ -387,16 +387,21 @@
             <!-- Right: Search, Wishlist, Cart, Account -->
             <div class="flex items-center gap-1 sm:gap-2">
                 {% if site_settings.show_search_in_header %}
-                <form action="{% url 'storefront:shop' %}" method="get"
-                      class="search-field hidden h-10 items-center gap-2 overflow-hidden rounded-xl px-3 sm:flex border border-transparent focus-within:border-coral transition-all"
-                      aria-label="Search toys">
-                    <button type="submit" aria-label="Search button" class="opacity-60 hover:opacity-100 hover:text-coral transition-colors">
-                        <i class="fa-solid fa-magnifying-glass text-xs" aria-hidden="true"></i>
-                    </button>
-                    <input name="q" value="{{ search_query|default:'' }}"
-                           class="min-w-0 border-0 bg-transparent text-xs outline-none placeholder:opacity-50 w-32 lg:w-44 focus:w-56 transition-all duration-200"
-                           placeholder="Find a new favorite..." type="search">
-                </form>
+                <div class="relative hidden sm:block" id="searchWrap1">
+                    <form action="{% url 'storefront:shop' %}" method="get"
+                          class="search-field h-10 items-center gap-2 overflow-hidden rounded-xl px-3 flex border border-transparent focus-within:border-coral transition-all"
+                          aria-label="Search toys">
+                        <button type="submit" aria-label="Search button" class="opacity-60 hover:opacity-100 hover:text-coral transition-colors flex-shrink-0">
+                            <i class="fa-solid fa-magnifying-glass text-xs" aria-hidden="true"></i>
+                        </button>
+                        <input name="q" value="{{ search_query|default:'' }}"
+                               id="liveSearch1"
+                               autocomplete="off"
+                               class="min-w-0 border-0 bg-transparent text-xs outline-none placeholder:opacity-50 w-32 lg:w-44 focus:w-56 transition-all duration-200"
+                               placeholder="Find a new favorite..." type="search">
+                    </form>
+                    <div id="searchDrop1" class="search-dropdown absolute left-0 top-full mt-1 z-[9999] hidden"></div>
+                </div>
                 {% endif %}
 
                 {% if site_settings.show_wishlist_in_header %}
@@ -544,11 +549,15 @@
 
             <!-- Center: Search Input Bar -->
             {% if site_settings.show_search_in_header %}
-            <div class="hidden md:flex flex-1 max-w-md mx-auto">
+            <div class="hidden md:flex flex-1 max-w-md mx-auto relative" id="searchWrap2">
                 <form action="{% url 'storefront:shop' %}" method="get" class="w-full flex items-center gap-2.5 bg-black/5 hover:bg-black/10 focus-within:bg-white focus-within:ring-2 focus-within:ring-coral rounded-xl px-3.5 py-2 transition-all">
                     <i class="fa-solid fa-magnifying-glass text-xs opacity-50"></i>
-                    <input name="q" value="{{ search_query|default:'' }}" class="w-full bg-transparent text-xs border-0 outline-none placeholder:opacity-50 text-ink" placeholder="Search toys...">
+                    <input name="q" value="{{ search_query|default:'' }}"
+                           id="liveSearch2"
+                           autocomplete="off"
+                           class="w-full bg-transparent text-xs border-0 outline-none placeholder:opacity-50 text-ink" placeholder="Search toys...">
                 </form>
+                <div id="searchDrop2" class="search-dropdown absolute left-0 top-full mt-1 z-[9999] hidden"></div>
             </div>
             {% endif %}
 
@@ -762,18 +771,22 @@
             <div class="ml-auto lg:ml-0 flex items-center gap-1 sm:gap-2">
                 {% if site_settings.show_search_in_header %}
                 <!-- Search -->
-                <form action="{% url 'storefront:shop' %}" method="get"
-                      class="search-field hidden h-10 items-center gap-2 overflow-hidden rounded-xl px-3 sm:flex border border-transparent focus-within:border-coral transition-all"
-                      aria-label="Search toys">
-                    <button type="submit" aria-label="Search button" class="opacity-60 hover:opacity-100 hover:text-coral transition-colors">
-                        <i class="fa-solid fa-magnifying-glass text-xs" aria-hidden="true"></i>
-                    </button>
-                    <input id="searchInput"
-                           name="q"
-                           value="{{ search_query|default:'' }}"
-                           class="min-w-0 border-0 bg-transparent text-xs outline-none placeholder:opacity-50 w-32 lg:w-44 focus:w-56 transition-all duration-200"
-                           placeholder="Find a new favorite..." type="search">
-                </form>
+                <div class="relative hidden sm:block" id="searchWrap3">
+                    <form action="{% url 'storefront:shop' %}" method="get"
+                          class="search-field h-10 items-center gap-2 overflow-hidden rounded-xl px-3 flex border border-transparent focus-within:border-coral transition-all"
+                          aria-label="Search toys">
+                        <button type="submit" aria-label="Search button" class="opacity-60 hover:opacity-100 hover:text-coral transition-colors flex-shrink-0">
+                            <i class="fa-solid fa-magnifying-glass text-xs" aria-hidden="true"></i>
+                        </button>
+                        <input id="liveSearch3"
+                               name="q"
+                               autocomplete="off"
+                               value="{{ search_query|default:'' }}"
+                               class="min-w-0 border-0 bg-transparent text-xs outline-none placeholder:opacity-50 w-32 lg:w-44 focus:w-56 transition-all duration-200"
+                               placeholder="Find a new favorite..." type="search">
+                    </form>
+                    <div id="searchDrop3" class="search-dropdown absolute left-0 top-full mt-1 z-[9999] hidden"></div>
+                </div>
                 {% endif %}
 
                 {% if site_settings.show_wishlist_in_header %}
@@ -893,14 +906,19 @@
              role="menu">
             {% if site_settings.show_search_in_header %}
             <!-- Mobile Search -->
-            <form action="{% url 'storefront:shop' %}" method="get" class="mb-3 flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 border border-ink/10 shadow-xs focus-within:border-coral text-ink">
-                <i class="fa-solid fa-magnifying-glass text-xs text-ink/40" aria-hidden="true"></i>
-                <input name="q"
-                       value="{{ search_query|default:'' }}"
-                       class="w-full border-0 bg-transparent text-xs text-ink outline-none placeholder:text-ink/40"
-                       placeholder="Search all toys..." type="search">
-                <button type="submit" class="text-[11px] font-bold text-coral uppercase tracking-wider">Go</button>
-            </form>
+            <div class="relative mb-3" id="searchWrap4">
+                <form action="{% url 'storefront:shop' %}" method="get" class="flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 border border-ink/10 shadow-xs focus-within:border-coral text-ink">
+                    <i class="fa-solid fa-magnifying-glass text-xs text-ink/40" aria-hidden="true"></i>
+                    <input name="q"
+                           id="liveSearch4"
+                           autocomplete="off"
+                           value="{{ search_query|default:'' }}"
+                           class="w-full border-0 bg-transparent text-xs text-ink outline-none placeholder:text-ink/40"
+                           placeholder="Search all toys..." type="search">
+                    <button type="submit" class="text-[11px] font-bold text-coral uppercase tracking-wider">Go</button>
+                </form>
+                <div id="searchDrop4" class="search-dropdown absolute left-0 top-full mt-1 z-[9999] hidden" style="min-width:100%"></div>
+            </div>
             {% endif %}
             <a class="block py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'index' and not selected_category %}text-coral{% else %}opacity-75 hover:opacity-100 hover:text-coral{% endif %}"
                href="{% url 'storefront:index' %}" @click="mobileMenuOpen = false">Home</a>
@@ -1746,6 +1764,270 @@
                 toast('Something went wrong, please try again.');
             }
         });
+
+    /* ─── Live Search Autocomplete ─────────────────────────────────────────── */
+    (function () {
+        const SUGGEST_URL = "{% url 'storefront:search_suggestions' %}";
+        const SHOP_URL    = "{% url 'storefront:shop' %}";
+
+        // CSS injected once
+        const css = `
+            .search-dropdown {
+                background: #fff;
+                border: 1.5px solid #e5e7eb;
+                border-radius: 16px;
+                box-shadow: 0 16px 48px rgba(25,37,59,.13), 0 4px 12px rgba(25,37,59,.07);
+                overflow: hidden;
+                min-width: 320px;
+                max-width: 480px;
+                animation: sdFadeIn .15s ease;
+            }
+            @keyframes sdFadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+            .sd-section-title {
+                padding: 8px 14px 4px;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: .06em;
+                text-transform: uppercase;
+                color: #8a93a6;
+                border-top: 1px solid #f3f4f6;
+            }
+            .sd-section-title:first-child { border-top: none; }
+            .sd-product-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 14px;
+                cursor: pointer;
+                transition: background .12s;
+                text-decoration: none;
+                color: inherit;
+            }
+            .sd-product-item:hover, .sd-product-item.sd-active { background: #f8f9fb; }
+            .sd-product-thumb {
+                width: 44px; height: 44px;
+                border-radius: 10px;
+                object-fit: cover;
+                background: #f3f4f6;
+                flex-shrink: 0;
+            }
+            .sd-product-thumb-placeholder {
+                width: 44px; height: 44px;
+                border-radius: 10px;
+                background: #f3f4f6;
+                flex-shrink: 0;
+                display: grid;
+                place-items: center;
+                font-size: 20px;
+            }
+            .sd-product-info { flex: 1; min-width: 0; }
+            .sd-product-name {
+                font-size: 12px;
+                font-weight: 600;
+                color: #19253b;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .sd-product-meta {
+                font-size: 10px;
+                color: #8a93a6;
+                margin-top: 1px;
+            }
+            .sd-product-price {
+                font-size: 12px;
+                font-weight: 700;
+                color: #19253b;
+                white-space: nowrap;
+            }
+            .sd-product-price .sd-old-price {
+                font-size: 10px;
+                font-weight: 400;
+                color: #b0b8c8;
+                text-decoration: line-through;
+                margin-left: 3px;
+            }
+            .sd-chip-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+                padding: 6px 14px 10px;
+            }
+            .sd-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px;
+                border-radius: 999px;
+                font-size: 11px;
+                font-weight: 600;
+                background: #f3f4f6;
+                color: #3c4a65;
+                cursor: pointer;
+                border: 1.5px solid transparent;
+                transition: all .12s;
+                text-decoration: none;
+            }
+            .sd-chip:hover { background: #fff0ec; border-color: #f97048; color: #f97048; }
+            .sd-view-all {
+                display: block;
+                text-align: center;
+                padding: 9px 14px;
+                font-size: 11px;
+                font-weight: 700;
+                color: #f97048;
+                border-top: 1px solid #f3f4f6;
+                cursor: pointer;
+                transition: background .12s;
+                text-decoration: none;
+            }
+            .sd-view-all:hover { background: #fff8f6; }
+            .sd-empty {
+                padding: 18px 14px;
+                font-size: 12px;
+                color: #8a93a6;
+                text-align: center;
+            }
+        `;
+        const styleEl = document.createElement('style');
+        styleEl.textContent = css;
+        document.head.appendChild(styleEl);
+
+        function highlight(text, query) {
+            if (!query) return text;
+            const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(re, '<mark style="background:transparent;color:#f97048;font-weight:700;">$1</mark>');
+        }
+
+        function renderDrop(drop, data, query) {
+            const { products, categories, brands } = data;
+            const total = products.length + categories.length + brands.length;
+
+            if (total === 0) {
+                drop.innerHTML = `<div class="sd-empty">No results found for "${query}"</div>`;
+                return;
+            }
+
+            let html = '';
+
+            // Products
+            if (products.length > 0) {
+                html += `<div class="sd-section-title">Products</div>`;
+                products.forEach(p => {
+                    const thumb = p.thumbnail
+                        ? `<img src="${p.thumbnail}" alt="" class="sd-product-thumb" loading="lazy">`
+                        : `<div class="sd-product-thumb-placeholder">🎁</div>`;
+                    const meta = [p.category, p.brand].filter(Boolean).join(' · ');
+                    const priceHtml = p.compare_price
+                        ? `৳${parseFloat(p.price).toLocaleString()} <span class="sd-old-price">৳${parseFloat(p.compare_price).toLocaleString()}</span>`
+                        : `৳${parseFloat(p.price).toLocaleString()}`;
+                    html += `
+                        <a href="${p.url}" class="sd-product-item">
+                            ${thumb}
+                            <div class="sd-product-info">
+                                <div class="sd-product-name">${highlight(p.title, query)}</div>
+                                ${meta ? `<div class="sd-product-meta">${meta}</div>` : ''}
+                            </div>
+                            <div class="sd-product-price">${priceHtml}</div>
+                        </a>`;
+                });
+            }
+
+            // Categories
+            if (categories.length > 0) {
+                html += `<div class="sd-section-title">Categories</div><div class="sd-chip-row">`;
+                categories.forEach(c => {
+                    html += `<a href="${c.url}" class="sd-chip"><i class="fa-solid fa-layer-group" style="font-size:9px"></i>${highlight(c.name, query)}</a>`;
+                });
+                html += `</div>`;
+            }
+
+            // Brands
+            if (brands.length > 0) {
+                html += `<div class="sd-section-title">Brands</div><div class="sd-chip-row">`;
+                brands.forEach(b => {
+                    html += `<a href="${SHOP_URL}?brand=${b.slug}" class="sd-chip"><i class="fa-solid fa-tag" style="font-size:9px"></i>${highlight(b.name, query)}</a>`;
+                });
+                html += `</div>`;
+            }
+
+            // View all link
+            html += `<a href="${SHOP_URL}?q=${encodeURIComponent(query)}" class="sd-view-all">View all results for "${query}" →</a>`;
+
+            drop.innerHTML = html;
+        }
+
+        function initSearchAutocomplete(inputId, dropId) {
+            const input = document.getElementById(inputId);
+            const drop  = document.getElementById(dropId);
+            if (!input || !drop) return;
+
+            let debounceTimer = null;
+            let lastQuery = '';
+            let isOpen = false;
+
+            function showDrop() {
+                drop.classList.remove('hidden');
+                isOpen = true;
+            }
+            function hideDrop() {
+                drop.classList.add('hidden');
+                isOpen = false;
+            }
+
+            input.addEventListener('input', () => {
+                const q = input.value.trim();
+                if (q === lastQuery) return;
+                lastQuery = q;
+
+                clearTimeout(debounceTimer);
+
+                if (q.length < 2) {
+                    hideDrop();
+                    drop.innerHTML = '';
+                    return;
+                }
+
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`${SUGGEST_URL}?q=${encodeURIComponent(q)}`);
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        if (input.value.trim() !== q) return; // stale response
+                        renderDrop(drop, data, q);
+                        showDrop();
+                    } catch (e) { /* silent */ }
+                }, 280);
+            });
+
+            // Keyboard: Escape closes, Enter submits
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { hideDrop(); input.blur(); }
+            });
+
+            // Click outside
+            document.addEventListener('click', (e) => {
+                if (!input.closest('#' + dropId.replace('Drop', 'Wrap'))?.contains(e.target)) {
+                    hideDrop();
+                }
+            });
+
+            // Reopen on focus if we have content
+            input.addEventListener('focus', () => {
+                if (drop.innerHTML.trim() !== '' && input.value.trim().length >= 2) {
+                    showDrop();
+                }
+            });
+        }
+
+        // Init all search bars (desktop nav 1, center bar, secondary nav, mobile)
+        document.addEventListener('DOMContentLoaded', () => {
+            initSearchAutocomplete('liveSearch1', 'searchDrop1');
+            initSearchAutocomplete('liveSearch2', 'searchDrop2');
+            initSearchAutocomplete('liveSearch3', 'searchDrop3');
+            initSearchAutocomplete('liveSearch4', 'searchDrop4');
+        });
+    })();
     </script>
 
     {% block extra_scripts %}{% endblock %}
