@@ -6,7 +6,6 @@ from products.models import Product, ProductVariant
 # Create your models here.
 class Order(models.Model):
     STATUS_CHOICES = (
-        ('PENDING', 'Pending'),
         ('CONFIRMED', 'Confirmed'),
         ('PROCESSING', 'Processing'),
         ('DELIVERED', 'Delivered'),
@@ -22,7 +21,7 @@ class Order(models.Model):
     phone_number = models.CharField(max_length=15)
     shipping_address = models.TextField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='CONFIRMED')
 
     # Soft delete
     is_deleted = models.BooleanField(default=False)
@@ -74,4 +73,3 @@ class OrderItem(models.Model):
 
     def get_global(self):
         return self.price * self.quantity
-    

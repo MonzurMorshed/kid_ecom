@@ -259,9 +259,7 @@
 
         {# Status ribbon #}
         <div class="inv-ribbon">
-            {% if order.status == 'PENDING' %}
-                <span class="status-badge s-pending"><span class="status-dot dot-pending"></span>Pending</span>
-            {% elif order.status == 'CONFIRMED' %}
+            {% if order.status == 'CONFIRMED' %}
                 <span class="status-badge s-confirmed"><span class="status-dot dot-confirmed"></span>Confirmed</span>
             {% elif order.status == 'PROCESSING' %}
                 <span class="status-badge s-processing"><span class="status-dot dot-processing"></span>Processing</span>

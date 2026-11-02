@@ -357,7 +357,7 @@ class Command(BaseCommand):
 
         # ── 5. Orders ────────────────────────────────────────────────────────
         self.stdout.write("\n[5/5] Creating orders...")
-        STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'DELIVERED', 'CANCELLED']
+        STATUSES = ['CONFIRMED', 'PROCESSING', 'DELIVERED', 'CANCELLED']
         NAMES = ['Rahim Uddin', 'Karim Mia', 'Fatema Begum', 'Nasrin Akter', 'Shakil Ahmed',
                  'Runa Akter', 'Milon Hossain', 'Poly Khatun', 'Sumon Talukder', 'Tania Islam']
         PHONES = ['017' + str(random.randint(10000000, 99999999)) for _ in range(10)]

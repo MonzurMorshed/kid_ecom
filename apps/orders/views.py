@@ -16,9 +16,8 @@ from .models import Order
 def order_list(request):
     data = Order.objects.filter(is_deleted=False).select_related('user').prefetch_related('items').order_by('-created_at')
 
-    pending_count    = data.filter(status='PENDING').count()
-    processing_count = data.filter(status='PROCESSING').count()
     confirmed_count  = data.filter(status='CONFIRMED').count()
+    processing_count = data.filter(status='PROCESSING').count()
     delivered_count  = data.filter(status='DELIVERED').count()
     cancelled_count  = data.filter(status='CANCELLED').count()
 
@@ -55,9 +54,8 @@ def order_list(request):
     context = {
         'orders':           page_obj,
         'page_obj':         page_obj,
-        'pending_count':    pending_count,
-        'processing_count': processing_count,
         'confirmed_count':  confirmed_count,
+        'processing_count': processing_count,
         'delivered_count':  delivered_count,
         'cancelled_count':  cancelled_count,
         'status_choices':   Order.STATUS_CHOICES,

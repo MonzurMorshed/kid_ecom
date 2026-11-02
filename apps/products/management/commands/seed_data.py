@@ -309,7 +309,7 @@ class Command(BaseCommand):
             ],
         },
         {
-            "status": "PENDING",
+            "status": "CONFIRMED",
             "full_name": "Karim Hossain",
             "email": "karim@example.com",
             "phone": "01555123456",

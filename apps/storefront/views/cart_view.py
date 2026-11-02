@@ -288,7 +288,7 @@ def checkout(request):
                 phone_number=phone_number,
                 shipping_address=shipping_address,
                 total_amount=cart.grand_total,
-                status='PENDING',
+                status='CONFIRMED',
             )
 
             for item in cart:
@@ -326,6 +326,8 @@ def checkout(request):
                 send_order_placed(order)
             send_admin_new_order(order)
             send_order_sms_to_manager(order)
+            from orders.emails import send_order_sms_to_customer
+            send_order_sms_to_customer(order, 'CONFIRMED')
 
             messages.success(request, f'🎉 Order #{order.id} placed! Thank you, {full_name}.')
             return redirect('storefront:order_success', pk=order.pk)

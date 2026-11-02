@@ -46,11 +46,7 @@
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-sm font-semibold text-white">Order Status</h2>
             {# Current status badge #}
-            {% if order.status == 'PENDING' %}
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Pending
-                </span>
-            {% elif order.status == 'CONFIRMED' %}
+            {% if order.status == 'CONFIRMED' %}
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                     <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Confirmed
                 </span>
@@ -74,24 +70,35 @@
         {% with s=order.status %}
         <div class="flex items-center gap-0">
 
-            {% for step, label, active_color, icon_path in steps %}
-            {# We'll use a static approach with template tags below #}
-            {% endfor %}
-
-            {# PENDING #}
+            {# CONFIRMED #}
             <div class="flex flex-col items-center flex-1">
                 <div class="w-9 h-9 rounded-full flex items-center justify-center border-2 transition
-                    {% if s == 'PENDING' or s == 'CONFIRMED' or s == 'PROCESSING' or s == 'DELIVERED' %}
-                        bg-amber-500 border-amber-500 text-white
+                    {% if s == 'CONFIRMED' or s == 'PROCESSING' or s == 'DELIVERED' %}
+                        bg-blue-500 border-blue-500 text-white
                     {% else %}
                         bg-slate-800 border-slate-700 text-slate-600
                     {% endif %}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <p class="text-[10px] mt-1.5 font-semibold {% if s == 'PENDING' or s == 'CONFIRMED' or s == 'PROCESSING' or s == 'DELIVERED' %}text-amber-400{% else %}text-slate-600{% endif %}">Pending</p>
+                <p class="text-[10px] mt-1.5 font-semibold {% if s == 'CONFIRMED' or s == 'PROCESSING' or s == 'DELIVERED' %}text-blue-400{% else %}text-slate-600{% endif %}">Confirmed</p>
             </div>
 
-            <div class="h-0.5 flex-1 mb-4 {% if s == 'CONFIRMED' or s == 'PROCESSING' or s == 'DELIVERED' %}bg-blue-500{% else %}bg-slate-800{% endif %} transition"></div>
+            <div class="h-0.5 flex-1 mb-4 {% if s == 'PROCESSING' or s == 'DELIVERED' %}bg-violet-500{% else %}bg-slate-800{% endif %} transition"></div>
+
+            {# PROCESSING #}
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center border-2 transition
+                    {% if s == 'PROCESSING' or s == 'DELIVERED' %}
+                        bg-violet-500 border-violet-500 text-white
+                    {% else %}
+                        bg-slate-800 border-slate-700 text-slate-600
+                    {% endif %}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </div>
+                <p class="text-[10px] mt-1.5 font-semibold {% if s == 'PROCESSING' or s == 'DELIVERED' %}text-violet-400{% else %}text-slate-600{% endif %}">Processing</p>
+            </div>
+
+            <div class="h-0.5 flex-1 mb-4 {% if s == 'DELIVERED' %}bg-emerald-500{% else %}bg-slate-800{% endif %} transition"></div>
 
             {# CONFIRMED #}
             <div class="flex flex-col items-center flex-1">

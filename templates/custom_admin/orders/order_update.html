@@ -27,7 +27,7 @@
                 <h2 class="text-sm font-semibold text-white">Order Status</h2>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {% for value, label in status_choices %}
                 <label class="cursor-pointer">
                     <input type="radio" name="status" value="{{ value }}" class="sr-only peer"
@@ -35,17 +35,14 @@
                     <div class="flex flex-col items-center gap-2 p-3 rounded-xl border transition
                         peer-checked:border-sky-500 peer-checked:bg-sky-500/10
                         border-slate-700 bg-slate-800/60 hover:border-slate-600
-                        {% if value == 'PENDING' %}peer-checked:border-amber-500 peer-checked:bg-amber-500/10
-                        {% elif value == 'CONFIRMED' %}peer-checked:border-blue-500 peer-checked:bg-blue-500/10
+                        {% if value == 'CONFIRMED' %}peer-checked:border-blue-500 peer-checked:bg-blue-500/10
                         {% elif value == 'PROCESSING' %}peer-checked:border-violet-500 peer-checked:bg-violet-500/10
                         {% elif value == 'DELIVERED' %}peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10
                         {% elif value == 'CANCELLED' %}peer-checked:border-rose-500 peer-checked:bg-rose-500/10
                         {% endif %}">
 
                         {# Status icon #}
-                        {% if value == 'PENDING' %}
-                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        {% elif value == 'CONFIRMED' %}
+                        {% if value == 'CONFIRMED' %}
                         <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         {% elif value == 'PROCESSING' %}
                         <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -56,8 +53,7 @@
                         {% endif %}
 
                         <span class="text-xs font-semibold
-                            {% if value == 'PENDING' %}text-amber-400
-                            {% elif value == 'CONFIRMED' %}text-blue-400
+                            {% if value == 'CONFIRMED' %}text-blue-400
                             {% elif value == 'PROCESSING' %}text-violet-400
                             {% elif value == 'DELIVERED' %}text-emerald-400
                             {% elif value == 'CANCELLED' %}text-rose-400

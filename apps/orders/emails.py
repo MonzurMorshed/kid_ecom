@@ -39,7 +39,6 @@ def send_order_placed(order) -> bool:
 # ── Order status update — to customer ─────────────────────────────────────────
 
 STATUS_LABELS = {
-    'PENDING':    ('⏳', 'Pending',    'Your order is pending review.'),
     'CONFIRMED':  ('✅', 'Confirmed',  'Your order has been confirmed and will be dispatched soon.'),
     'PROCESSING': ('📦', 'Processing', 'Your order is being prepared and packed.'),
     'DELIVERED':  ('🎉', 'Delivered',  'Your order has been delivered. We hope you love it!'),
