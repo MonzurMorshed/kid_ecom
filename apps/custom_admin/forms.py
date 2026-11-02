@@ -146,6 +146,9 @@ class SiteSettingsForm(forms.ModelForm):
                          'focus:ring-sky-500 focus:border-transparent transition text-sm',
                 'placeholder': 'https://youtube.com/yourchannel',
             }),
+            'sms_dummy_mode': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 rounded text-amber-500 bg-slate-800 border-slate-700 cursor-pointer accent-amber-500',
+            }),
             'sms_backend': _select(),
             'sms_api_key': _input('Your BulkSMSBD API key (leave blank to use .env)'),
             'sms_sender_id': _input('Approved Sender ID (e.g. Kidurabd or 88096...)'),

@@ -476,6 +476,7 @@ def developer_settings(request):
         'current_static_url':          getattr(settings, 'STATIC_URL', '/static/'),
         'current_media_url':           getattr(settings, 'MEDIA_URL', '/media/'),
         # SMS Gateway diagnostics
+        'sms_dummy_mode':              getattr(site_settings_obj, 'sms_dummy_mode', True),
         'sms_backend':                 getattr(site_settings_obj, 'sms_backend', 'console') or getattr(settings, 'SMS_BACKEND', 'console'),
         'sms_sender_id':               getattr(site_settings_obj, 'sms_sender_id', '') or getattr(settings, 'SMS_SENDER_ID', 'Kidurabd'),
         'has_sms_key':                 bool(getattr(site_settings_obj, 'sms_api_key', None) or getattr(settings, 'SMS_API_KEY', None)),
@@ -542,5 +543,28 @@ def test_sms(request):
         messages.success(request, f"✅ Test SMS dispatched successfully via {backend_name} to {recipient}!")
     else:
         messages.error(request, f"❌ Failed to dispatch test SMS to {recipient}. Check API credentials or server logs.")
+
+    return redirect('custom_admin:developer_settings')
+
+
+@permission_required('developer')
+@require_POST
+def toggle_sms_dummy_mode(request):
+    """Toggle between Dummy / Simulation Mode and Live SMS Gateway."""
+    site_settings_obj = SiteSettings.get_settings()
+    site_settings_obj.sms_dummy_mode = not site_settings_obj.sms_dummy_mode
+    site_settings_obj.save(update_fields=['sms_dummy_mode', 'updated_at'])
+
+    status_str = "ENABLED (Simulation / Dummy OTP active)" if site_settings_obj.sms_dummy_mode else "DISABLED (Live SMS Gateway active)"
+    ActivityLog.log(
+        request=request,
+        action='toggle',
+        description=f"SMS Dummy / Simulation Mode {status_str}.",
+        target_type='Developer Settings',
+    )
+    if site_settings_obj.sms_dummy_mode:
+        messages.info(request, "⚡ SMS Dummy / Simulation Mode is now ENABLED. OTP codes will be displayed on screen and '123456' will be accepted.")
+    else:
+        messages.success(request, "🚀 Live SMS Mode is now ACTIVE. Real SMS messages will be dispatched via BulkSMSBD API.")
 
     return redirect('custom_admin:developer_settings')

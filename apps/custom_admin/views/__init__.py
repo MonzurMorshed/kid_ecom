@@ -23,6 +23,7 @@ from .developer import (
     developer_settings,
     clear_error_log,
     test_sms,
+    toggle_sms_dummy_mode,
 )
 from .content import (
     slider_list,

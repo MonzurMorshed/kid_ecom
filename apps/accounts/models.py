@@ -139,11 +139,13 @@ class OTPCode(models.Model):
         import random
         from django.utils import timezone
         import datetime
+        from kidurabd.sms_service import is_dummy_mode
         # Opportunistic cleanup of old expired codes
         cls.cleanup()
         # Invalidate previous unused codes for same phone + purpose
         cls.objects.filter(phone_number=phone_number, purpose=purpose, is_used=False).update(is_used=True)
-        code = f"{random.randint(100000, 999999)}"
+        # In dummy mode, set default easy OTP '123456'
+        code = '123456' if is_dummy_mode() else f"{random.randint(100000, 999999)}"
         expires_at = timezone.now() + datetime.timedelta(minutes=10)
         return cls.objects.create(
             phone_number=phone_number,
@@ -156,6 +158,21 @@ class OTPCode(models.Model):
     def verify(cls, phone_number, code, purpose):
         """Returns OTPCode if valid (unused and not expired), else None."""
         from django.utils import timezone
+        from kidurabd.sms_service import is_dummy_mode
+
+        # If dummy mode is active and user enters '123456', always accept
+        if is_dummy_mode() and code == '123456':
+            otp = cls.objects.filter(phone_number=phone_number, purpose=purpose, is_used=False).order_by('-created_at').first()
+            if otp:
+                return otp
+            import datetime
+            return cls.objects.create(
+                phone_number=phone_number,
+                code='123456',
+                purpose=purpose,
+                expires_at=timezone.now() + datetime.timedelta(minutes=10),
+            )
+
         try:
             otp = cls.objects.get(
                 phone_number=phone_number,

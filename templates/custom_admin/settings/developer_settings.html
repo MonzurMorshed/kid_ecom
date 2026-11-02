@@ -740,22 +740,48 @@
                 </div>
                 <div>
                     <h2 class="text-base font-semibold text-white">SMS Gateway Integration &amp; Diagnostics</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Diagnose provider status, API credentials, and dispatch test SMS messages</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Diagnose provider status, API credentials, and toggle Dummy / Live modes</p>
                 </div>
             </div>
-            <a href="{% url 'custom_admin:site_settings' %}"
-               class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition">
-                <i class="fa-solid fa-gear text-xs"></i>
-                Configure in Site Settings
-            </a>
+            <div class="flex items-center gap-2">
+                <form method="POST" action="{% url 'custom_admin:toggle_sms_dummy_mode' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                            title="Click to switch between Dummy Simulation Mode and Live SMS Gateway"
+                            class="inline-flex items-center gap-2 px-3.5 py-2 {% if sms_dummy_mode %}bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25{% else %}bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25{% endif %} border text-xs font-bold rounded-xl transition shadow-sm">
+                        <i class="fa-solid {% if sms_dummy_mode %}fa-toggle-on text-amber-400{% else %}fa-toggle-off text-emerald-400{% endif %} text-base"></i>
+                        <span>Simulation Mode: {% if sms_dummy_mode %}ON (Dummy OTP){% else %}OFF (Live Gateway){% endif %}</span>
+                    </button>
+                </form>
+                <a href="{% url 'custom_admin:site_settings' %}"
+                   class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition">
+                    <i class="fa-solid fa-gear text-xs"></i>
+                    Configure
+                </a>
+            </div>
         </div>
+
+        {% if sms_dummy_mode %}
+        <div class="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2.5 text-amber-300">
+                <i class="fa-solid fa-circle-info text-amber-400 text-sm shrink-0"></i>
+                <span><strong>Simulation / Dummy Mode is currently ACTIVE:</strong> Customer signups and password resets will display the OTP directly on screen and always accept <strong class="text-amber-100 font-mono bg-amber-900/60 px-1.5 py-0.5 rounded">123456</strong> without consuming SMS balance. Click the toggle button above when you are ready to switch to live SMS.</span>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Status Badges -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">Mode</span>
+                <p class="text-sm font-bold {% if sms_dummy_mode %}text-amber-400{% else %}text-emerald-400{% endif %} mt-0.5 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full {% if sms_dummy_mode %}bg-amber-400{% else %}bg-emerald-400 animate-pulse{% endif %}"></span>
+                    {% if sms_dummy_mode %}Simulation (Demo OTP){% else %}Live SMS Active{% endif %}
+                </p>
+            </div>
+            <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                 <span class="text-[10px] text-slate-500 uppercase font-semibold">Active Backend</span>
-                <p class="text-sm font-bold text-white mt-0.5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full {% if sms_backend == 'bulksmsbd' %}bg-emerald-400 animate-pulse{% else %}bg-amber-400{% endif %}"></span>
+                <p class="text-sm font-bold text-white mt-0.5">
                     {{ sms_backend|upper }}
                 </p>
             </div>
@@ -768,10 +794,6 @@
                     <i class="fa-solid fa-triangle-exclamation text-xs"></i> Not Set
                     {% endif %}
                 </p>
-            </div>
-            <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
-                <span class="text-[10px] text-slate-500 uppercase font-semibold">Sender ID</span>
-                <p class="text-sm font-semibold text-white mt-0.5">{{ sms_sender_id|default:'Kidurabd' }}</p>
             </div>
             <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                 <span class="text-[10px] text-slate-500 uppercase font-semibold">Manager Alert Phone</span>

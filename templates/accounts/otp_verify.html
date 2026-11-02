@@ -50,6 +50,22 @@
                 {% endfor %}
                 {% endif %}
 
+                {% if dummy_mode %}
+                <div class="mb-5 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="grid h-8 w-8 place-items-center rounded-xl bg-amber-400 text-ink text-xs font-bold shrink-0 shadow-sm">⚡</span>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-bold text-amber-900 uppercase tracking-wide">Test / Simulation Mode</p>
+                            <p class="text-xs text-amber-800">Your OTP code is <strong class="font-mono text-sm font-bold text-amber-950 bg-amber-200/80 px-2 py-0.5 rounded">{{ dummy_otp|default:'123456' }}</strong></p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('id_code').value='{{ dummy_otp|default:'123456' }}'; document.getElementById('otpForm').submit();"
+                            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-sm transition shrink-0">
+                        Auto Fill
+                    </button>
+                </div>
+                {% endif %}
+
                 <!-- Non-field errors -->
                 {% if form.non_field_errors %}
                 <div class="mb-5 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700">

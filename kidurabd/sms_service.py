@@ -1,12 +1,15 @@
 """
 Generic SMS service for Kidurabd.
 
-Supports multiple SMS backends configured via SiteSettings (DB) or environment variables:
-  • 'console'    : Print to console (development / default in DEBUG)
-  • 'bulksmsbd'  : BulkSMSBD API (https://bulksmsbd.net/api/smsapi)
+Supports:
+  • Dummy / Simulation Mode: For development & testing before purchasing live SMS credits.
+    - Displays OTP on screen and accepts universal test OTP (123456).
+    - Can be toggled on/off anytime from Developer Settings or Site Settings.
+  • Live BulkSMSBD Gateway: When dummy mode is turned OFF.
+  • Console Logging: For terminal output.
 
 Configuration priority:
-  1. SiteSettings in DB (custom_admin -> Site Settings -> SMS Gateway)
+  1. SiteSettings in DB (custom_admin -> Site Settings -> SMS Gateway / Developer Settings)
   2. Environment variables / settings.py (.env fallback)
 """
 
@@ -25,11 +28,13 @@ def get_sms_settings() -> dict[str, Any]:
     try:
         from custom_admin.models import SiteSettings
         site_settings = SiteSettings.get_settings()
+        dummy_mode = getattr(site_settings, 'sms_dummy_mode', True)
         backend = getattr(site_settings, 'sms_backend', None) or getattr(settings, 'SMS_BACKEND', 'console')
         api_key = getattr(site_settings, 'sms_api_key', None) or getattr(settings, 'SMS_API_KEY', '')
         sender_id = getattr(site_settings, 'sms_sender_id', None) or getattr(settings, 'SMS_SENDER_ID', 'Kidurabd')
         manager_phone = getattr(site_settings, 'manager_sms_number', None) or getattr(settings, 'MANAGER_SMS_NUMBER', '')
         return {
+            'dummy_mode': dummy_mode,
             'backend': backend,
             'api_key': api_key,
             'sender_id': sender_id,
@@ -40,6 +45,7 @@ def get_sms_settings() -> dict[str, Any]:
         }
     except Exception:
         return {
+            'dummy_mode': True,
             'backend': getattr(settings, 'SMS_BACKEND', 'console'),
             'api_key': getattr(settings, 'SMS_API_KEY', ''),
             'sender_id': getattr(settings, 'SMS_SENDER_ID', 'Kidurabd'),
@@ -48,6 +54,11 @@ def get_sms_settings() -> dict[str, Any]:
             'complete_customer': True,
             'placed_manager': True,
         }
+
+
+def is_dummy_mode() -> bool:
+    """Return True if dummy/simulation mode is currently active."""
+    return get_sms_settings().get('dummy_mode', True)
 
 
 def send_sms(to: str, message: str) -> bool:
@@ -62,8 +73,18 @@ def send_sms(to: str, message: str) -> bool:
         True if sent successfully, False on failure (always fail-silently).
     """
     cfg = get_sms_settings()
-    backend = cfg.get('backend', 'console')
 
+    # If dummy/simulation mode is on, log safely and don't call external API
+    if cfg.get('dummy_mode', True):
+        print(f"\n{'='*60}")
+        print(f"[DUMMY / SIMULATION SMS (No live credits used)]")
+        print(f"  To     : {to}")
+        print(f"  Message: {message}")
+        print(f"{'='*60}\n")
+        logger.info(f"SMS [DUMMY MODE] to={to}: {message[:60]}")
+        return True
+
+    backend = cfg.get('backend', 'console')
     try:
         if backend == 'bulksmsbd':
             return _send_bulksmsbd(to, message, cfg=cfg)

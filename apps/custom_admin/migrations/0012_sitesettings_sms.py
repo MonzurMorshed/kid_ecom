@@ -12,6 +12,14 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='sitesettings',
+            name='sms_dummy_mode',
+            field=models.BooleanField(
+                default=True,
+                help_text='When enabled, displays OTP on screen and accepts dummy OTP (123456) without sending real SMS',
+            ),
+        ),
+        migrations.AddField(
+            model_name='sitesettings',
             name='sms_backend',
             field=models.CharField(
                 choices=[

@@ -26,6 +26,7 @@ urlpatterns = [
     path('developer-settings/', views.developer_settings, name='developer_settings'),
     path('developer-settings/clear-log/', views.clear_error_log, name='clear_error_log'),
     path('developer-settings/test-sms/', views.test_sms, name='test_sms'),
+    path('developer-settings/toggle-sms-dummy/', views.toggle_sms_dummy_mode, name='toggle_sms_dummy_mode'),
 
     # ── Payment Methods ────────────────────────────────────────────────────────
     path('settings/payment-methods/', views.payment_method_list, name='payment_method_list'),

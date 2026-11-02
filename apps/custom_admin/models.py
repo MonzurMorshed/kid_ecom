@@ -192,85 +192,50 @@ class SiteSettings(models.Model):
     )
 
 
-    # ── SMS Integration Settings ─────────────────────────────────────────────
-    SMS_BACKEND_CHOICES = [
-        ('console', 'Console / Simulation (Development / Logs only)'),
-        ('bulksmsbd', 'BulkSMSBD (Live API Gateway)'),
-    ]
-    sms_backend = models.CharField(
-        max_length=20,
-        choices=SMS_BACKEND_CHOICES,
-        default='console',
-        help_text='SMS Gateway provider to use for OTP & notifications',
-    )
-    sms_api_key = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text='API key provided by your SMS gateway (e.g. BulkSMSBD)',
-    )
-    sms_sender_id = models.CharField(
-        max_length=50,
-        default='Kidurabd',
-        blank=True,
-        help_text='Approved Sender ID / mask name (e.g. Kidurabd or 88096...)',
-    )
-    manager_sms_number = models.CharField(
-        max_length=20,
-        blank=True,
-        help_text='Manager mobile number to receive new order SMS alerts (e.g. 017xxxxxxxx)',
-    )
-    sms_order_confirm_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Confirmed',
-    )
-    sms_order_complete_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Delivered',
-    )
-    sms_order_placed_manager = models.BooleanField(
-        default=True,
-        help_text='Send SMS alert to store manager when a new order is placed',
-    )
-    # ── SMS Integration Settings ─────────────────────────────────────────────
-    SMS_BACKEND_CHOICES = [
-        ('console', 'Console / Simulation (Development / Logs only)'),
-        ('bulksmsbd', 'BulkSMSBD (Live API Gateway)'),
-    ]
-    sms_backend = models.CharField(
-        max_length=20,
-        choices=SMS_BACKEND_CHOICES,
-        default='console',
-        help_text='SMS Gateway provider to use for OTP & notifications',
-    )
-    sms_api_key = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text='API key provided by your SMS gateway (e.g. BulkSMSBD)',
-    )
-    sms_sender_id = models.CharField(
-        max_length=50,
-        default='Kidurabd',
-        blank=True,
-        help_text='Approved Sender ID / mask name (e.g. Kidurabd or 88096...)',
-    )
-    manager_sms_number = models.CharField(
-        max_length=20,
-        blank=True,
-        help_text='Manager mobile number to receive new order SMS alerts (e.g. 017xxxxxxxx)',
-    )
-    sms_order_confirm_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Confirmed',
-    )
-    sms_order_complete_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Delivered',
-    )
-    sms_order_placed_manager = models.BooleanField(
-        default=True,
-        help_text='Send SMS alert to store manager when a new order is placed',
-    )
 
+    # ── SMS Integration Settings ─────────────────────────────────────────────
+    sms_dummy_mode = models.BooleanField(
+        default=True,
+        help_text='Simulation / Test Mode: Display OTP code on screen and accept dummy OTP (123456) without sending real SMS',
+    )
+    SMS_BACKEND_CHOICES = [
+        ('console', 'Console / Simulation (Development / Logs only)'),
+        ('bulksmsbd', 'BulkSMSBD (Live API Gateway)'),
+    ]
+    sms_backend = models.CharField(
+        max_length=20,
+        choices=SMS_BACKEND_CHOICES,
+        default='console',
+        help_text='SMS Gateway provider to use for OTP & notifications',
+    )
+    sms_api_key = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text='API key provided by your SMS gateway (e.g. BulkSMSBD)',
+    )
+    sms_sender_id = models.CharField(
+        max_length=50,
+        default='Kidurabd',
+        blank=True,
+        help_text='Approved Sender ID / mask name (e.g. Kidurabd or 88096...)',
+    )
+    manager_sms_number = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text='Manager mobile number to receive new order SMS alerts (e.g. 017xxxxxxxx)',
+    )
+    sms_order_confirm_customer = models.BooleanField(
+        default=True,
+        help_text='Send SMS notification to customer when order is Confirmed',
+    )
+    sms_order_complete_customer = models.BooleanField(
+        default=True,
+        help_text='Send SMS notification to customer when order is Delivered',
+    )
+    sms_order_placed_manager = models.BooleanField(
+        default=True,
+        help_text='Send SMS alert to store manager when a new order is placed',
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -564,45 +529,6 @@ class PaymentMethod(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # ── SMS Integration Settings ─────────────────────────────────────────────
-    SMS_BACKEND_CHOICES = [
-        ('console', 'Console / Simulation (Development / Logs only)'),
-        ('bulksmsbd', 'BulkSMSBD (Live API Gateway)'),
-    ]
-    sms_backend = models.CharField(
-        max_length=20,
-        choices=SMS_BACKEND_CHOICES,
-        default='console',
-        help_text='SMS Gateway provider to use for OTP & notifications',
-    )
-    sms_api_key = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text='API key provided by your SMS gateway (e.g. BulkSMSBD)',
-    )
-    sms_sender_id = models.CharField(
-        max_length=50,
-        default='Kidurabd',
-        blank=True,
-        help_text='Approved Sender ID / mask name (e.g. Kidurabd or 88096...)',
-    )
-    manager_sms_number = models.CharField(
-        max_length=20,
-        blank=True,
-        help_text='Manager mobile number to receive new order SMS alerts (e.g. 017xxxxxxxx)',
-    )
-    sms_order_confirm_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Confirmed',
-    )
-    sms_order_complete_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Delivered',
-    )
-    sms_order_placed_manager = models.BooleanField(
-        default=True,
-        help_text='Send SMS alert to store manager when a new order is placed',
-    )
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -649,45 +575,6 @@ class HeroSlide(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # ── SMS Integration Settings ─────────────────────────────────────────────
-    SMS_BACKEND_CHOICES = [
-        ('console', 'Console / Simulation (Development / Logs only)'),
-        ('bulksmsbd', 'BulkSMSBD (Live API Gateway)'),
-    ]
-    sms_backend = models.CharField(
-        max_length=20,
-        choices=SMS_BACKEND_CHOICES,
-        default='console',
-        help_text='SMS Gateway provider to use for OTP & notifications',
-    )
-    sms_api_key = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text='API key provided by your SMS gateway (e.g. BulkSMSBD)',
-    )
-    sms_sender_id = models.CharField(
-        max_length=50,
-        default='Kidurabd',
-        blank=True,
-        help_text='Approved Sender ID / mask name (e.g. Kidurabd or 88096...)',
-    )
-    manager_sms_number = models.CharField(
-        max_length=20,
-        blank=True,
-        help_text='Manager mobile number to receive new order SMS alerts (e.g. 017xxxxxxxx)',
-    )
-    sms_order_confirm_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Confirmed',
-    )
-    sms_order_complete_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Delivered',
-    )
-    sms_order_placed_manager = models.BooleanField(
-        default=True,
-        help_text='Send SMS alert to store manager when a new order is placed',
-    )
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -780,45 +667,6 @@ class Banner(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # ── SMS Integration Settings ─────────────────────────────────────────────
-    SMS_BACKEND_CHOICES = [
-        ('console', 'Console / Simulation (Development / Logs only)'),
-        ('bulksmsbd', 'BulkSMSBD (Live API Gateway)'),
-    ]
-    sms_backend = models.CharField(
-        max_length=20,
-        choices=SMS_BACKEND_CHOICES,
-        default='console',
-        help_text='SMS Gateway provider to use for OTP & notifications',
-    )
-    sms_api_key = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text='API key provided by your SMS gateway (e.g. BulkSMSBD)',
-    )
-    sms_sender_id = models.CharField(
-        max_length=50,
-        default='Kidurabd',
-        blank=True,
-        help_text='Approved Sender ID / mask name (e.g. Kidurabd or 88096...)',
-    )
-    manager_sms_number = models.CharField(
-        max_length=20,
-        blank=True,
-        help_text='Manager mobile number to receive new order SMS alerts (e.g. 017xxxxxxxx)',
-    )
-    sms_order_confirm_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Confirmed',
-    )
-    sms_order_complete_customer = models.BooleanField(
-        default=True,
-        help_text='Send SMS notification to customer when order is Delivered',
-    )
-    sms_order_placed_manager = models.BooleanField(
-        default=True,
-        help_text='Send SMS alert to store manager when a new order is placed',
-    )
 
     updated_at = models.DateTimeField(auto_now=True)
 

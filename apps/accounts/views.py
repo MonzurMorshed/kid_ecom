@@ -81,7 +81,17 @@ def register_view(request):
                 form.cleaned_data['phone_number'],
                 f"[{site_name}] Your verification OTP code is {otp.code}. Valid for 10 minutes."
             )
-            messages.info(request, f"We have sent a 6-digit OTP to {_mask_phone(form.cleaned_data['phone_number'])}. Please enter it below.")
+            from kidurabd.sms_service import is_dummy_mode
+            if is_dummy_mode():
+                messages.info(
+                    request,
+                    f"⚡ [Demo Mode Active] We simulated sending an OTP to {_mask_phone(form.cleaned_data['phone_number'])}. Your OTP code is: {otp.code}"
+                )
+            else:
+                messages.info(
+                    request,
+                    f"We have sent a 6-digit OTP to {_mask_phone(form.cleaned_data['phone_number'])}. Please enter it below."
+                )
             next_url = request.POST.get('next') or request.GET.get('next')
             if next_url:
                 request.session['signup_next'] = next_url
@@ -151,6 +161,11 @@ def verify_signup_otp_view(request):
             messages.success(request, f'Welcome to {site_name}, {user.first_name}! 🎉 Your account is verified.')
             return redirect(next_url or 'storefront:index')
 
+    from kidurabd.sms_service import is_dummy_mode
+    dummy_mode = is_dummy_mode()
+    latest_otp = OTPCode.objects.filter(phone_number=phone, purpose='signup', is_used=False).order_by('-created_at').first()
+    dummy_otp = latest_otp.code if latest_otp else '123456'
+
     return render(request, 'accounts/otp_verify.html', {
         'form': form,
         'phone_masked': _mask_phone(phone),
@@ -158,6 +173,8 @@ def verify_signup_otp_view(request):
         'title': 'Verify Your Mobile Number',
         'subtitle': f'Enter the 6-digit verification code sent to {_mask_phone(phone)}',
         'resend_url': request.path,
+        'dummy_mode': dummy_mode,
+        'dummy_otp': dummy_otp,
     })
 
 
@@ -296,7 +313,11 @@ def forgot_password_view(request):
                     f"[{site_name}] Your password reset OTP is {otp.code}. Valid for 10 minutes."
                 )
                 request.session['reset_phone'] = user.phone_number
-                messages.info(request, f"A 6-digit reset OTP has been sent to {_mask_phone(user.phone_number)}.")
+                from kidurabd.sms_service import is_dummy_mode
+                if is_dummy_mode():
+                    messages.info(request, f"⚡ [Demo Mode Active] Password reset OTP for {_mask_phone(user.phone_number)} is: {otp.code}")
+                else:
+                    messages.info(request, f"A 6-digit reset OTP has been sent to {_mask_phone(user.phone_number)}.")
                 return redirect('accounts:verify_reset_otp')
             else:
                 messages.error(request, 'No customer account found with that mobile number.')
@@ -335,6 +356,11 @@ def verify_reset_otp_view(request):
             request.session['reset_verified_phone'] = phone
             return redirect('accounts:reset_password_phone')
 
+    from kidurabd.sms_service import is_dummy_mode
+    dummy_mode = is_dummy_mode()
+    latest_otp = OTPCode.objects.filter(phone_number=phone, purpose='reset', is_used=False).order_by('-created_at').first()
+    dummy_otp = latest_otp.code if latest_otp else '123456'
+
     return render(request, 'accounts/otp_verify.html', {
         'form': form,
         'phone_masked': _mask_phone(phone),
@@ -342,6 +368,8 @@ def verify_reset_otp_view(request):
         'title': 'Verify Reset Code',
         'subtitle': f'Enter the 6-digit verification code sent to {_mask_phone(phone)}',
         'resend_url': request.path,
+        'dummy_mode': dummy_mode,
+        'dummy_otp': dummy_otp,
     })
 
 
