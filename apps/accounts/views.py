@@ -13,14 +13,22 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_POST
 from functools import wraps
 
-from .models import User, Wishlist, UserAddress
+from .models import User, Wishlist, UserAddress, OTPCode
 from .forms import (
     CustomerRegisterForm, CustomerLoginForm, CustomerProfileForm,
     CustomerChangePasswordForm, CustomerForgotPasswordForm, CustomerResetPasswordForm,
-    UserAddressForm,
+    UserAddressForm, OTPVerifyForm,
 )
+from kidurabd.sms_service import send_sms
 from orders.models import Order
 from products.models import Product, ProductReview
+
+
+def _mask_phone(phone: str) -> str:
+    """Mask phone for display, e.g. 01712345678 -> 017****5678"""
+    if len(phone) >= 7:
+        return f"{phone[:3]}****{phone[-4:]}"
+    return phone
 
 
 # ── Auth decorators ───────────────────────────────────────────────────────────
@@ -51,46 +59,126 @@ def guest_only(view_func):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Register
+# Register (Step 1: Details -> OTP)
 # ──────────────────────────────────────────────────────────────────────────────
 @guest_only
 def register_view(request):
     if request.method == 'POST':
         form = CustomerRegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-
-            # Welcome email (fail-silently — SMTP issues must never block registration)
-            from orders.emails import send_welcome_email
-            send_welcome_email(user)
-
-            messages.success(request, f'Welcome to Kidurabd, {user.first_name}! 🎉')
+            # Store signup payload in session pending OTP verification
+            request.session['signup_data'] = {
+                'first_name': form.cleaned_data['first_name'],
+                'last_name': form.cleaned_data.get('last_name', ''),
+                'phone_number': form.cleaned_data['phone_number'],
+                'email': form.cleaned_data.get('email', ''),
+                'password': form.cleaned_data['password'],
+            }
+            # Generate and send OTP via SMS
+            otp = OTPCode.generate_for(form.cleaned_data['phone_number'], 'signup')
+            site_name = getattr(settings, 'SITE_NAME', 'Kidurabd')
+            send_sms(
+                form.cleaned_data['phone_number'],
+                f"[{site_name}] Your verification OTP code is {otp.code}. Valid for 10 minutes."
+            )
+            messages.info(request, f"We have sent a 6-digit OTP to {_mask_phone(form.cleaned_data['phone_number'])}. Please enter it below.")
             next_url = request.POST.get('next') or request.GET.get('next')
-            return redirect(next_url or 'storefront:index')
+            if next_url:
+                request.session['signup_next'] = next_url
+            return redirect('accounts:verify_signup_otp')
     else:
         form = CustomerRegisterForm()
     return render(request, 'accounts/register.html', {'form': form})
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Login
+# Verify Signup OTP (Step 2: OTP -> Account Creation)
+# ──────────────────────────────────────────────────────────────────────────────
+@guest_only
+def verify_signup_otp_view(request):
+    signup_data = request.session.get('signup_data')
+    if not signup_data:
+        messages.warning(request, 'Please fill in the registration form first.')
+        return redirect('accounts:register')
+
+    phone = signup_data['phone_number']
+    site_name = getattr(settings, 'SITE_NAME', 'Kidurabd')
+
+    # Handle resend OTP request
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        otp = OTPCode.generate_for(phone, 'signup')
+        send_sms(phone, f"[{site_name}] Your verification OTP code is {otp.code}. Valid for 10 minutes.")
+        messages.success(request, f'A new OTP code has been sent to {_mask_phone(phone)}.')
+        return redirect('accounts:verify_signup_otp')
+
+    form = OTPVerifyForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        code = form.cleaned_data['code']
+        otp = OTPCode.verify(phone, code, 'signup')
+        if not otp:
+            form.add_error('code', 'Invalid or expired OTP code. Please try again or request a new code.')
+        else:
+            otp.consume()
+
+            # Ensure phone is unique in DB before creating
+            if User.objects.filter(phone_number=phone).exists():
+                messages.error(request, 'An account with this mobile number already exists. Please log in.')
+                request.session.pop('signup_data', None)
+                return redirect('accounts:login')
+
+            user = User.objects.create_user(
+                username=phone,
+                phone_number=phone,
+                email=signup_data.get('email', ''),
+                first_name=signup_data['first_name'],
+                last_name=signup_data.get('last_name', ''),
+                is_customer=True,
+                password=signup_data['password'],
+            )
+
+            # Clean up session
+            request.session.pop('signup_data', None)
+            next_url = request.session.pop('signup_next', None)
+
+            # Auto log in
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+            # Send welcome email if customer provided an email address
+            if user.email:
+                from orders.emails import send_welcome_email
+                send_welcome_email(user)
+
+            messages.success(request, f'Welcome to {site_name}, {user.first_name}! 🎉 Your account is verified.')
+            return redirect(next_url or 'storefront:index')
+
+    return render(request, 'accounts/otp_verify.html', {
+        'form': form,
+        'phone_masked': _mask_phone(phone),
+        'purpose': 'signup',
+        'title': 'Verify Your Mobile Number',
+        'subtitle': f'Enter the 6-digit verification code sent to {_mask_phone(phone)}',
+        'resend_url': request.path,
+    })
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Login (by Mobile Number)
 # ──────────────────────────────────────────────────────────────────────────────
 @guest_only
 def login_view(request):
     form = CustomerLoginForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        email    = form.cleaned_data['email'].lower()
+        phone = form.cleaned_data['phone_number']
         password = form.cleaned_data['password']
         remember = form.cleaned_data.get('remember_me', False)
 
-        # Resolve username (registered users use email as username, but check DB to be sure)
-        try:
-            u = User.objects.get(email__iexact=email)
-            auth_username = u.username
-        except User.DoesNotExist:
-            auth_username = email
+        # Lookup customer by phone_number, or by username
+        u = User.objects.filter(phone_number=phone).first()
+        if not u:
+            # Fallback for any legacy users where username matches the phone
+            u = User.objects.filter(username__iexact=phone).first()
 
+        auth_username = u.username if u else phone
         user = authenticate(request, username=auth_username, password=password)
 
         if user is not None:
@@ -102,15 +190,16 @@ def login_view(request):
                 request.session.set_expiry(0)  # Session cookie expires when browser closes
             else:
                 request.session.set_expiry(getattr(settings, 'SESSION_COOKIE_AGE', 86400))  # 1 day (24 hours)
+
             # Merge any guest-session cart items into the user's DB cart
             from storefront.cart import merge_session_cart_to_user
             merge_session_cart_to_user(request, user)
 
-            messages.success(request, f'Welcome back, {user.first_name or user.username or user.email}!')
+            messages.success(request, f'Welcome back, {user.first_name or user.username}!')
             next_url = request.POST.get('next') or request.GET.get('next')
             return redirect(next_url or 'storefront:index')
         else:
-            messages.error(request, 'No account found with that email and password.')
+            messages.error(request, 'No account found with that mobile number and password.')
 
     return render(request, 'accounts/login.html', {'form': form})
 
@@ -186,43 +275,111 @@ def change_password_view(request):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Forgot Password
+# Forgot Password (Step 1: Phone -> Send OTP)
 # ──────────────────────────────────────────────────────────────────────────────
 @guest_only
 def forgot_password_view(request):
     if request.method == 'POST':
         form = CustomerForgotPasswordForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data['email'].lower()
-            try:
-                user = User.objects.get(email__iexact=email, is_staff=False, is_superuser=False)
-                token_gen = PasswordResetTokenGenerator()
-                uid   = urlsafe_base64_encode(force_bytes(user.pk))
-                token = token_gen.make_token(user)
-                reset_url = request.build_absolute_uri(
-                    f'/accounts/reset-password/{uid}/{token}/'
+            phone = form.cleaned_data['phone_number']
+            user = User.objects.filter(phone_number=phone, is_staff=False, is_superuser=False).first()
+            if not user:
+                # Also check username in case username is the phone
+                user = User.objects.filter(username=phone, is_staff=False, is_superuser=False).first()
+
+            if user and user.phone_number:
+                otp = OTPCode.generate_for(user.phone_number, 'reset')
+                site_name = getattr(settings, 'SITE_NAME', 'Kidurabd')
+                send_sms(
+                    user.phone_number,
+                    f"[{site_name}] Your password reset OTP is {otp.code}. Valid for 10 minutes."
                 )
-                from kidurabd.email_service import send_templated_email
-                send_templated_email(
-                    channel='notification',
-                    subject=f'[{getattr(settings, "SITE_NAME", "Kidurabd")}] Reset your password',
-                    template_name='emails/password_reset.html',
-                    context={
-                        'user_display': user.first_name or user.username,
-                        'email': email,
-                        'reset_url': reset_url,
-                    },
-                    to=email,
-                    fail_silently=True,
-                )
-            except User.DoesNotExist:
-                pass   # Don't reveal whether the email exists
-            # Always show the same success message for security
-            messages.success(request, 'If an account exists for that email, we sent a password reset link.')
-            return redirect('accounts:forgot_password')
+                request.session['reset_phone'] = user.phone_number
+                messages.info(request, f"A 6-digit reset OTP has been sent to {_mask_phone(user.phone_number)}.")
+                return redirect('accounts:verify_reset_otp')
+            else:
+                messages.error(request, 'No customer account found with that mobile number.')
+                return redirect('accounts:forgot_password')
     else:
         form = CustomerForgotPasswordForm()
     return render(request, 'accounts/forgot_password.html', {'form': form})
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Verify Reset OTP (Step 2: Enter OTP)
+# ──────────────────────────────────────────────────────────────────────────────
+@guest_only
+def verify_reset_otp_view(request):
+    phone = request.session.get('reset_phone')
+    if not phone:
+        messages.warning(request, 'Please enter your mobile number first.')
+        return redirect('accounts:forgot_password')
+
+    site_name = getattr(settings, 'SITE_NAME', 'Kidurabd')
+
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        otp = OTPCode.generate_for(phone, 'reset')
+        send_sms(phone, f"[{site_name}] Your password reset OTP is {otp.code}. Valid for 10 minutes.")
+        messages.success(request, f'A new reset OTP has been sent to {_mask_phone(phone)}.')
+        return redirect('accounts:verify_reset_otp')
+
+    form = OTPVerifyForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        code = form.cleaned_data['code']
+        otp = OTPCode.verify(phone, code, 'reset')
+        if not otp:
+            form.add_error('code', 'Invalid or expired OTP code. Please try again or request a new code.')
+        else:
+            otp.consume()
+            request.session['reset_verified_phone'] = phone
+            return redirect('accounts:reset_password_phone')
+
+    return render(request, 'accounts/otp_verify.html', {
+        'form': form,
+        'phone_masked': _mask_phone(phone),
+        'purpose': 'reset',
+        'title': 'Verify Reset Code',
+        'subtitle': f'Enter the 6-digit verification code sent to {_mask_phone(phone)}',
+        'resend_url': request.path,
+    })
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Reset Password with Phone (Step 3: New Password)
+# ──────────────────────────────────────────────────────────────────────────────
+@guest_only
+def reset_password_phone_view(request):
+    phone = request.session.get('reset_verified_phone')
+    if not phone:
+        messages.warning(request, 'Please verify your mobile number first.')
+        return redirect('accounts:forgot_password')
+
+    user = User.objects.filter(phone_number=phone).first()
+    if not user:
+        user = User.objects.filter(username=phone).first()
+
+    if not user:
+        request.session.pop('reset_verified_phone', None)
+        messages.error(request, 'Account not found.')
+        return redirect('accounts:login')
+
+    if request.method == 'POST':
+        form = CustomerResetPasswordForm(request.POST)
+        if form.is_valid():
+            user.set_password(form.cleaned_data['new_password'])
+            user.save()
+            request.session.pop('reset_phone', None)
+            request.session.pop('reset_verified_phone', None)
+            messages.success(request, 'Your password has been reset successfully! Please log in with your new password.')
+            return redirect('accounts:login')
+    else:
+        form = CustomerResetPasswordForm()
+
+    return render(request, 'accounts/reset_password_phone.html', {
+        'form': form,
+        'phone_masked': _mask_phone(phone),
+    })
 
 
 # ──────────────────────────────────────────────────────────────────────────────

@@ -146,6 +146,19 @@ class SiteSettingsForm(forms.ModelForm):
                          'focus:ring-sky-500 focus:border-transparent transition text-sm',
                 'placeholder': 'https://youtube.com/yourchannel',
             }),
+            'sms_backend': _select(),
+            'sms_api_key': _input('Your BulkSMSBD API key (leave blank to use .env)'),
+            'sms_sender_id': _input('Approved Sender ID (e.g. Kidurabd or 88096...)'),
+            'manager_sms_number': _input('Manager mobile number (e.g. 017xxxxxxxx)'),
+            'sms_order_confirm_customer': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 rounded text-sky-500 bg-slate-800 border-slate-700 cursor-pointer accent-sky-500',
+            }),
+            'sms_order_complete_customer': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 rounded text-sky-500 bg-slate-800 border-slate-700 cursor-pointer accent-sky-500',
+            }),
+            'sms_order_placed_manager': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 rounded text-sky-500 bg-slate-800 border-slate-700 cursor-pointer accent-sky-500',
+            }),
         }
 
 

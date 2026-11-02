@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title|default:'Verify OTP' }} — Kidurabd{% endblock %}
+
+{% block content %}
+<section class="min-h-[calc(100vh-72px)] flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-md">
+
+        <!-- Card -->
+        <div class="bg-white rounded-3xl shadow-toy border border-ink/5 overflow-hidden">
+            <!-- Top accent bar -->
+            <div class="h-1.5 bg-gradient-to-r from-coral via-butter to-softmint"></div>
+
+            <div class="p-8 sm:p-10">
+                <!-- Brand Logo -->
+                <div class="text-center mb-6">
+                    <a href="{% url 'storefront:index' %}" class="inline-flex items-center gap-2.5 group">
+                        {% if site_settings and site_settings.site_logo %}
+                        <img src="{{ site_settings.site_logo.url }}" alt="{{ site_settings.site_name|default:'Kidurabd' }}"
+                             class="h-9 sm:h-10 w-auto max-h-12 object-contain transition-transform group-hover:scale-105 duration-200">
+                        <span class="text-[22px] font-bold tracking-[-.075em] font-display">
+                            {{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span>
+                        </span>
+                        {% else %}
+                        <span class="grid h-8 w-8 rotate-[-8deg] place-items-center rounded-[10px_10px_10px_3px] bg-butter text-lg shadow-[3px_3px_0_#19253b] font-bold transition-transform group-hover:rotate-0 duration-200 text-ink">{{ site_settings.site_name|default:'Kidurabd'|first|default:'K' }}</span>
+                        <span class="text-[22px] font-bold tracking-[-.075em] font-display">{{ site_settings.site_name|default:'Kidurabd' }}<span class="text-coral">.</span></span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <!-- Icon -->
+                <div class="w-14 h-14 rounded-2xl bg-coral/10 text-coral flex items-center justify-center text-2xl mx-auto mb-6">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+
+                <h1 class="text-2xl font-bold text-ink text-center mb-1.5">{{ title }}</h1>
+                <p class="text-sm text-ink/50 text-center mb-6">
+                    Enter the 6-digit code sent to <strong class="text-ink font-semibold">{{ phone_masked }}</strong>
+                </p>
+
+                <!-- Messages -->
+                {% if messages %}
+                {% for message in messages %}
+                <div class="mb-5 px-4 py-3 rounded-xl text-sm font-medium
+                    {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                    {% elif message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200
+                    {% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="mb-5 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700">
+                    {{ form.non_field_errors|join:", " }}
+                </div>
+                {% endif %}
+
+                <!-- OTP Verify Form -->
+                <form method="post" novalidate id="otpForm">
+                    {% csrf_token %}
+                    <div>
+                        <label for="id_code" class="block text-xs font-semibold text-ink/60 mb-2 uppercase tracking-wide text-center">
+                            6-Digit Verification Code
+                        </label>
+                        {{ form.code }}
+                        {% if form.code.errors %}
+                        <p class="mt-2 text-xs text-rose-600 text-center font-medium">{{ form.code.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit"
+                            class="mt-6 w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-button hover:bg-coral/90 transition-all active:translate-y-1 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Verify &amp; Continue</span>
+                    </button>
+                </form>
+
+                <!-- Resend OTP Section -->
+                <div class="mt-6 pt-5 border-t border-ink/10 text-center">
+                    <p class="text-xs text-ink/40 mb-2">Didn't receive the code?</p>
+                    <form method="post" class="inline-block" id="resendForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="resend">
+                        <button type="submit" id="resendBtn"
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-coral hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-rotate-right text-[11px]"></i>
+                            <span id="resendText">Resend OTP</span>
+                            <span id="countdown" class="hidden font-mono"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Back Link -->
+                <div class="mt-6 text-center">
+                    {% if purpose == 'signup' %}
+                    <a href="{% url 'accounts:register' %}" class="inline-flex items-center gap-1.5 text-xs text-ink/40 hover:text-coral transition font-medium">
+                        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        <span>Change Mobile Number / Back to Signup</span>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'accounts:forgot_password' %}" class="inline-flex items-center gap-1.5 text-xs text-ink/40 hover:text-coral transition font-medium">
+                        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        <span>Change Mobile Number / Back</span>
+                    </a>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script>
+(function() {
+    // 60-second cooldown timer for resend button
+    const resendBtn = document.getElementById('resendBtn');
+    const resendText = document.getElementById('resendText');
+    const countdown = document.getElementById('countdown');
+    if (!resendBtn) return;
+
+    let timeLeft = 60;
+    resendBtn.disabled = true;
+    countdown.classList.remove('hidden');
+    countdown.textContent = `(${timeLeft}s)`;
+
+    const timer = setInterval(function() {
+        timeLeft -= 1;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            resendBtn.disabled = false;
+            countdown.classList.add('hidden');
+            resendText.textContent = 'Resend OTP';
+        } else {
+            countdown.textContent = `(${timeLeft}s)`;
+        }
+    }, 1000);
+})();
+</script>
+{% endblock %}
+

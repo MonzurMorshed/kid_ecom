@@ -114,3 +114,77 @@ class Wishlist(models.Model):
 
     def __str__(self):
         return f'{self.user.username} → {self.product.title}'
+
+
+# ── OTPCode ───────────────────────────────────────────────────────────────────
+
+class OTPCode(models.Model):
+    """One-time password codes for phone-based signup and password reset flows."""
+
+    PURPOSE_CHOICES = [
+        ('signup', 'Signup'),
+        ('reset',  'Password Reset'),
+    ]
+
+    phone_number = models.CharField(max_length=15)
+    code         = models.CharField(max_length=6)
+    purpose      = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
+    created_at   = models.DateTimeField(auto_now_add=True)
+    expires_at   = models.DateTimeField()
+    is_used      = models.BooleanField(default=False)
+
+    @classmethod
+    def generate_for(cls, phone_number, purpose):
+        """Generate a 6-digit OTP, invalidate old ones, return the new OTPCode object."""
+        import random
+        from django.utils import timezone
+        import datetime
+        # Opportunistic cleanup of old expired codes
+        cls.cleanup()
+        # Invalidate previous unused codes for same phone + purpose
+        cls.objects.filter(phone_number=phone_number, purpose=purpose, is_used=False).update(is_used=True)
+        code = f"{random.randint(100000, 999999)}"
+        expires_at = timezone.now() + datetime.timedelta(minutes=10)
+        return cls.objects.create(
+            phone_number=phone_number,
+            code=code,
+            purpose=purpose,
+            expires_at=expires_at,
+        )
+
+    @classmethod
+    def verify(cls, phone_number, code, purpose):
+        """Returns OTPCode if valid (unused and not expired), else None."""
+        from django.utils import timezone
+        try:
+            otp = cls.objects.get(
+                phone_number=phone_number,
+                code=code,
+                purpose=purpose,
+                is_used=False,
+                expires_at__gt=timezone.now(),
+            )
+            return otp
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def cleanup(cls):
+        """Delete expired OTP codes (called opportunistically)."""
+        from django.utils import timezone
+        try:
+            cls.objects.filter(expires_at__lt=timezone.now()).delete()
+        except Exception:
+            pass
+
+    def consume(self):
+        """Mark this OTP as used."""
+        self.is_used = True
+        self.save(update_fields=['is_used'])
+
+    class Meta:
+        ordering     = ['-created_at']
+        verbose_name = 'OTP Code'
+
+    def __str__(self):
+        return f'OTP({self.phone_number}, {self.purpose}, used={self.is_used})'

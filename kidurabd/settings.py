@@ -200,6 +200,12 @@ SITE_URL   = config('SITE_URL',   default='https://kidurabd.com')
 # Where admin new-order notifications go
 ADMIN_NOTIFICATION_EMAIL = config('ADMIN_NOTIFICATION_EMAIL', default='notification@kidurabd.com')
 
+# ── SMS Configuration ────────────────────────────────────────────────────────
+SMS_BACKEND = config('SMS_BACKEND', default='console')  # 'console' or 'bulksmsbd'
+SMS_API_KEY = config('SMS_API_KEY', default='')
+SMS_SENDER_ID = config('SMS_SENDER_ID', default='Kidurabd')
+MANAGER_SMS_NUMBER = config('MANAGER_SMS_NUMBER', default='')  # Manager phone for new order alerts
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -5,9 +5,10 @@ app_name = 'accounts'
 
 urlpatterns = [
     # ── Auth ─────────────────────────────────────────────────────────────────
-    path('register/',                               views.register_view,       name='register'),
-    path('login/',                                  views.login_view,          name='login'),
-    path('logout/',                                 views.logout_view,         name='logout'),
+    path('register/',                               views.register_view,          name='register'),
+    path('verify-signup-otp/',                      views.verify_signup_otp_view, name='verify_signup_otp'),
+    path('login/',                                  views.login_view,             name='login'),
+    path('logout/',                                 views.logout_view,            name='logout'),
 
     # ── Profile ───────────────────────────────────────────────────────────────
     path('profile/',                                views.profile_view,        name='profile'),
@@ -32,6 +33,8 @@ urlpatterns = [
     path('addresses/<int:pk>/default/',             views.address_set_default, name='address_set_default'),
 
     # ── Password Reset ────────────────────────────────────────────────────────
-    path('forgot-password/',                        views.forgot_password_view,  name='forgot_password'),
-    path('reset-password/<uidb64>/<token>/',        views.reset_password_view,   name='reset_password'),
+    path('forgot-password/',                        views.forgot_password_view,        name='forgot_password'),
+    path('verify-reset-otp/',                       views.verify_reset_otp_view,       name='verify_reset_otp'),
+    path('reset-password-phone/',                   views.reset_password_phone_view,   name='reset_password_phone'),
+    path('reset-password/<uidb64>/<token>/',        views.reset_password_view,         name='reset_password'),
 ]

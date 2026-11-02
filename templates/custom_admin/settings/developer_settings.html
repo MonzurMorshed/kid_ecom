@@ -731,6 +731,83 @@
         </form>
     </div>
 
+    <!-- SMS Gateway Diagnostics & Test Card -->
+    <div id="sms-testing" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                    <i class="fa-solid fa-message text-sm"></i>
+                </div>
+                <div>
+                    <h2 class="text-base font-semibold text-white">SMS Gateway Integration &amp; Diagnostics</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Diagnose provider status, API credentials, and dispatch test SMS messages</p>
+                </div>
+            </div>
+            <a href="{% url 'custom_admin:site_settings' %}"
+               class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition">
+                <i class="fa-solid fa-gear text-xs"></i>
+                Configure in Site Settings
+            </a>
+        </div>
+
+        <!-- Status Badges -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">Active Backend</span>
+                <p class="text-sm font-bold text-white mt-0.5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full {% if sms_backend == 'bulksmsbd' %}bg-emerald-400 animate-pulse{% else %}bg-amber-400{% endif %}"></span>
+                    {{ sms_backend|upper }}
+                </p>
+            </div>
+            <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">API Key Status</span>
+                <p class="text-sm font-semibold {% if has_sms_key %}text-emerald-400{% else %}text-amber-400{% endif %} mt-0.5">
+                    {% if has_sms_key %}
+                    <i class="fa-solid fa-check text-xs"></i> Configured
+                    {% else %}
+                    <i class="fa-solid fa-triangle-exclamation text-xs"></i> Not Set
+                    {% endif %}
+                </p>
+            </div>
+            <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">Sender ID</span>
+                <p class="text-sm font-semibold text-white mt-0.5">{{ sms_sender_id|default:'Kidurabd' }}</p>
+            </div>
+            <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">Manager Alert Phone</span>
+                <p class="text-sm font-semibold text-white mt-0.5">{{ manager_sms_number|default:'Not set' }}</p>
+            </div>
+        </div>
+
+        <!-- Test Form -->
+        <form method="POST" action="{% url 'custom_admin:test_sms' %}" class="bg-slate-950/60 rounded-xl p-4 border border-slate-800/80 space-y-4">
+            {% csrf_token %}
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
+                <i class="fa-solid fa-paper-plane text-sky-400"></i>
+                <span>Dispatch Live Test SMS</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Recipient Mobile Number</label>
+                    <input type="text" name="test_phone" placeholder="e.g. 017xxxxxxxx" required
+                           class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Message Content (Optional)</label>
+                    <div class="flex gap-2">
+                        <input type="text" name="test_message" placeholder="Test SMS from Kidurabd Admin Diagnostics"
+                               class="flex-1 px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <button type="submit"
+                                class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs rounded-lg transition shadow-md shadow-sky-500/20 shrink-0 flex items-center gap-1.5">
+                            <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                            <span>Send Test</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <!-- Cache Management Card -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">

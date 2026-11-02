@@ -123,3 +123,48 @@ def send_auto_registration_email(user, auto_password: str, order=None) -> bool:
         fail_silently=True,
     )
 
+
+# ── SMS Notifications ────────────────────────────────────────────────────────
+
+def send_order_sms_to_customer(order, status: str) -> bool:
+    """Send SMS to customer when order is confirmed or delivered."""
+    from kidurabd.sms_service import send_sms, get_sms_settings
+
+    cfg = get_sms_settings()
+    status_upper = status.upper()
+
+    if status_upper == 'CONFIRMED' and not cfg.get('confirm_customer', True):
+        return False
+    if status_upper == 'DELIVERED' and not cfg.get('complete_customer', True):
+        return False
+
+    phone = getattr(order, 'phone_number', '').strip()
+    if not phone:
+        return False
+
+    if status_upper == 'CONFIRMED':
+        msg = f"Dear {order.full_name}, your {SITE_NAME} order #{order.id:05d} has been confirmed. Total: BDT {order.total_amount}. Thank you for shopping with us!"
+    elif status_upper == 'DELIVERED':
+        msg = f"Dear {order.full_name}, your {SITE_NAME} order #{order.id:05d} has been delivered. We hope you and your little one love it! Thank you for choosing {SITE_NAME}."
+    else:
+        return False
+
+    return send_sms(phone, msg)
+
+
+def send_order_sms_to_manager(order) -> bool:
+    """Send SMS alert to store manager when a new order is placed."""
+    from kidurabd.sms_service import send_sms, get_sms_settings
+
+    cfg = get_sms_settings()
+    if not cfg.get('placed_manager', True):
+        return False
+
+    manager_phone = (cfg.get('manager_phone') or getattr(settings, 'MANAGER_SMS_NUMBER', '')).strip()
+    if not manager_phone:
+        return False
+
+    msg = f"[{SITE_NAME}] New order #{order.id:05d} from {order.full_name} ({order.phone_number}). Total: BDT {order.total_amount}."
+    return send_sms(manager_phone, msg)
+
+

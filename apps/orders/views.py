@@ -112,8 +112,10 @@ def order_update(request, pk):
 
         # Notify customer if status changed
         if order.status != old_status:
-            from .emails import send_order_status_update
+            from .emails import send_order_status_update, send_order_sms_to_customer
             send_order_status_update(order)
+            if order.status in ('CONFIRMED', 'DELIVERED'):
+                send_order_sms_to_customer(order, order.status)
 
         messages.success(request, f'Order #{order.id:05d} updated successfully.')
         return redirect('custom_admin:order_detail', pk=order.pk)

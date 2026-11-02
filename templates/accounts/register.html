@@ -88,22 +88,23 @@
                             </div>
                         </div>
 
-                        <!-- Email -->
+                        <!-- Mobile Number (Mandatory) -->
+                        <div>
+                            <label for="id_phone_number"
+                                class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Mobile
+                                Number <span class="text-coral">*</span></label>
+                            {{ form.phone_number }}
+                            <p class="mt-1 text-[11px] text-ink/40">We will send a 6-digit verification code (OTP) via SMS.</p>
+                            {% if form.phone_number.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.phone_number.errors|join:", " }}</p>{% endif %}
+                        </div>
+
+                        <!-- Email (Optional) -->
                         <div>
                             <label for="id_email"
                                 class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Email
-                                <span class="text-coral">*</span></label>
+                                Address <span class="text-ink/30 font-normal lowercase">(optional)</span></label>
                             {{ form.email }}
                             {% if form.email.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.email.errors|join:", " }}</p>{% endif %}
-                        </div>
-
-                        <!-- Phone -->
-                        <div>
-                            <label for="id_phone_number"
-                                class="block text-xs font-semibold text-ink/60 mb-1.5 uppercase tracking-wide">Phone
-                                Number</label>
-                            {{ form.phone_number }}
-                            {% if form.phone_number.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.phone_number.errors|join:", " }}</p>{% endif %}
                         </div>
 
                         <!-- Password -->
@@ -155,8 +156,8 @@
                     <button type="submit"
                         class="mt-6 w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm
                                    shadow-button hover:bg-coral/90 transition-all active:translate-y-1 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-user-plus"></i>
-                        <span>Create Account</span>
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Continue &amp; Verify OTP</span>
                     </button>
 
                     <p class="mt-4 text-center text-xs text-ink/40">

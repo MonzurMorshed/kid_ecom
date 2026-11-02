@@ -475,6 +475,14 @@ def developer_settings(request):
         'whitenoise_active':           not getattr(settings, 'DEBUG', False),
         'current_static_url':          getattr(settings, 'STATIC_URL', '/static/'),
         'current_media_url':           getattr(settings, 'MEDIA_URL', '/media/'),
+        # SMS Gateway diagnostics
+        'sms_backend':                 getattr(site_settings_obj, 'sms_backend', 'console') or getattr(settings, 'SMS_BACKEND', 'console'),
+        'sms_sender_id':               getattr(site_settings_obj, 'sms_sender_id', '') or getattr(settings, 'SMS_SENDER_ID', 'Kidurabd'),
+        'has_sms_key':                 bool(getattr(site_settings_obj, 'sms_api_key', None) or getattr(settings, 'SMS_API_KEY', None)),
+        'manager_sms_number':          getattr(site_settings_obj, 'manager_sms_number', '') or getattr(settings, 'MANAGER_SMS_NUMBER', ''),
+        'sms_order_confirm_customer':  getattr(site_settings_obj, 'sms_order_confirm_customer', True),
+        'sms_order_complete_customer': getattr(site_settings_obj, 'sms_order_complete_customer', True),
+        'sms_order_placed_manager':    getattr(site_settings_obj, 'sms_order_placed_manager', True),
     }
     return render(request, 'custom_admin/settings/developer_settings.html', context)
 
@@ -501,5 +509,38 @@ def clear_error_log(request):
         messages.success(request, 'Error log has been cleared successfully.')
     except Exception as e:
         messages.error(request, f'Failed to clear error log: {str(e)}')
+
+    return redirect('custom_admin:developer_settings')
+
+
+@permission_required('developer')
+@require_POST
+def test_sms(request):
+    """
+    Send a test SMS to verify the configured SMS gateway.
+    """
+    recipient = request.POST.get('test_phone', '').strip().replace(' ', '').replace('-', '')
+    if not recipient:
+        messages.error(request, 'Please provide a valid recipient mobile number.')
+        return redirect('custom_admin:developer_settings')
+
+    site_name = getattr(settings, 'SITE_NAME', 'Kidurabd')
+    test_msg = request.POST.get('test_message', '').strip() or f"[{site_name}] Test SMS sent from Developer Settings."
+
+    from kidurabd.sms_service import send_sms, get_sms_settings
+    cfg = get_sms_settings()
+    success = send_sms(recipient, test_msg)
+
+    if success:
+        ActivityLog.log(
+            request=request,
+            action='settings',
+            description=f"Sent test SMS via [{cfg.get('backend')}] to {recipient}.",
+            target_type='Developer Settings',
+        )
+        backend_name = 'BulkSMSBD (Live API)' if cfg.get('backend') == 'bulksmsbd' else 'Console (Development Simulation)'
+        messages.success(request, f"✅ Test SMS dispatched successfully via {backend_name} to {recipient}!")
+    else:
+        messages.error(request, f"❌ Failed to dispatch test SMS to {recipient}. Check API credentials or server logs.")
 
     return redirect('custom_admin:developer_settings')

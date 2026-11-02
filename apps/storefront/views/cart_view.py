@@ -292,7 +292,10 @@ def checkout(request):
             cart.clear()
 
             # ── Transactional emails ──────────────────────────────────────────
-            from orders.emails import send_order_placed, send_admin_new_order, send_auto_registration_email
+            from orders.emails import (
+                send_order_placed, send_admin_new_order, send_auto_registration_email,
+                send_order_sms_to_manager,
+            )
 
             if is_new_user and auto_password:
                 send_auto_registration_email(order_user, auto_password, order=order)
@@ -303,6 +306,7 @@ def checkout(request):
 
             send_order_placed(order)
             send_admin_new_order(order)
+            send_order_sms_to_manager(order)
 
             messages.success(request, f'🎉 Order #{order.id} placed! Thank you, {full_name}.')
             return redirect('storefront:order_success', pk=order.pk)

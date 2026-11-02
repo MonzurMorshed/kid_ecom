@@ -22,6 +22,7 @@ from .settings import (
 from .developer import (
     developer_settings,
     clear_error_log,
+    test_sms,
 )
 from .content import (
     slider_list,
