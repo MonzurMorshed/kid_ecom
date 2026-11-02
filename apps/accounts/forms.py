@@ -137,7 +137,8 @@ class CustomerProfileForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': _INPUT, 'placeholder': 'Last name'})
     )
     email = forms.EmailField(
-        widget=forms.EmailInput(attrs={'class': _INPUT, 'placeholder': 'Email address'})
+        required=False,
+        widget=forms.EmailInput(attrs={'class': _INPUT, 'placeholder': 'Email address (optional)'})
     )
     phone_number = forms.CharField(
         max_length=15, required=False,
@@ -158,6 +159,8 @@ class CustomerProfileForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip().lower()
+        if not email:
+            return ''
         qs = User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
         if qs.exists():
             raise forms.ValidationError('This email is already in use by another account.')

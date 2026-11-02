@@ -259,8 +259,10 @@ def profile_edit(request):
         form = CustomerProfileForm(request.POST, instance=user)
         if form.is_valid():
             profile = form.save(commit=False)
-            # Keep username in sync with email
-            profile.username = form.cleaned_data['email'].lower()
+            new_email = form.cleaned_data.get('email', '').strip().lower()
+            # Only sync username with email if user previously had an email-based username and email is provided
+            if new_email and '@' in profile.username:
+                profile.username = new_email
             profile.save()
             messages.success(request, 'Your profile has been updated.')
             return redirect('accounts:profile')

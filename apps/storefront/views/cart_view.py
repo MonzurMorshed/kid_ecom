@@ -196,7 +196,7 @@ def checkout(request):
 
         errors = {}
         if not full_name:        errors['full_name']        = 'Full name is required.'
-        if not email:            errors['email']            = 'Email is required.'
+        # Email is optional for customers
         if not phone_number:     errors['phone_number']     = 'Phone number is required.'
         if not shipping_address: errors['shipping_address'] = 'Delivery address is required.'
 
@@ -206,9 +206,18 @@ def checkout(request):
 
             if request.user.is_authenticated:
                 order_user = request.user
+                if email and not order_user.email:
+                    order_user.email = email.lower()
+                    order_user.save(update_fields=['email'])
             else:
                 from accounts.models import User as UserModel
-                order_user = UserModel.objects.filter(email__iexact=email).first()
+                # Lookup existing customer by phone number (primary identifier) or email if given
+                order_user = None
+                if phone_number:
+                    order_user = UserModel.objects.filter(phone_number=phone_number).first()
+                if not order_user and email:
+                    order_user = UserModel.objects.filter(email__iexact=email).first()
+
                 if not order_user:
                     is_new_user = True
                     import secrets
@@ -218,8 +227,11 @@ def checkout(request):
                     first_name = parts[0] if parts else 'Customer'
                     last_name = parts[1] if len(parts) > 1 else ''
 
-                    # Generate clean, unique username based on email prefix
-                    clean_prefix = re.sub(r'[^a-zA-Z0-9_]', '', email.split('@')[0].lower())
+                    # Generate clean, unique username based on email or phone
+                    if email:
+                        clean_prefix = re.sub(r'[^a-zA-Z0-9_]', '', email.split('@')[0].lower())
+                    else:
+                        clean_prefix = f"user_{phone_number[-4:]}" if len(phone_number) >= 4 else "user"
                     if not clean_prefix or len(clean_prefix) < 3:
                         clean_prefix = 'user'
 
@@ -239,7 +251,7 @@ def checkout(request):
 
                     order_user = UserModel.objects.create_user(
                         username=username,
-                        email=email.lower(),
+                        email=email.lower() if email else '',
                         first_name=first_name,
                         last_name=last_name,
                         phone_number=user_phone,
@@ -264,6 +276,10 @@ def checkout(request):
                     # Automatically log in the newly registered user
                     from django.contrib.auth import login
                     login(request, order_user, backend='django.contrib.auth.backends.ModelBackend')
+                else:
+                    if email and not order_user.email:
+                        order_user.email = email.lower()
+                        order_user.save(update_fields=['email'])
 
             order = Order.objects.create(
                 user=order_user,
@@ -298,13 +314,16 @@ def checkout(request):
             )
 
             if is_new_user and auto_password:
-                send_auto_registration_email(order_user, auto_password, order=order)
+                if order_user.email:
+                    send_auto_registration_email(order_user, auto_password, order=order)
                 request.session['just_auto_registered'] = {
                     'username': order_user.username,
                     'email': order_user.email,
+                    'phone_number': order_user.phone_number or phone_number,
                 }
 
-            send_order_placed(order)
+            if order.email:
+                send_order_placed(order)
             send_admin_new_order(order)
             send_order_sms_to_manager(order)
 

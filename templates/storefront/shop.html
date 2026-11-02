@@ -350,7 +350,7 @@ Explore our curated collection of joyful, safe, and imaginative toys for curious
 
                 <!-- Products Grid -->
                 {% if products %}
-                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {% for product in products %}
                     {% include "storefront/partials/product_card.html" with product=product %}
                     {% endfor %}

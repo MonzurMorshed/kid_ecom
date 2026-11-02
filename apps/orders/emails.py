@@ -17,7 +17,10 @@ ADMIN_EMAIL = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', 'notification@kidura
 # ── Order placed — confirmation to customer ───────────────────────────────────
 
 def send_order_placed(order) -> bool:
-    """Send an order-confirmation email to the customer right after checkout via billing@kidurabd.com."""
+    """Send an order-confirmation email to the customer right after checkout via billing@kidurabd.com (optional if customer has no email)."""
+    recipient = (getattr(order, 'email', '') or '').strip()
+    if not recipient:
+        return False
     ctx = {
         'order': order,
         'items': order.items.select_related('product', 'variant').all(),
@@ -27,7 +30,7 @@ def send_order_placed(order) -> bool:
         subject=f'[{SITE_NAME}] Order #{order.id:05d} Confirmed 🎉',
         template_name='emails/order_placed.html',
         context=ctx,
-        to=order.email,
+        to=recipient,
         reply_to=['billing@kidurabd.com'],
         fail_silently=True,
     )
@@ -44,7 +47,10 @@ STATUS_LABELS = {
 }
 
 def send_order_status_update(order) -> bool:
-    """Notify the customer whenever an admin changes the order status via billing@kidurabd.com."""
+    """Notify the customer whenever an admin changes the order status via billing@kidurabd.com (optional if customer has no email)."""
+    recipient = (getattr(order, 'email', '') or '').strip()
+    if not recipient:
+        return False
     emoji, label, detail = STATUS_LABELS.get(order.status, ('📋', order.status, ''))
     ctx = {
         'order':         order,
@@ -57,7 +63,7 @@ def send_order_status_update(order) -> bool:
         subject=f'[{SITE_NAME}] Order #{order.id:05d} — {label} {emoji}',
         template_name='emails/order_status_update.html',
         context=ctx,
-        to=order.email,
+        to=recipient,
         reply_to=['billing@kidurabd.com'],
         fail_silently=True,
     )
@@ -84,7 +90,10 @@ def send_admin_new_order(order) -> bool:
 # ── Welcome email — on registration ───────────────────────────────────────────
 
 def send_welcome_email(user) -> bool:
-    """Send a welcome email to a newly registered customer via care@kidurabd.com."""
+    """Send a welcome email to a newly registered customer via care@kidurabd.com (optional if customer has no email)."""
+    recipient = (getattr(user, 'email', '') or '').strip()
+    if not recipient:
+        return False
     ctx = {
         'user': user,
     }
@@ -93,7 +102,7 @@ def send_welcome_email(user) -> bool:
         subject=f'Welcome to {SITE_NAME}! 🎉',
         template_name='emails/welcome.html',
         context=ctx,
-        to=user.email,
+        to=recipient,
         reply_to=['care@kidurabd.com'],
         fail_silently=True,
     )
@@ -106,7 +115,11 @@ def send_auto_registration_email(user, auto_password: str, order=None) -> bool:
     Send an email with automatically generated username and password
     to a customer who was automatically registered during guest checkout.
     Includes a prominent security note advising them to change their password.
+    Returns False silently if customer has no email.
     """
+    recipient = (getattr(user, 'email', '') or '').strip()
+    if not recipient:
+        return False
     ctx = {
         'user': user,
         'auto_password': auto_password,
@@ -118,7 +131,7 @@ def send_auto_registration_email(user, auto_password: str, order=None) -> bool:
         subject=f'[{SITE_NAME}] Your Account & Login Credentials{order_ref} 🔐',
         template_name='emails/auto_registration.html',
         context=ctx,
-        to=user.email,
+        to=recipient,
         reply_to=['care@kidurabd.com'],
         fail_silently=True,
     )

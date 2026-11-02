@@ -18,7 +18,7 @@ class Order(models.Model):
         related_name='orders',
     )
     full_name = models.CharField(max_length=200)
-    email = models.EmailField()
+    email = models.EmailField(blank=True, default='')
     phone_number = models.CharField(max_length=15)
     shipping_address = models.TextField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)

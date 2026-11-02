@@ -17,7 +17,7 @@
   </div>
   <div class="info-row">
     <span class="info-label">Email</span>
-    <span class="info-value">{{ order.email }}</span>
+    <span class="info-value">{{ order.email|default:"Not provided" }}</span>
   </div>
   <div class="info-row">
     <span class="info-label">Phone</span>

@@ -102,7 +102,20 @@ def send_templated_email(
         fail_silently: When True, catches exceptions and returns False
     """
     cfg = _get_channel_config(channel)
-    to_list = [to] if isinstance(to, str) else list(to)
+
+    # Normalize and validate recipient(s)
+    if not to:
+        logger.info(f"Email skipped [{channel}] '{subject}': No recipient provided")
+        return False
+
+    if isinstance(to, str):
+        to_list = [t.strip() for t in to.split(',') if t.strip()]
+    else:
+        to_list = [str(t).strip() for t in to if t and str(t).strip()]
+
+    if not to_list:
+        logger.info(f"Email skipped [{channel}] '{subject}': Recipient list is empty")
+        return False
 
     # Standard context items
     merged_context = {

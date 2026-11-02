@@ -20,7 +20,8 @@
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">You are logged in</span>
                     </div>
                     <p class="text-xs sm:text-sm text-slate-600 mb-3 leading-relaxed">
-                        An account has been created for you with username <strong class="text-slate-900 font-mono font-bold">{{ just_registered.username }}</strong>. Your automatic password and login details have been sent to <strong class="text-slate-900 font-bold">{{ just_registered.email }}</strong>.
+                        An account has been created for you with mobile number <strong class="text-slate-900 font-mono font-bold">{{ order.phone_number }}</strong>.
+                        {% if just_registered.email %}Your automatic password and login details have also been sent to <strong class="text-slate-900 font-bold">{{ just_registered.email }}</strong>.{% else %}You can sign in anytime using your mobile number.{% endif %}
                     </p>
                     <div class="flex items-start sm:items-center gap-2.5 p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 mb-4">
                         <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm shrink-0 mt-0.5 sm:mt-0" aria-hidden="true"></i>
@@ -156,7 +157,7 @@
                         <span class="text-[11px] font-bold uppercase tracking-wider text-ink/40 block mb-1">Recipient</span>
                         <p class="text-sm font-bold text-ink">{{ order.full_name }}</p>
                         <p class="text-xs text-ink/65">{{ order.phone_number }}</p>
-                        <p class="text-xs text-ink/65">{{ order.email }}</p>
+                        {% if order.email %}<p class="text-xs text-ink/65">{{ order.email }}</p>{% endif %}
                     </div>
 
                     <div class="border-t border-ink/8 pt-4">

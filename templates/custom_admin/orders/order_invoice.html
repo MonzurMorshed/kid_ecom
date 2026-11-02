@@ -277,7 +277,7 @@
             <div>
                 <div class="party-label">Bill To</div>
                 <div class="party-name">{{ order.full_name }}</div>
-                <div class="party-line">{{ order.email }}</div>
+                {% if order.email %}<div class="party-line">{{ order.email }}</div>{% endif %}
                 <div class="party-line">{{ order.phone_number }}</div>
             </div>
             <div>
