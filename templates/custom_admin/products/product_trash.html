@@ -36,7 +36,7 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
-            {% if page_obj.paginator.count > 0 %}
+            {% if is_superadmin and page_obj.paginator.count > 0 %}
             <button type="button" @click="emptyTrashModal = true"
                class="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-white font-semibold text-sm rounded-xl border border-rose-800/40 transition">
                 <i class="fa-solid fa-trash-can text-xs text-rose-400"></i>
@@ -77,11 +77,15 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Restore Selected (<span x-text="selectedTrash.length"></span>)
             </button>
+            {% if is_superadmin %}
             <button type="button" @click="bulkActionType = 'permanent_delete'; bulkActionModal = true"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-700/20 transition">
+                class="inline-flex items-center gap-2 px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-700/20 transition"
+                title="Super Admin: Permanently delete selected items from database">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                Delete Forever (<span x-text="selectedTrash.length"></span>)
+                <span>Delete Forever (<span x-text="selectedTrash.length"></span>)</span>
+                <span class="px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider bg-rose-950/80 text-rose-300 rounded border border-rose-500/40">Superadmin</span>
             </button>
+            {% endif %}
         </div>
     </div>
 
@@ -153,13 +157,15 @@
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                     Restore
                                 </button>
-                                <!-- Permanently Delete Button -->
+                                {% if is_superadmin %}
+                                <!-- Permanently Delete Button (Superadmin only) -->
                                 <button @click="permDeleteOpen = true"
-                                        title="Permanently Delete"
+                                        title="Super Admin: Permanently Delete"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-lg border border-rose-500/20 transition">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     Delete Forever
                                 </button>
+                                {% endif %}
                             </div>
 
                             <!-- Restore Confirm Modal -->
@@ -195,7 +201,8 @@
                                 </div>
                             </div>
 
-                            <!-- Permanent Delete Confirm Modal -->
+                            <!-- Permanent Delete Confirm Modal (Superadmin only) -->
+                            {% if is_superadmin %}
                             <div x-show="permDeleteOpen" x-cloak
                                  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
                                 <div @click.outside="permDeleteOpen = false"
@@ -227,6 +234,7 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
 
                         </td>
                     </tr>

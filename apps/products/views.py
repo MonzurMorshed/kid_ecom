@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.utils.text import slugify
 
-from custom_admin.decorators import admin_required, permission_required
+from custom_admin.decorators import admin_required, permission_required, superadmin_required
 from .models import Category, Product, Brand, ProductOption, ProductOptionValue, ProductVariant, ProductImage
 
 # =========================================================
@@ -581,6 +581,32 @@ def product_bulk_delete(request):
 
 
 
+@superadmin_required
+def product_bulk_permanent_delete(request):
+    """Permanently delete multiple products directly from the database (Super Admin only)."""
+    if request.method == 'POST':
+        product_ids = request.POST.getlist('product_ids')
+        if product_ids:
+            qs = Product.objects.filter(pk__in=product_ids)
+            count = qs.count()
+            qs.delete()
+            messages.success(request, f'{count} product(s) permanently deleted from the database.')
+        else:
+            messages.warning(request, 'No products were selected for permanent deletion.')
+    return redirect('custom_admin:product_list')
+
+
+@superadmin_required
+def product_direct_permanent_delete(request, pk):
+    """Permanently delete a single product directly from the catalog (Super Admin only)."""
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        title = product.title
+        product.delete()
+        messages.success(request, f'"{title}" has been permanently deleted from the database.')
+    return redirect('custom_admin:product_list')
+
+
 @permission_required('products')
 def product_trash(request):
     """Recycle bin – list of soft-deleted products."""
@@ -609,7 +635,7 @@ def product_restore(request, pk):
     return redirect('custom_admin:product_trash')
 
 
-@permission_required('products')
+@superadmin_required
 def product_permanent_delete(request, pk):
     """Permanently remove a soft-deleted product from the database."""
     product = get_object_or_404(Product, pk=pk, is_deleted=True)
@@ -634,6 +660,11 @@ def product_bulk_trash_action(request):
             count = qs.update(is_deleted=False, deleted_at=None)
             messages.success(request, f'{count} product(s) restored.')
         elif action == 'permanent_delete':
+            profile = getattr(request.user, 'admin_profile', None)
+            is_super = request.user.is_superuser or (profile and profile.role == 'superadmin')
+            if not is_super:
+                messages.error(request, 'Super Admin privileges required to permanently delete products.')
+                return redirect('custom_admin:product_trash')
             count = qs.count()
             qs.delete()
             messages.success(request, f'{count} product(s) permanently deleted.')
@@ -642,7 +673,7 @@ def product_bulk_trash_action(request):
     return redirect('custom_admin:product_trash')
 
 
-@permission_required('products')
+@superadmin_required
 def product_empty_trash(request):
     """Permanently delete all products currently in trash."""
     if request.method == 'POST':
