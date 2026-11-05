@@ -4,7 +4,24 @@
 {% block page_title %}Product Management{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{ importModalOpen: false }">
+<div class="space-y-6" x-data="{
+    importModalOpen: false,
+    selectedProducts: [],
+    bulkDeleteModalOpen: false,
+    selectAll: false,
+    toggleAll() {
+        if (this.selectAll) {
+            const boxes = document.querySelectorAll('.product-checkbox');
+            this.selectedProducts = Array.from(boxes).map(b => b.value);
+        } else {
+            this.selectedProducts = [];
+        }
+    },
+    updateSelectAll() {
+        const boxes = document.querySelectorAll('.product-checkbox');
+        this.selectAll = boxes.length > 0 && this.selectedProducts.length === boxes.length;
+    }
+}">
 
     <!-- Top Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -126,12 +143,49 @@
         {% endif %}
     </form>
 
+    <!-- Floating / Sticky Bulk Action Bar -->
+    <div x-show="selectedProducts.length > 0" x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="bg-slate-900 border border-rose-500/30 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl shadow-rose-950/20">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-xs"
+                x-text="selectedProducts.length"></span>
+            <div>
+                <p class="text-sm font-semibold text-white">
+                    <span x-text="selectedProducts.length"></span> product<span x-show="selectedProducts.length > 1">s</span> selected
+                </p>
+                <p class="text-xs text-slate-400">Apply bulk deletion to all selected products</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" @click="selectedProducts = []; selectAll = false"
+                class="px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition">
+                Deselect All
+            </button>
+            <button type="button" @click="bulkDeleteModalOpen = true"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-600/20 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete Selected (<span x-text="selectedProducts.length"></span>)
+            </button>
+        </div>
+    </div>
+
     <!-- Table Card -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-slate-300">
                 <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
                     <tr>
+                        <th class="w-12 px-4 py-4 text-center">
+                            <input type="checkbox" x-model="selectAll" @change="toggleAll()"
+                                class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-rose-500 focus:ring-rose-500/30 focus:ring-offset-0 cursor-pointer"
+                                title="Select All on this page">
+                        </th>
                         <th class="px-6 py-4">ID</th>
                         <th class="px-6 py-4">Title</th>
                         <th class="px-6 py-4">Category</th>
@@ -147,6 +201,11 @@
                 <tbody class="divide-y divide-slate-800/60">
                     {% for product in page_obj %}
                     <tr class="hover:bg-slate-800/40 transition" x-data="{ deleteOpen: false }">
+                        <td class="w-12 px-4 py-4 text-center">
+                            <input type="checkbox" value="{{ product.id }}"
+                                class="product-checkbox w-4 h-4 rounded bg-slate-800 border-slate-700 text-rose-500 focus:ring-rose-500/30 focus:ring-offset-0 cursor-pointer"
+                                x-model="selectedProducts" @change="updateSelectAll()">
+                        </td>
                         <td class="px-6 py-4 font-mono text-xs text-slate-400">#{{ product.id }}</td>
                         <td class="px-6 py-4 font-semibold text-white">
                             <a href="{% url 'custom_admin:product_detail' product.pk %}"
@@ -266,7 +325,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="10" class="px-6 py-12 text-center text-slate-500">
+                        <td colspan="11" class="px-6 py-12 text-center text-slate-500">
                             No products found. Click "Add Product" or "Import CSV" to populate catalog.
                         </td>
                     </tr>
@@ -363,6 +422,52 @@
                     <button type="submit"
                         class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-600/20 transition">
                         Upload & Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Delete Confirm Modal -->
+    <div x-show="bulkDeleteModalOpen" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div @click.outside="bulkDeleteModalOpen = false"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div class="flex items-start gap-4">
+                <div class="w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white">Move <span x-text="selectedProducts.length"></span> Product(s) to Trash?</h3>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Selected products will be soft-deleted and hidden from your live catalog. You can restore them anytime from the <strong>Trash</strong>.
+                    </p>
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'custom_admin:product_bulk_delete' %}" class="pt-2">
+                {% csrf_token %}
+                <template x-for="id in selectedProducts" :key="id">
+                    <input type="hidden" name="product_ids" :value="id">
+                </template>
+                <div class="flex justify-end gap-3">
+                    <button type="button" @click="bulkDeleteModalOpen = false"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-600/20 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>Yes, Move to Trash</span>
                     </button>
                 </div>
             </form>

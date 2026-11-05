@@ -563,6 +563,23 @@ def product_soft_delete(request, pk):
         messages.success(request, f'"{product.title}" has been moved to trash.')
     return redirect('custom_admin:product_list')
 
+@permission_required('products')
+def product_bulk_delete(request):
+    """Bulk soft-delete products (moves selected products to trash)."""
+    if request.method == 'POST':
+        product_ids = request.POST.getlist('product_ids')
+        if product_ids:
+            from django.utils import timezone
+            updated = Product.objects.filter(pk__in=product_ids, is_deleted=False).update(
+                is_deleted=True,
+                deleted_at=timezone.now(),
+            )
+            messages.success(request, f'{updated} product(s) moved to trash.')
+        else:
+            messages.warning(request, 'No products were selected for bulk deletion.')
+    return redirect('custom_admin:product_list')
+
+
 
 @permission_required('products')
 def product_trash(request):
@@ -601,6 +618,43 @@ def product_permanent_delete(request, pk):
         product.delete()
         messages.success(request, f'"{title}" has been permanently deleted.')
     return redirect('custom_admin:product_trash')
+
+@permission_required('products')
+def product_bulk_trash_action(request):
+    """Bulk actions on trashed products: restore or permanently delete."""
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        product_ids = request.POST.getlist('product_ids')
+        if not product_ids:
+            messages.warning(request, 'No products were selected.')
+            return redirect('custom_admin:product_trash')
+
+        qs = Product.objects.filter(pk__in=product_ids, is_deleted=True)
+        if action == 'restore':
+            count = qs.update(is_deleted=False, deleted_at=None)
+            messages.success(request, f'{count} product(s) restored.')
+        elif action == 'permanent_delete':
+            count = qs.count()
+            qs.delete()
+            messages.success(request, f'{count} product(s) permanently deleted.')
+        else:
+            messages.error(request, 'Invalid bulk action.')
+    return redirect('custom_admin:product_trash')
+
+
+@permission_required('products')
+def product_empty_trash(request):
+    """Permanently delete all products currently in trash."""
+    if request.method == 'POST':
+        qs = Product.objects.filter(is_deleted=True)
+        count = qs.count()
+        if count > 0:
+            qs.delete()
+            messages.success(request, f'Trash emptied. {count} product(s) permanently deleted.')
+        else:
+            messages.info(request, 'Trash is already empty.')
+    return redirect('custom_admin:product_trash')
+
 
 
 # =========================================================

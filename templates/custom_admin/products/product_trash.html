@@ -4,7 +4,25 @@
 {% block page_title %}Product Trash{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{}">
+<div class="space-y-6" x-data="{
+    selectedTrash: [],
+    selectAllTrash: false,
+    bulkActionModal: false,
+    bulkActionType: '',
+    emptyTrashModal: false,
+    toggleAll() {
+        if (this.selectAllTrash) {
+            const boxes = document.querySelectorAll('.trash-checkbox');
+            this.selectedTrash = Array.from(boxes).map(b => b.value);
+        } else {
+            this.selectedTrash = [];
+        }
+    },
+    updateSelectAll() {
+        const boxes = document.querySelectorAll('.trash-checkbox');
+        this.selectAllTrash = boxes.length > 0 && this.selectedTrash.length === boxes.length;
+    }
+}">
 
     <!-- Top Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -17,11 +35,54 @@
                 <p class="text-sm text-slate-400 mt-0.5">Soft-deleted products — restore or permanently remove them</p>
             </div>
         </div>
-        <a href="{% url 'custom_admin:product_list' %}"
-           class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-xl border border-slate-700 transition">
-            <i class="fa-solid fa-arrow-left text-xs"></i>
-            <span>Back to Products</span>
-        </a>
+        <div class="flex items-center gap-3">
+            {% if page_obj.paginator.count > 0 %}
+            <button type="button" @click="emptyTrashModal = true"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-white font-semibold text-sm rounded-xl border border-rose-800/40 transition">
+                <i class="fa-solid fa-trash-can text-xs text-rose-400"></i>
+                <span>Empty Trash</span>
+            </button>
+            {% endif %}
+            <a href="{% url 'custom_admin:product_list' %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-xl border border-slate-700 transition">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Back to Products</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Floating / Sticky Bulk Action Bar for Trash -->
+    <div x-show="selectedTrash.length > 0" x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        class="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl shadow-black/30">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs"
+                x-text="selectedTrash.length"></span>
+            <div>
+                <p class="text-sm font-semibold text-white">
+                    <span x-text="selectedTrash.length"></span> trashed product<span x-show="selectedTrash.length > 1">s</span> selected
+                </p>
+                <p class="text-xs text-slate-400">Restore or permanently delete selected items</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" @click="selectedTrash = []; selectAllTrash = false"
+                class="px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition">
+                Deselect All
+            </button>
+            <button type="button" @click="bulkActionType = 'restore'; bulkActionModal = true"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Restore Selected (<span x-text="selectedTrash.length"></span>)
+            </button>
+            <button type="button" @click="bulkActionType = 'permanent_delete'; bulkActionModal = true"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-700/20 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Delete Forever (<span x-text="selectedTrash.length"></span>)
+            </button>
+        </div>
     </div>
 
     <!-- Table Card -->
@@ -30,6 +91,11 @@
             <table class="w-full text-left text-sm text-slate-300">
                 <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
                     <tr>
+                        <th class="w-12 px-4 py-4 text-center">
+                            <input type="checkbox" x-model="selectAllTrash" @change="toggleAll()"
+                                class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-rose-500 focus:ring-rose-500/30 focus:ring-offset-0 cursor-pointer"
+                                title="Select All in trash">
+                        </th>
                         <th class="px-6 py-4">ID</th>
                         <th class="px-6 py-4">Title</th>
                         <th class="px-6 py-4">Category</th>
@@ -42,6 +108,11 @@
                 <tbody class="divide-y divide-slate-800/60">
                     {% for product in page_obj %}
                     <tr class="hover:bg-slate-800/30 transition" x-data="{ restoreOpen: false, permDeleteOpen: false }">
+                        <td class="w-12 px-4 py-4 text-center">
+                            <input type="checkbox" value="{{ product.id }}"
+                                class="trash-checkbox w-4 h-4 rounded bg-slate-800 border-slate-700 text-rose-500 focus:ring-rose-500/30 focus:ring-offset-0 cursor-pointer"
+                                x-model="selectedTrash" @change="updateSelectAll()">
+                        </td>
                         <td class="px-6 py-4 font-mono text-xs text-slate-400">#{{ product.id }}</td>
 
                         <td class="px-6 py-4 font-semibold text-slate-300">
@@ -161,7 +232,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="px-6 py-16 text-center">
+                        <td colspan="8" class="px-6 py-16 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-600">
                                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -200,6 +271,87 @@
             </div>
         </div>
         {% endif %}
+    </div>
+
+    <!-- Bulk Trash Action Modal -->
+    <div x-show="bulkActionModal" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div @click.outside="bulkActionModal = false"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div class="flex items-start gap-4">
+                <div :class="bulkActionType === 'restore' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'"
+                    class="w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0">
+                    <template x-if="bulkActionType === 'restore'">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </template>
+                    <template x-if="bulkActionType !== 'restore'">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </template>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white" x-text="bulkActionType === 'restore' ? 'Restore Selected Products?' : 'Permanently Delete Selected Products?'"></h3>
+                    <p class="text-xs text-slate-400 mt-1" x-text="bulkActionType === 'restore' ? 'Selected products will be restored and visible in the store catalog again.' : 'Selected products will be permanently wiped from the database. This action cannot be undone!'"></p>
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'custom_admin:product_bulk_trash_action' %}" class="pt-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" :value="bulkActionType">
+                <template x-for="id in selectedTrash" :key="id">
+                    <input type="hidden" name="product_ids" :value="id">
+                </template>
+                <div class="flex justify-end gap-3">
+                    <button type="button" @click="bulkActionModal = false"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        :class="bulkActionType === 'restore' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20' : 'bg-rose-700 hover:bg-rose-600 shadow-rose-700/20'"
+                        class="px-4 py-2 text-white text-xs font-bold rounded-xl shadow-lg transition">
+                        <span x-text="bulkActionType === 'restore' ? 'Yes, Restore All' : 'Yes, Delete Forever'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Empty Trash Modal -->
+    <div x-show="emptyTrashModal" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div @click.outside="emptyTrashModal = false"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            class="w-full max-w-md bg-slate-900 border border-rose-900/40 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div class="flex items-start gap-4">
+                <div class="w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white">Empty Entire Trash?</h3>
+                    <p class="text-xs text-slate-400 mt-1">
+                        All <span class="font-bold text-rose-400">{{ page_obj.paginator.count }}</span> product(s) in the trash will be <strong class="text-white">permanently deleted</strong>. This cannot be undone.
+                    </p>
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'custom_admin:product_empty_trash' %}" class="pt-2">
+                {% csrf_token %}
+                <div class="flex justify-end gap-3">
+                    <button type="button" @click="emptyTrashModal = false"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-700/20 transition">
+                        Yes, Empty Trash
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </div>
